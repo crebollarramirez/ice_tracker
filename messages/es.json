@@ -1,0 +1,120 @@
+{
+    "header": {
+        "title": "Rastreador de Actividad de ICE",
+        "subtitle": "Sistema Comunitario de Alertas de Seguridad"
+    },
+    "safetyAlert": {
+        "title": "Información Importante de Seguridad",
+        "description": "Esta herramienta ayuda a los miembros de la comunidad a reportar y rastrear avistamientos de ICE (Inmigración y Control de Aduanas) para proteger a inmigrantes indocumentados y sus familias."
+    },
+    "howToUse": {
+        "title": "Cómo Usar Esta Herramienta",
+        "reporting": {
+            "title": "📍 Reportar Actividad de ICE:",
+            "items": [
+                "Reporta vehículos de ICE, retenes o actividades de cumplimiento",
+                "Incluye cruces o direcciones específicas",
+                "Haz el reporte tan pronto como sea seguro hacerlo",
+                "Todos los reportes son anónimos"
+            ]
+        },
+        "stayingSafe": {
+            "title": "🛡️ Cómo Mantenerte Seguro:",
+            "items": [
+                "Consulta el mapa antes de salir",
+                "Comparte alertas con familiares y amistades",
+                "Evita zonas con actividad reciente de ICE",
+                "Conoce tus derechos si ICE se te acerca"
+            ]
+        }
+    },
+    "form": {
+        "title": "Reportar Actividad de ICE",
+        "guidelines": {
+            "title": "Guía Rápida de Reporte:",
+            "activities": "Vehículos de ICE • Retenes • Redadas • Operativos",
+            "examples": "Ejemplos: \"4th St y La Regina Ave, Downey CA\" o \"123 Main St, Los Ángeles CA\""
+        },
+        "fields": {
+            "locationLabel": "Ubicación",
+            "locationRequired": "Requerido",
+            "locationPlaceholder": "Dirección, cruce o punto de referencia",
+            "addDetails": "Agregar detalles (opcional)",
+            "detailsLabel": "Detalles",
+            "detailsPlaceholder": "Cantidad de vehículos, hora, oficiales vistos...",
+            "charactersCount": "{count}/200"
+        },
+        "buttons": {
+            "submit": "Enviar Reporte",
+            "locating": "📍 Obteniendo ubicación...",
+            "hide": "✕"
+        },
+        "validation": {
+            "enterAddress": "Por favor ingresa una dirección o ubicación",
+            "noResults": "No se encontraron resultados. Estado: {status}",
+            "apiError": "Error al llamar a la API de geocodificación de Google. Revisa la consola para más detalles.",
+            "saveError": "Error al guardar en la base de datos. Revisa la consola para más detalles.",
+            "rateLimitError": "Por favor espera antes de enviar otro reporte"
+        },
+        "confirmation": {
+            "title": "🚨 CONFIRMAR REPORTE DE ACTIVIDAD DE ICE",
+            "question": "¿Es esta la dirección/ubicación correcta donde viste actividad de ICE?",
+            "address": "\"{address}\"",
+            "instructions": "Haz clic en Aceptar para confirmar y enviar este reporte para ayudar a proteger tu comunidad.\nHaz clic en Cancelar para regresar y corregir la ubicación."
+        },
+        "success": {
+            "title": "✅ ¡Reporte de actividad de ICE enviado con éxito!",
+            "location": "Ubicación: {address}",
+            "thanks": "Gracias por ayudar a proteger tu comunidad. Comparte esta información con familiares y amistades."
+        }
+    },
+    "reportsList": {
+        "title": "📍 Reportes Recientes de ICE",
+        "loading": "Cargando reportes recientes...",
+        "noReports": "Aún no hay reportes. ¡Ayuda a proteger tu comunidad reportando actividad de ICE!",
+        "reported": "Reportado: {date}",
+        "additionalInfo": "ℹ️ {info}",
+        "coordinates": "Lat: {lat}, Lng: {lng}",
+        "total": "Total de reportes de ICE: {count}",
+        "warning": "⚠️ Revisa antes de viajar – evita estas zonas"
+    },
+    "map": {
+        "loading": "Cargando reportes de ICE...",
+        "popup": {
+            "title": "🚨 Reporte de ICE",
+            "additionalDetails": "ℹ️ Detalles adicionales:",
+            "reported": "Reportado: {date}"
+        }
+    },
+    "rights": {
+        "title": "Conoce Tus Derechos",
+        "iceApproaches": {
+            "title": "Si ICE se te Acerca:",
+            "items": [
+                "Tienes derecho a guardar silencio",
+                "No estás obligado a responder preguntas sobre tu estatus migratorio",
+                "No tienes que mostrar documentos a menos que estés conduciendo",
+                "Puedes negarte a que revisen tus pertenencias o a ti mismo"
+            ]
+        },
+        "emergencyContacts": {
+            "title": "Contactos de Emergencia:",
+            "items": [
+                "Ten a la mano números de contacto de emergencia",
+                "Conoce el número de tu consulado",
+                "Guarda el número de una línea directa de ayuda legal",
+                "Asegúrate de que tu familia sepa dónde estás"
+            ]
+        }
+    },
+    "footer": {
+        "disclaimer": "Esta es una herramienta comunitaria para concientización sobre seguridad. Reporta información de manera responsable y verifica las alertas siempre que sea posible.",
+        "emergency": "En caso de emergencia inmediata, contacta a los servicios de emergencia locales. Para ayuda legal de inmigración, acude a organizaciones legales calificadas."
+    },
+    "common": {
+        "hide": "Ocultar",
+        "close": "✕",
+        "required": "*",
+        "optional": "(opcional)"
+    }
+}

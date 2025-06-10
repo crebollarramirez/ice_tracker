@@ -1,0 +1,120 @@
+{
+    "header": {
+        "title": "ICE Activity Tracker",
+        "subtitle": "Community Safety Alert System"
+    },
+    "safetyAlert": {
+        "title": "Important Safety Information",
+        "description": "This tool helps community members report and track ICE (Immigration and Customs Enforcement) sightings to help protect undocumented immigrants and their families."
+    },
+    "howToUse": {
+        "title": "How to Use This Tool",
+        "reporting": {
+            "title": "📍 Reporting ICE Activity:",
+            "items": [
+                "Report ICE vehicles, checkpoints, or enforcement activity",
+                "Include specific intersections or addresses",
+                "Report as soon as it's safe to do so",
+                "All reports are anonymous"
+            ]
+        },
+        "stayingSafe": {
+            "title": "🛡️ Staying Safe:",
+            "items": [
+                "Check the map before traveling",
+                "Share alerts with family and friends",
+                "Avoid areas with recent ICE activity",
+                "Know your rights if approached by ICE"
+            ]
+        }
+    },
+    "form": {
+        "title": "Report ICE Activity",
+        "guidelines": {
+            "title": "Quick Report Guidelines:",
+            "activities": "ICE vehicles • Checkpoints • Raids • Enforcement operations",
+            "examples": "Examples: \"4th St and La Regina Ave, Downey CA\" or \"123 Main St, Los Angeles CA\""
+        },
+        "fields": {
+            "locationLabel": "Location",
+            "locationRequired": "Required",
+            "locationPlaceholder": "Address, intersection, or landmark",
+            "addDetails": "Add details (optional)",
+            "detailsLabel": "Details",
+            "detailsPlaceholder": "Vehicles count, time, officers seen...",
+            "charactersCount": "{count}/200"
+        },
+        "buttons": {
+            "submit": "Submit Report",
+            "locating": "📍 Locating...",
+            "hide": "✕"
+        },
+        "validation": {
+            "enterAddress": "Please enter an address or location",
+            "noResults": "No results found. Status: {status}",
+            "apiError": "Error calling Google Geocoding API. Check console for details.",
+            "saveError": "Error saving to database. Check console for details.",
+            "rateLimitError": "Please wait before submitting another report"
+        },
+        "confirmation": {
+            "title": "🚨 CONFIRM ICE ACTIVITY REPORT",
+            "question": "Is this the correct address/location where you witnessed ICE activity?",
+            "address": "\"{address}\"",
+            "instructions": "Click OK to confirm and submit this report to help protect your community.\nClick Cancel to go back and edit the location."
+        },
+        "success": {
+            "title": "✅ ICE activity report submitted successfully!",
+            "location": "Location: {address}",
+            "thanks": "Thank you for helping protect your community. Please share this information with family and friends."
+        }
+    },
+    "reportsList": {
+        "title": "📍 Recent ICE Reports",
+        "loading": "Loading recent reports...",
+        "noReports": "No reports yet. Help protect your community by reporting ICE activity!",
+        "reported": "Reported: {date}",
+        "additionalInfo": "ℹ️ {info}",
+        "coordinates": "Lat: {lat}, Lng: {lng}",
+        "total": "Total ICE reports: {count}",
+        "warning": "⚠️ Check before traveling - avoid these areas"
+    },
+    "map": {
+        "loading": "Loading ICE reports...",
+        "popup": {
+            "title": "🚨 ICE Report",
+            "additionalDetails": "ℹ️ Additional Details:",
+            "reported": "Reported: {date}"
+        }
+    },
+    "rights": {
+        "title": "Know Your Rights",
+        "iceApproaches": {
+            "title": "If ICE Approaches You:",
+            "items": [
+                "You have the right to remain silent",
+                "You do not have to answer questions about your immigration status",
+                "You do not have to show documents unless you're driving",
+                "You can refuse to let them search you or your belongings"
+            ]
+        },
+        "emergencyContacts": {
+            "title": "Emergency Contacts:",
+            "items": [
+                "Keep emergency contact numbers readily available",
+                "Know your consulate's phone number",
+                "Have a legal aid hotline number saved",
+                "Make sure family knows your location"
+            ]
+        }
+    },
+    "footer": {
+        "disclaimer": "This is a community-driven tool for safety awareness. Report information responsibly and verify alerts when possible.",
+        "emergency": "For immediate emergencies, contact local emergency services. For immigration legal help, contact qualified legal aid organizations."
+    },
+    "common": {
+        "hide": "Hide",
+        "close": "✕",
+        "required": "*",
+        "optional": "(optional)"
+    }
+}
