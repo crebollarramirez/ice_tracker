@@ -156,7 +156,7 @@ export default function AddressForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col p-3 md:p-4 border border-gray-300 rounded-lg bg-white shadow-md text-black h-80 md:h-96"
+      className="flex flex-col p-3 md:p-4 border border-gray-300 rounded-lg bg-white shadow-md text-black min-h-80 md:h-96"
     >
       {/* Compact Header */}
       <div className="flex items-center gap-2 mb-3">
@@ -238,7 +238,7 @@ export default function AddressForm() {
                 onChange={(e) => setAdditionalInfo(e.target.value)}
                 placeholder={t("form.fields.detailsPlaceholder")}
                 className="px-3 py-2 border border-gray-300 rounded w-full text-sm resize-none"
-                rows="1"
+                rows="2"
                 disabled={isLoading}
                 maxLength="200"
               />
