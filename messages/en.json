@@ -74,9 +74,11 @@
         "noReports": "No reports yet. Help protect your community by reporting ICE activity!",
         "reported": "Reported: {date}",
         "additionalInfo": "ℹ️ {info}",
-        "coordinates": "Lat: {lat}, Lng: {lng}",
         "total": "Total ICE reports: {count}",
-        "warning": "⚠️ Check before traveling - avoid these areas"
+        "warning": "⚠️ Check before traveling - avoid these areas",
+        "search": "Find",
+        "searchPlaceholder": "Search addresses...", 
+        "filtered": "Found:"
     },
     "map": {
         "loading": "Loading ICE reports...",

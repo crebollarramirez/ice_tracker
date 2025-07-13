@@ -74,9 +74,11 @@
         "noReports": "Aún no hay reportes. ¡Ayuda a proteger tu comunidad reportando actividad de ICE!",
         "reported": "Reportado: {date}",
         "additionalInfo": "ℹ️ {info}",
-        "coordinates": "Lat: {lat}, Lng: {lng}",
         "total": "Total de reportes de ICE: {count}",
-        "warning": "⚠️ Revisa antes de viajar – evita estas zonas"
+        "warning": "⚠️ Revisa antes de viajar – evita estas zonas",
+        "search": "Buscar",
+        "searchPlaceholder": "Buscar direcciones...",
+        "filtered": "Encontrados:"
     },
     "map": {
         "loading": "Cargando reportes de ICE...",

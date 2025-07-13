@@ -90,10 +90,10 @@ export default function Home() {
           <MapComponent />
 
           <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full">
-            <div className="flex-1">
+            <div className="w-full md:w-1/2">
               <AddressForm />
             </div>
-            <div className="flex-1">
+            <div className="w-full md:w-1/2">
               <AddressList />
             </div>
           </div>
