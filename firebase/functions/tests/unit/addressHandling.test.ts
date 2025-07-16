@@ -1,5 +1,6 @@
-import { sanitizeInput } from "../src/utils/addressHanding";
+import { sanitizeInput } from "../../src/utils/addressHandling";
 import { MockGeocodingService } from "./mockGeocodingService";
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 
 describe("sanitizeInput", () => {
   it("should remove HTML tags", () => {

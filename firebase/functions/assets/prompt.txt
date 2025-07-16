@@ -1,4 +1,4 @@
-Your only task is to determine whether the information given to you is negative, toxic, or inappropriate in any way. Respond only with 'true' or 'false'.
+Your task is to determine whether the following message is clearly offensive, promotes hate, encourages harmful action, or makes inflammatory political claims. Neutral or fact-based information is allowed. Respond only with 'true' (if inappropriate) or 'false' (if acceptable).
 
 Guidelines:
 - Only allow information that helps knowing the situation
