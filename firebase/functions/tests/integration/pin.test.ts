@@ -21,66 +21,101 @@ jest.mock("../../src/utils/aiFilter", () => ({
   })),
 }));
 
-// Mock Firebase Admin to avoid conflicts
-const mockDatabaseSet = jest.fn().mockResolvedValue(undefined);
-const mockDatabasePush = jest.fn(() => ({
-  set: mockDatabaseSet,
-  key: "mock-key-123",
-}));
-const mockDatabaseRef = jest.fn(() => ({
-  push: mockDatabasePush,
-}));
-
-const mockFirestoreAdd = jest.fn().mockResolvedValue({ id: "mock-doc-id" });
-const mockFirestoreCollection = jest.fn(() => ({
-  add: mockFirestoreAdd,
-}));
-
-jest.mock("firebase-admin", () => ({
-  initializeApp: jest.fn(),
-  database: jest.fn(() => ({
-    ref: mockDatabaseRef,
-  })),
-  firestore: jest.fn(() => ({
-    collection: mockFirestoreCollection,
-  })),
-}));
-
 import { pin } from "../../src/index";
 
 describe("Pin Function Simple Integration Test", () => {
   // Helper function to create mock request and response objects
-  function createMockRequestResponse(method = "POST", body = {}) {
-    const req = {
+  /**
+   * Mock Firebase Functions Request type that matches Express Request interface.
+   */
+  interface MockRequest {
+    method: string;
+    body: Record<string, unknown>;
+    headers: Record<string, string>;
+    url: string;
+    // Additional properties that might be expected by Express/Firebase Functions
+    params?: Record<string, string>;
+    query?: Record<string, unknown>;
+    ip?: string;
+  }
+
+  /**
+   * Mock Firebase Functions Response type that matches Express Response interface.
+   */
+  interface MockResponse {
+    status: jest.Mock;
+    send: jest.Mock;
+    json: jest.Mock;
+    statusCode: number;
+    _sent: boolean;
+    _data: unknown;
+    // Additional properties that might be expected by Express/Firebase Functions
+    locals?: Record<string, unknown>;
+    headersSent?: boolean;
+  }
+
+  /**
+   * Helper function to call the pin function with proper type assertions.
+   * This avoids repetitive type assertions and centralizes the type-casting logic.
+   *
+   * @param {MockRequest} req - Mock request object
+   * @param {MockResponse} res - Mock response object
+   * @return {Promise<void>} Promise that resolves when the pin function completes
+   */
+  async function callPinFunction(
+    req: MockRequest,
+    res: MockResponse
+  ): Promise<void> {
+    // Our mock objects are designed to be compatible with Express Request/Response interfaces
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await pin(req as any, res as any);
+  }
+
+  /**
+   * Creates mock request and response objects for testing Firebase Functions.
+   * @param {string} method The HTTP method to simulate.
+   * @param {Object} body The request body data.
+   * @return {Object} The mock request and response objects.
+   */
+  function createMockRequestResponse(
+    method = "POST",
+    body: Record<string, unknown> = {}
+  ): { req: MockRequest; res: MockResponse } {
+    const req: MockRequest = {
       method,
       body,
       headers: {},
       url: "/",
+      params: {},
+      query: {},
+      ip: "127.0.0.1",
     };
 
-    const res = {
+    const res: MockResponse = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
       statusCode: 200,
       _sent: false,
-      _data: null,
+      _data: null as unknown,
+      locals: {},
+      headersSent: false,
     };
 
     // Mock response methods to capture data
-    res.send.mockImplementation((data) => {
+    res.send.mockImplementation((data: unknown) => {
       res._sent = true;
       res._data = data;
       return res;
     });
 
-    res.json.mockImplementation((data) => {
+    res.json.mockImplementation((data: unknown) => {
       res._sent = true;
       res._data = data;
       return res;
     });
 
-    res.status.mockImplementation((code) => {
+    res.status.mockImplementation((code: number) => {
       res.statusCode = code;
       return res;
     });
@@ -101,12 +136,14 @@ describe("Pin Function Simple Integration Test", () => {
 
     mockIsNegative.mockResolvedValue(false);
 
-    // Reset database mocks
-    mockDatabaseSet.mockClear().mockResolvedValue(undefined);
-    mockDatabasePush.mockClear();
-    mockDatabaseRef.mockClear();
-    mockFirestoreAdd.mockClear().mockResolvedValue({ id: "mock-doc-id" });
-    mockFirestoreCollection.mockClear();
+    // Reset database mocks using global mocks from setup.ts
+    global.mockDatabaseSet.mockClear().mockResolvedValue(undefined);
+    global.mockDatabasePush.mockClear();
+    global.mockDatabaseRef.mockClear();
+    global.mockFirestoreAdd
+      .mockClear()
+      .mockResolvedValue({ id: "mock-doc-id" });
+    global.mockFirestoreCollection.mockClear();
   });
 
   describe("POST /pin - End-to-End Tests", () => {
@@ -117,7 +154,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "2 ice cream trucks spotted, good visibility",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       // Verify HTTP response
       expect(res.statusCode).toBe(200);
@@ -137,9 +174,9 @@ describe("Pin Function Simple Integration Test", () => {
 
       // Verify database operations were called
       expect(admin.database).toHaveBeenCalled();
-      expect(mockDatabaseRef).toHaveBeenCalledWith("locations");
-      expect(mockDatabasePush).toHaveBeenCalled();
-      expect(mockDatabaseSet).toHaveBeenCalledWith({
+      expect(global.mockDatabaseRef).toHaveBeenCalledWith("locations");
+      expect(global.mockDatabasePush).toHaveBeenCalled();
+      expect(global.mockDatabaseSet).toHaveBeenCalledWith({
         addedAt: "2025-07-15T12:00:00.000Z",
         address: "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA",
         additionalInfo: "2 ice cream trucks spotted, good visibility",
@@ -154,7 +191,7 @@ describe("Pin Function Simple Integration Test", () => {
         // Missing addedAt and address
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(400);
       expect(res._data).toBe("Missing required fields: addedAt and address");
@@ -167,7 +204,7 @@ describe("Pin Function Simple Integration Test", () => {
     it("should reject non-POST requests", async () => {
       const { req, res } = createMockRequestResponse("GET");
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(405);
       expect(res._data).toBe("Method Not Allowed");
@@ -183,7 +220,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "This place is terrible and should be shut down!",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(422);
       expect(res._data).toEqual({
@@ -199,8 +236,8 @@ describe("Pin Function Simple Integration Test", () => {
 
       // Verify negative content was logged to Firestore
       expect(admin.firestore).toHaveBeenCalled();
-      expect(mockFirestoreCollection).toHaveBeenCalledWith("negative");
-      expect(mockFirestoreAdd).toHaveBeenCalledWith({
+      expect(global.mockFirestoreCollection).toHaveBeenCalledWith("negative");
+      expect(global.mockFirestoreAdd).toHaveBeenCalledWith({
         addedAt: "2025-07-15T12:00:00.000Z",
         address: "123 Main Street",
         additionalInfo: "This place is terrible and should be shut down!",
@@ -221,7 +258,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "Some info",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(400);
       expect(res._data).toEqual({
@@ -244,7 +281,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "<div>2 ice cream trucks</div>",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(200);
 
@@ -260,7 +297,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(200);
 
@@ -270,15 +307,14 @@ describe("Pin Function Simple Integration Test", () => {
       expect(mockIsNegative).toHaveBeenCalledWith("");
     });
 
-    
     it("should preserve allowed characters like ampersands", async () => {
       const { req, res } = createMockRequestResponse("POST", {
         addedAt: "2025-07-15T12:00:00.000Z",
-        address: '123 Main St & "First" Ave',
-        additionalInfo: 'Some "good" info',
+        address: "123 Main St & \"First\" Ave",
+        additionalInfo: "Some \"good\" info",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(200);
 
@@ -289,7 +325,7 @@ describe("Pin Function Simple Integration Test", () => {
 
     it("should handle database write failures", async () => {
       // Mock database to throw an error
-      mockDatabaseSet.mockRejectedValue(
+      global.mockDatabaseSet.mockRejectedValue(
         new Error("Database connection failed")
       );
 
@@ -299,7 +335,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "Some info",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(500);
       expect(res._data).toBe("Internal server error");
@@ -309,16 +345,16 @@ describe("Pin Function Simple Integration Test", () => {
       expect(mockGeocode).toHaveBeenCalledWith("123 Main Street");
 
       // Verify database operations were attempted
-      expect(mockDatabaseRef).toHaveBeenCalledWith("locations");
-      expect(mockDatabasePush).toHaveBeenCalled();
-      expect(mockDatabaseSet).toHaveBeenCalled();
+      expect(global.mockDatabaseRef).toHaveBeenCalledWith("locations");
+      expect(global.mockDatabasePush).toHaveBeenCalled();
+      expect(global.mockDatabaseSet).toHaveBeenCalled();
     });
 
     it("should handle Firestore write failures for negative content", async () => {
       // Mock AI service to detect negative content
       mockIsNegative.mockResolvedValue(true);
       // Mock Firestore to fail
-      mockFirestoreAdd.mockRejectedValue(
+      global.mockFirestoreAdd.mockRejectedValue(
         new Error("Firestore connection failed")
       );
 
@@ -328,7 +364,7 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "This is terrible!",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       // Should still return the negative content error even if Firestore logging fails
       expect(res.statusCode).toBe(422);
@@ -339,8 +375,8 @@ describe("Pin Function Simple Integration Test", () => {
       });
 
       // Verify Firestore operations were attempted
-      expect(mockFirestoreCollection).toHaveBeenCalledWith("negative");
-      expect(mockFirestoreAdd).toHaveBeenCalledWith({
+      expect(global.mockFirestoreCollection).toHaveBeenCalledWith("negative");
+      expect(global.mockFirestoreAdd).toHaveBeenCalledWith({
         addedAt: "2025-07-15T12:00:00.000Z",
         address: "123 Main Street",
         additionalInfo: "This is terrible!",
@@ -350,7 +386,7 @@ describe("Pin Function Simple Integration Test", () => {
 
     it("should validate complete data structure in database write", async () => {
       // Reset database mocks to successful state
-      mockDatabaseSet.mockResolvedValue(undefined);
+      global.mockDatabaseSet.mockResolvedValue(undefined);
 
       const { req, res } = createMockRequestResponse("POST", {
         addedAt: "2025-07-15T12:00:00.000Z",
@@ -358,12 +394,12 @@ describe("Pin Function Simple Integration Test", () => {
         additionalInfo: "Ice cream van with music playing",
       });
 
-      await pin(req as any, res as any);
+      await callPinFunction(req, res);
 
       expect(res.statusCode).toBe(200);
 
       // Verify the complete data structure written to database
-      expect(mockDatabaseSet).toHaveBeenCalledWith({
+      expect(global.mockDatabaseSet).toHaveBeenCalledWith({
         addedAt: "2025-07-15T12:00:00.000Z",
         address: "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA", // Formatted address from geocoding
         additionalInfo: "Ice cream van with music playing",
@@ -372,7 +408,7 @@ describe("Pin Function Simple Integration Test", () => {
       });
 
       // Verify the data structure has all required fields
-      const writtenData = mockDatabaseSet.mock.calls[0][0];
+      const writtenData = global.mockDatabaseSet.mock.calls[0][0];
       expect(writtenData).toHaveProperty("addedAt");
       expect(writtenData).toHaveProperty("address");
       expect(writtenData).toHaveProperty("additionalInfo");

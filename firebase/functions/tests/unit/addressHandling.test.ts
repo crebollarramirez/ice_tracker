@@ -10,7 +10,7 @@ describe("sanitizeInput", () => {
   });
 
   it("should remove dangerous characters", () => {
-    const input = 'Hello &\' "World" <script>';
+    const input = "Hello &' \"World\" <script>";
     const result = sanitizeInput(input);
     expect(result).toBe("Hello & World");
   });
@@ -28,9 +28,9 @@ describe("sanitizeInput", () => {
   });
 
   it("should return empty string for invalid input", () => {
-    expect(sanitizeInput(null as any)).toBe("");
-    expect(sanitizeInput(undefined as any)).toBe("");
-    expect(sanitizeInput(123 as any)).toBe("");
+    expect(sanitizeInput(null as unknown as string)).toBe("");
+    expect(sanitizeInput(undefined as unknown as string)).toBe("");
+    expect(sanitizeInput(123 as unknown as string)).toBe("");
   });
 
   it("should handle empty string", () => {
@@ -45,7 +45,7 @@ describe("sanitizeInput", () => {
   });
 
   it("should handle mixed HTML and dangerous characters", () => {
-    const input = '<div>Hello &amp; "quoted" text</div>';
+    const input = "<div>Hello &amp; \"quoted\" text</div>";
     const result = sanitizeInput(input);
     expect(result).toBe("Hello &amp; quoted text");
   });

@@ -22,10 +22,28 @@ export interface IGeocodingService {
 export class GoogleGeocodingService implements IGeocodingService {
   private readonly apiKey: string | undefined;
 
+  /**
+   * Creates a new instance of the geocoding service.
+   * Initializes the service with the Google Maps API key from environment variables.
+   *
+   * @throws {Error} If GOOGLE_MAPS_API_KEY environment variable is not set
+   */
   constructor() {
     this.apiKey = process.env.GOOGLE_MAPS_API_KEY;
   }
 
+  /**
+   * Geocodes a physical address using the Google Maps Geocoding API.
+   *
+   * This method takes a string address and returns the corresponding latitude/longitude
+   * coordinates along with the formatted address from Google's geocoding service.
+   *
+   * @param {string} address - The physical address string to geocode (e.g., "123 Main St, City, State")
+   * @return {Promise<GeocodeResult | null>} A Promise that resolves to a GeocodeResult object containing lat, lng, and formattedAddress,
+   *          or null if geocoding fails, no results are found, or API key is missing
+   *
+   * @throws Will not throw but logs errors internally and returns null on failure
+   */
   async geocodeAddress(address: string): Promise<GeocodeResult | null> {
     try {
       if (!this.apiKey) {

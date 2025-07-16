@@ -25,49 +25,49 @@ interface GivenPinData {
 
 /**
  * HTTP Cloud Function for creating and storing location pins with geocoding and content filtering.
- * 
+ *
  * This function accepts POST requests to create location pins with the following features:
  * - Input validation and sanitization for XSS protection
  * - Address geocoding using Google Maps API
  * - Content filtering for inappropriate language using OpenAI
  * - Storage in Firebase Realtime Database
- * 
+ *
  * @route POST /pin
- * 
+ *
  * @param {Object} req.body - The request body containing pin data
  * @param {string} req.body.addedAt - ISO 8601 timestamp when the pin was created (required)
  * @param {string} req.body.address - Street address to be geocoded (required)
  * @param {string} req.body.additionalInfo - Optional additional information about the location
- * 
+ *
  * @returns {Object} Response object with the following structure:
- * 
+ *
  * @success {200} Success - Pin created successfully
  * @success {Object} response - Success response
  * @success {string} response.message - Success message
  * @success {string} response.formattedAddress - Google-formatted address
- * 
+ *
  * @error {405} Method Not Allowed - Non-POST requests
  * @error {string} response - "Method Not Allowed"
- * 
+ *
  * @error {400} Bad Request - Missing required fields
  * @error {string} response - "Missing required fields: addedAt and address"
- * 
+ *
  * @error {400} Bad Request - Invalid address after sanitization
  * @error {string} response - "Invalid address provided"
- * 
+ *
  * @error {422} Unprocessable Entity - Inappropriate content detected
  * @error {Object} response - Error response with details
  * @error {string} response.error - "Negative content detected"
  * @error {string} response.message - User-friendly error message
- * 
+ *
  * @error {400} Bad Request - Address not found during geocoding
  * @error {Object} response - Error response with details
  * @error {string} response.error - "Could not geocode the provided address"
  * @error {string} response.message - User-friendly error message
- * 
+ *
  * @error {500} Internal Server Error - Database or unexpected errors
  * @error {string} response - "Internal server error"
- * 
+ *
  * @example
  * // Example request body:
  * {
@@ -75,20 +75,20 @@ interface GivenPinData {
  *   "address": "1600 Amphitheatre Parkway, Mountain View, CA",
  *   "additionalInfo": "2 vans outside"
  * }
- * 
+ *
  * @example
  * // Example success response:
  * {
  *   "message": "Data logged and saved successfully",
  *   "formattedAddress": "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA"
  * }
- * 
+ *
  * @security
  * - All user inputs are sanitized to prevent XSS attacks
  * - HTML tags and dangerous characters are removed from inputs
  * - Content is filtered for inappropriate language using AI
  * - Input length is limited to prevent abuse
- * 
+ *
  * @dependencies
  * - Google Maps Geocoding API (requires GOOGLE_MAPS_API_KEY environment variable)
  * - OpenAI API (requires OPENAI_API_KEY environment variable)
@@ -122,7 +122,6 @@ export const pin = onRequest(async (req, res) => {
   const isNegative = await aiFilterService.isNegative(sanitizedAdditionalInfo);
 
   if (isNegative) {
-
     // Log negative content to separate database for monitoring
     try {
       const db = admin.firestore();

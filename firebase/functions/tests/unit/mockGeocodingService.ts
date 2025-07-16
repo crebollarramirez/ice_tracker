@@ -12,6 +12,8 @@ export class MockGeocodingService implements IGeocodingService {
 
   /**
    * Set a mock response for a specific address.
+   * @param {string} address - The address to set a mock response for.
+   * @param {GeocodeResult | null} response - The geocoding result to return.
    */
   setMockResponse(address: string, response: GeocodeResult | null): void {
     this.mockResponses.set(address, response);
@@ -19,6 +21,7 @@ export class MockGeocodingService implements IGeocodingService {
 
   /**
    * Configure the service to throw an error on the next call.
+   * @param {boolean} shouldThrow - Whether to throw an error on the next call.
    */
   setShouldThrowError(shouldThrow: boolean): void {
     this.shouldThrowError = shouldThrow;
@@ -26,6 +29,8 @@ export class MockGeocodingService implements IGeocodingService {
 
   /**
    * Mock implementation of geocodeAddress.
+   * @param {string} address - The address to geocode.
+   * @return {Promise<GeocodeResult | null>} The geocoding result or null if not found.
    */
   async geocodeAddress(address: string): Promise<GeocodeResult | null> {
     if (this.shouldThrowError) {
