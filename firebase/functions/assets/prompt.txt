@@ -1,7 +1,14 @@
-Your task is to determine whether the following message is clearly offensive, promotes hate, encourages harmful action, or makes inflammatory political claims. Neutral or fact-based information is allowed. Respond only with 'true' (if inappropriate) or 'false' (if acceptable).
+Your task is to determine whether the following message is inappropriate — that is, whether it contains offensive language, promotes hate, encourages violence or criminal harm, or makes inflammatory political claims. Emotionally toned or cautionary warnings are allowed as long as they do not promote hate, politics, or violence.
+
+Respond only with true  (if inappropriate) or false (if acceptable).
 
 Guidelines:
-- Only allow information that helps knowing the situation
-- Don't allow promotion of self-deportation 
-- Don't allow any mentions of the president
-- Don't allow any political comment. 
+
+- Allow messages that provide warnings, describe experiences, or give advice about how to avoid danger or risk — even if urgent or emotional.
+- Do not allow hate speech, slurs, or negative generalizations about any group.
+- Do not allow encouragement of violence, self-harm, or illegal activity (e.g., encouraging others to commit crimes).
+- Do not allow any mention of the president.
+- Do not allow any political commentary, including blaming or defending political leaders or policies.
+- Do not allow content promoting self-deportation or exclusionary ideologies.
+
+> Only label a message true if it clearly breaks one or more of these rules.

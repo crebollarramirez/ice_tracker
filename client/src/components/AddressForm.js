@@ -1,18 +1,9 @@
-import { useState } from "react";
-import { database } from "../firebase";
-import { ref, push } from "firebase/database";
-import { useTranslations } from "next-intl";
+"use client";
 
-// Input sanitization function to prevent XSS
-const sanitizeInput = (input) => {
-  if (!input || typeof input !== "string") return "";
-  // Remove HTML tags and potentially dangerous characters
-  return input
-    .replace(/<[^>]*>/g, "") // Remove HTML tags
-    .replace(/[<>\"'&]/g, "") // Remove dangerous characters
-    .trim()
-    .substring(0, 500); // Limit length to prevent abuse
-};
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import backendConnect from "../utils/backendConnect";
+import Notification from "./Notification";
 
 export default function AddressForm() {
   const t = useTranslations();
@@ -20,136 +11,138 @@ export default function AddressForm() {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  const [notification, setNotification] = useState(null);
 
-  const testGoogleGeocodingAPI = async (query) => {
-    try {
-      setIsLoading(true);
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-        query
-      )}&key=${apiKey}`;
+  // Get cooldown durations from environment variables (in minutes) and convert to milliseconds
+  const SUCCESS_COOLDOWN_MINUTES =
+    parseInt(process.env.NEXT_PUBLIC_SUCCESS_COOLDOWN_MINUTES, 10) || 3; // Default: 3 minutes
+  const NEGATIVE_COOLDOWN_MINUTES =
+    parseInt(process.env.NEXT_PUBLIC_NEGATIVE_COOLDOWN_MINUTES, 10) || 60; // Default: 60 minutes
 
-      const response = await fetch(url);
-      const data = await response.json();
+  // Convert minutes to milliseconds
+  const SUCCESS_COOLDOWN = SUCCESS_COOLDOWN_MINUTES * 60 * 1000;
+  const NEGATIVE_COOLDOWN = NEGATIVE_COOLDOWN_MINUTES * 60 * 1000;
 
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
+  // Helper function to check block status (only called when needed)
+  const isBlocked = () => {
+    if (typeof window === "undefined") return false;
 
-        return {
-          lat: result.geometry.location.lat,
-          lng: result.geometry.location.lng,
-          address: result.formatted_address,
-        };
+    const blockedUntil = localStorage.getItem("blockedUntil");
+    if (blockedUntil) {
+      const blockedTime = parseInt(blockedUntil, 10);
+      const currentTime = Date.now();
+
+      if (currentTime < blockedTime) {
+        return true; // User is still blocked
       } else {
-        alert(
-          t("form.validation.noResults", { status: data.status || "Unknown" })
-        );
-        return null;
+        // Block has expired, remove from localStorage
+        localStorage.removeItem("blockedUntil");
+        return false; // Block has expired
       }
-    } catch (error) {
-      console.error("Google Geocoding API error:", error);
-      alert(t("form.validation.apiError"));
-      return null;
-    } finally {
-      setIsLoading(false);
     }
+    return false; // No block exists
   };
 
-  // Function to save location to Firebase
-  const saveLocationToFirebase = async (locationData) => {
-    try {
-      // Basic validation
-      if (!locationData.address || !locationData.lat || !locationData.lng) {
-        throw new Error("Invalid location data");
+  // Helper function to get remaining time for user feedback
+  const getRemainingMinutes = () => {
+    if (typeof window === "undefined") return 0;
+
+    const blockedUntil = localStorage.getItem("blockedUntil");
+    if (blockedUntil) {
+      const blockedTime = parseInt(blockedUntil, 10);
+      const currentTime = Date.now();
+
+      if (currentTime < blockedTime) {
+        return Math.ceil((blockedTime - currentTime) / (60 * 1000));
       }
-
-      // Sanitize user inputs before saving
-      const sanitizedAddress = sanitizeInput(locationData.address);
-      const sanitizedAdditionalInfo = sanitizeInput(
-        locationData.additionalInfo || ""
-      );
-
-      // Validate coordinates are within reasonable bounds
-      if (Math.abs(locationData.lat) > 90 || Math.abs(locationData.lng) > 180) {
-        throw new Error("Invalid coordinates");
-      }
-
-      // Rate limiting - prevent spam (store last submission time)
-      const lastSubmission = localStorage.getItem("lastICEReport");
-      const now = Date.now();
-      if (lastSubmission && now - parseInt(lastSubmission) < 60000) {
-        // 1 minute cooldown
-        alert(t("form.validation.rateLimitError"));
-        return null;
-      }
-
-      const locationsRef = ref(database, "locations");
-      const newLocationRef = await push(locationsRef, {
-        address: sanitizedAddress,
-        additionalInfo: sanitizedAdditionalInfo,
-        addedAt: new Date().toISOString(),
-        lat: Number(locationData.lat),
-        lng: Number(locationData.lng),
-      });
-
-      // Set rate limiting
-      localStorage.setItem("lastICEReport", now.toString());
-      return newLocationRef.key;
-    } catch (error) {
-      alert(t("form.validation.saveError"));
-      return null;
     }
+    return 0;
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Sanitize input before processing
-    const sanitizedAddress = sanitizeInput(address);
-    const sanitizedAdditionalInfo = sanitizeInput(additionalInfo);
-
-    if (!sanitizedAddress.trim()) {
-      alert(t("form.validation.enterAddress"));
+    if (!address.trim()) {
+      setNotification(
+        t("form.errors.addressRequired") || "Address is required"
+      );
       return;
     }
-    const location = await testGoogleGeocodingAPI(sanitizedAddress);
 
-    if (location) {
-      // Show confirmation dialog with the geocoded address
-      const confirmReport = confirm(
-        `${t("form.confirmation.title")}\n\n` +
-          `${t("form.confirmation.question")}\n\n` +
-          `${t("form.confirmation.address", {
-            address: location.address,
-          })}\n\n` +
-          `${t("form.confirmation.instructions")}`
+    // Check if user is currently blocked (only when they try to submit)
+    if (isBlocked()) {
+      const remainingMinutes = getRemainingMinutes();
+      setNotification(
+        t("form.errors.cooldown", { minutes: remainingMinutes }) ||
+          `Please wait ${remainingMinutes} more minutes before submitting another report.`
       );
+      return;
+    }
 
-      if (!confirmReport) {
-        return; // User cancelled, don't submit the report
-      }
+    setIsLoading(true);
 
-      const newMarker = {
-        lat: location.lat,
-        lng: location.lng,
-        address: location.address,
-        additionalInfo: sanitizedAdditionalInfo,
-      };
+    try {
+      const response = await backendConnect.post("/pin", {
+        addedAt: new Date().toISOString(),
+        address: address.trim(),
+        additionalInfo: additionalInfo.trim(),
+      });
 
-      // Save to Firebase
-      const firebaseId = await saveLocationToFirebase(newMarker);
-
-      if (firebaseId) {
+      if (response.status === 200) {
+        const data = response.data;
+        // Clear form on success
         setAddress("");
         setAdditionalInfo("");
         setShowAdditionalInfo(false);
-        alert(
-          `${t("form.success.title")}\n\n` +
-            `${t("form.success.location", { address: location.address })}\n\n` +
-            `${t("form.success.thanks")}`
+
+        // Set cooldown after successful post using environment variable
+        const cooldownUntil = Date.now() + SUCCESS_COOLDOWN;
+        localStorage.setItem("blockedUntil", cooldownUntil.toString());
+
+        setNotification(
+          t("form.success.message") ||
+            `Successfully added location: ${data.formattedAddress}`
         );
       }
+    } catch (error) {
+      // Handle the error without logging to console to prevent propagation
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 422) {
+          // Negative content detected - set block using environment variable
+          const blockUntil = Date.now() + NEGATIVE_COOLDOWN;
+          localStorage.setItem("blockedUntil", blockUntil.toString());
+
+          setNotification(
+            data.message ||
+              t("form.errors.negativeContent") ||
+              "Please avoid using negative or abusive language. You are now blocked from submitting for 1 hour."
+          );
+        } else if (status === 400) {
+          // Address not found or invalid
+          setNotification(
+            data.message ||
+              t("form.errors.invalidAddress") ||
+              "Please provide a valid address that can be found on the map"
+          );
+        } else {
+          // Other errors
+          setNotification(
+            t("form.errors.generic") ||
+              "An error occurred while submitting the form"
+          );
+        }
+      } else {
+        // Network error or request setup error
+        setNotification(
+          t("form.errors.network") ||
+            "Network error. Please check your connection and try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -256,12 +249,20 @@ export default function AddressForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 w-full font-medium text-sm"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded w-full font-medium text-sm"
           >
             {isLoading ? t("form.buttons.locating") : t("form.buttons.submit")}
           </button>
         </div>
       </div>
+
+      {/* Notification Component - Always Rendered */}
+      {notification && (
+        <Notification
+          message={notification}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </form>
   );
 }

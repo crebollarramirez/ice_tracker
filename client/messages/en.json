@@ -49,6 +49,20 @@
             "locating": "📍 Locating...",
             "hide": "✕"
         },
+        "errors": {
+            "addressRequired": "Address is required",
+            "negativeContent": "Please avoid using negative or abusive language in the additional info. You are now blocked from submitting for 1 hour.",
+            "invalidAddress": "Please provide a valid address that can be found on the map",
+            "generic": "An error occurred while submitting the form",
+            "network": "Network error. Please check your connection and try again.",
+            "cooldown": "Please wait {minutes} more minutes before submitting another report."
+        },
+        "success": {
+            "message": "Successfully added location",
+            "title": "✅ ICE activity report submitted successfully!",
+            "location": "Location: {address}",
+            "thanks": "Thank you for helping protect your community. Please share this information with family and friends."
+        },
         "validation": {
             "enterAddress": "Please enter an address or location",
             "noResults": "No results found. Status: {status}",
@@ -61,11 +75,6 @@
             "question": "Is this the correct address/location where you witnessed ICE activity?",
             "address": "\"{address}\"",
             "instructions": "Click OK to confirm and submit this report to help protect your community.\nClick Cancel to go back and edit the location."
-        },
-        "success": {
-            "title": "✅ ICE activity report submitted successfully!",
-            "location": "Location: {address}",
-            "thanks": "Thank you for helping protect your community. Please share this information with family and friends."
         }
     },
     "reportsList": {
@@ -77,7 +86,7 @@
         "total": "Total ICE reports: {count}",
         "warning": "⚠️ Check before traveling - avoid these areas",
         "search": "Find",
-        "searchPlaceholder": "Search addresses...", 
+        "searchPlaceholder": "Search addresses...",
         "filtered": "Found:"
     },
     "map": {

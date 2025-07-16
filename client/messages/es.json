@@ -49,6 +49,20 @@
             "locating": "📍 Obteniendo ubicación...",
             "hide": "✕"
         },
+        "errors": {
+            "addressRequired": "La dirección es requerida",
+            "negativeContent": "Por favor evita usar lenguaje negativo o abusivo en la información adicional. Ahora estás bloqueado para enviar reportes por 1 hora.",
+            "invalidAddress": "Por favor proporciona una dirección válida que se pueda encontrar en el mapa",
+            "generic": "Ocurrió un error al enviar el formulario",
+            "network": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo.",
+            "cooldown": "Por favor espera {minutes} minutos más antes de enviar otro reporte."
+        },
+        "success": {
+            "message": "Ubicación agregada exitosamente",
+            "title": "✅ ¡Reporte de actividad de ICE enviado con éxito!",
+            "location": "Ubicación: {address}",
+            "thanks": "Gracias por ayudar a proteger tu comunidad. Comparte esta información con familiares y amistades."
+        },
         "validation": {
             "enterAddress": "Por favor ingresa una dirección o ubicación",
             "noResults": "No se encontraron resultados. Estado: {status}",
@@ -61,11 +75,6 @@
             "question": "¿Es esta la dirección/ubicación correcta donde viste actividad de ICE?",
             "address": "\"{address}\"",
             "instructions": "Haz clic en Aceptar para confirmar y enviar este reporte para ayudar a proteger tu comunidad.\nHaz clic en Cancelar para regresar y corregir la ubicación."
-        },
-        "success": {
-            "title": "✅ ¡Reporte de actividad de ICE enviado con éxito!",
-            "location": "Ubicación: {address}",
-            "thanks": "Gracias por ayudar a proteger tu comunidad. Comparte esta información con familiares y amistades."
         }
     },
     "reportsList": {
