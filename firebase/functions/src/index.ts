@@ -1,111 +1,71 @@
-import { setGlobalOptions } from "firebase-functions";
-import { onRequest } from "firebase-functions/https";
+import {setGlobalOptions} from "firebase-functions";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
+import {OpenAIService} from "./utils/aiFilter";
+import {GoogleGeocodingService} from "./utils/geocodingService";
 import { sanitizeInput } from "./utils/addressHandling";
-import { GoogleGeocodingService } from "./utils/geocodingService";
-import { OpenAIService } from "./utils/aiFilter";
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
 setGlobalOptions({ maxInstances: 10 });
 
-// Create geocoding service instance
+// Initialize services
+const aiFilterService = new OpenAIService();
 const geocodingService = new GoogleGeocodingService();
 
-// Create AI filter service instance
-const aiFilterService = new OpenAIService();
-
-interface GivenPinData {
-  addedAt: string;
-  additionalInfo: string;
-  address: string;
-}
 
 /**
- * HTTP Cloud Function for creating and storing location pins with geocoding and content filtering.
+ * Firebase Cloud Function to pin a location with address validation and content filtering.
  *
- * This function accepts POST requests to create location pins with the following features:
- * - Input validation and sanitization for XSS protection
- * - Address geocoding using Google Maps API
- * - Content filtering for inappropriate language using OpenAI
- * - Storage in Firebase Realtime Database
+ * This function accepts location data, validates and sanitizes the input, filters for negative content,
+ * geocodes the address to get precise coordinates, and stores the location in Firebase Realtime Database.
  *
- * @route POST /pin
+ * @param {Object} request - The Firebase functions request object
+ * @param {Object} request.data - The data payload containing location information
+ * @param {string} request.data.addedAt - ISO timestamp when the location was added (required)
+ * @param {string} request.data.address - The address to be pinned (required)
+ * @param {string} [request.data.additionalInfo] - Optional additional information about the location
  *
- * @param {Object} req.body - The request body containing pin data
- * @param {string} req.body.addedAt - ISO 8601 timestamp when the pin was created (required)
- * @param {string} req.body.address - Street address to be geocoded (required)
- * @param {string} req.body.additionalInfo - Optional additional information about the location
+ * @returns {Promise<Object>} Promise that resolves to an object containing:
+ *   - message: Success message
+ *   - formattedAddress: The geocoded and formatted address from Google Maps
  *
- * @returns {Object} Response object with the following structure:
- *
- * @success {200} Success - Pin created successfully
- * @success {Object} response - Success response
- * @success {string} response.message - Success message
- * @success {string} response.formattedAddress - Google-formatted address
- *
- * @error {405} Method Not Allowed - Non-POST requests
- * @error {string} response - "Method Not Allowed"
- *
- * @error {400} Bad Request - Missing required fields
- * @error {string} response - "Missing required fields: addedAt and address"
- *
- * @error {400} Bad Request - Invalid address after sanitization
- * @error {string} response - "Invalid address provided"
- *
- * @error {422} Unprocessable Entity - Inappropriate content detected
- * @error {Object} response - Error response with details
- * @error {string} response.error - "Negative content detected"
- * @error {string} response.message - User-friendly error message
- *
- * @error {400} Bad Request - Address not found during geocoding
- * @error {Object} response - Error response with details
- * @error {string} response.error - "Could not geocode the provided address"
- * @error {string} response.message - User-friendly error message
- *
- * @error {500} Internal Server Error - Database or unexpected errors
- * @error {string} response - "Internal server error"
+ * @throws {HttpsError}
+ *   - 'invalid-argument': When required fields (addedAt, address) are missing or address is invalid
+ *   - 'failed-precondition': When additional info contains negative or abusive content
+ *   - 'not-found': When the provided address cannot be geocoded/found on the map
+ *   - 'internal': When there's a database error during save operation
  *
  * @example
- * // Example request body:
- * {
- *   "addedAt": "2025-07-15T12:00:00.000Z",
- *   "address": "1600 Amphitheatre Parkway, Mountain View, CA",
- *   "additionalInfo": "2 vans outside"
- * }
+ * // Call from client:
+ * const result = await pin({
+ *   addedAt: "2025-07-18T10:30:00.000Z",
+ *   address: "1600 Amphitheatre Parkway, Mountain View, CA",
+ *   additionalInfo: "Google headquarters"
+ * });
  *
- * @example
- * // Example success response:
- * {
- *   "message": "Data logged and saved successfully",
- *   "formattedAddress": "1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA"
- * }
- *
- * @security
- * - All user inputs are sanitized to prevent XSS attacks
- * - HTML tags and dangerous characters are removed from inputs
- * - Content is filtered for inappropriate language using AI
- * - Input length is limited to prevent abuse
- *
- * @dependencies
- * - Google Maps Geocoding API (requires GOOGLE_MAPS_API_KEY environment variable)
- * - OpenAI API (requires OPENAI_API_KEY environment variable)
- * - Firebase Realtime Database
+ * @description
+ * Processing flow:
+ * 1. Validates required fields (addedAt, address)
+ * 2. Sanitizes input to prevent XSS attacks
+ * 3. Uses AI service to detect negative content in additionalInfo
+ * 4. Logs negative content to separate collection for monitoring
+ * 5. Geocodes address using Google Geocoding API
+ * 6. Saves location data with coordinates to Firebase Realtime Database
+ * 7. Returns success message with formatted address
  */
-export const pin = onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).send("Method Not Allowed");
-    return;
-  }
+export const pin = onCall(async (request) => {
+  logger.info("pin called", { data: request.data });
 
-  const data = req.body as GivenPinData;
+  const { data } = request;
 
-  // Validate the data structure
   if (!data.addedAt || !data.address) {
-    res.status(400).send("Missing required fields: addedAt and address");
-    return;
+    throw new HttpsError(
+      "invalid-argument",
+      "Missing required fields: addedAt and address"
+    );
   }
 
   // Sanitize the address input
@@ -115,10 +75,10 @@ export const pin = onRequest(async (req, res) => {
   const sanitizedAdditionalInfo = sanitizeInput(data.additionalInfo || "");
 
   if (!sanitizedAddress.trim()) {
-    res.status(400).send("Invalid address provided");
-    return;
+    throw new HttpsError("invalid-argument", "Invalid address provided");
   }
 
+  // Check for negative content using AI filter service
   const isNegative = await aiFilterService.isNegative(sanitizedAdditionalInfo);
 
   if (isNegative) {
@@ -134,21 +94,20 @@ export const pin = onRequest(async (req, res) => {
     } catch (error) {
       logger.error("Error saving negative content to database:", error);
     }
-    res.status(422).json({
-      error: "Negative content detected",
-      message: "Please avoid using negative or abusive language in the additional info",
-    });
-    return;
+    throw new HttpsError(
+      "failed-precondition",
+      "Please avoid using negative or abusive language in the additional info"
+    );
   }
 
+  // Geocode the address to get coordinates and formatted address
   const geocodeResult = await geocodingService.geocodeAddress(sanitizedAddress);
 
   if (!geocodeResult) {
-    res.status(400).json({
-      error: "Could not geocode the provided address",
-      message: "Please provide a valid address that can be found on the map",
-    });
-    return;
+    throw new HttpsError(
+      "not-found",
+      "Please provide a valid address that can be found on the map"
+    );
   }
 
   // Create final location data with geocoded coordinates and formatted address
@@ -171,12 +130,12 @@ export const pin = onRequest(async (req, res) => {
       ...finalLocationData,
     });
 
-    res.status(200).json({
+    return {
       message: "Data logged and saved successfully",
       formattedAddress: finalLocationData.address,
-    });
+    };
   } catch (error) {
     logger.error("Error saving to database:", error);
-    res.status(500).send("Internal server error");
+    throw new HttpsError("internal", "Internal server error");
   }
 });

@@ -36,10 +36,16 @@ export const metadata = {
       "Anonymous community tool to report and track ICE activity. Help protect undocumented immigrants with real-time safety alerts.",
     creator: "@CommunitySafety",
   },
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#dc2626",
   category: "Community Safety",
 };
+
+// Move viewport and themeColor to separate exports
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
+export const themeColor = "#dc2626";
 
 export default function RootLayout({ children }) {
   return children;

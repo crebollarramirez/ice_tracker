@@ -10,6 +10,22 @@ export interface GeocodeResult {
 }
 
 /**
+ * Google Maps API response structure.
+ */
+interface GoogleMapsResponse {
+  results: Array<{
+    geometry: {
+      location: {
+        lat: number;
+        lng: number;
+      };
+    };
+    formatted_address: string;
+  }>;
+  status: string;
+}
+
+/**
  * Interface for geocoding services.
  */
 export interface IGeocodingService {
@@ -20,18 +36,6 @@ export interface IGeocodingService {
  * Google Maps Geocoding Service implementation.
  */
 export class GoogleGeocodingService implements IGeocodingService {
-  private readonly apiKey: string | undefined;
-
-  /**
-   * Creates a new instance of the geocoding service.
-   * Initializes the service with the Google Maps API key from environment variables.
-   *
-   * @throws {Error} If GOOGLE_MAPS_API_KEY environment variable is not set
-   */
-  constructor() {
-    this.apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  }
-
   /**
    * Geocodes a physical address using the Google Maps Geocoding API.
    *
@@ -46,17 +50,18 @@ export class GoogleGeocodingService implements IGeocodingService {
    */
   async geocodeAddress(address: string): Promise<GeocodeResult | null> {
     try {
-      if (!this.apiKey) {
-        logger.error("Google Maps API key not found in environment variables");
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        // Error already logged in getGoogleMapsApiKey
         return null;
       }
 
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
         address
-      )}&key=${this.apiKey}`;
+      )}&key=${apiKey}`;
 
       const response = await fetch(url);
-      const data = await response.json();
+      const data = (await response.json()) as GoogleMapsResponse;
 
       if (data.results && data.results.length > 0) {
         const result = data.results[0];

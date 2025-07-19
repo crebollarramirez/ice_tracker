@@ -1,5 +1,3 @@
-import {} from "./geocodingService";
-
 /**
  * Sanitizes user input by removing HTML tags and dangerous characters to prevent XSS attacks.
  *

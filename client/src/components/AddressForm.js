@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import backendConnect from "../utils/backendConnect";
+import { pinFunction } from "../firebase";
 import Notification from "./Notification";
 
 export default function AddressForm() {
@@ -82,60 +82,77 @@ export default function AddressForm() {
 
     setIsLoading(true);
 
+    console.log({
+      addedAt: new Date().toISOString(),
+      address: address.trim(),
+      additionalInfo: additionalInfo.trim(),
+    });
+
     try {
-      const response = await backendConnect.post("/pin", {
+      const result = await pinFunction({
         addedAt: new Date().toISOString(),
         address: address.trim(),
         additionalInfo: additionalInfo.trim(),
       });
 
-      if (response.status === 200) {
-        const data = response.data;
-        // Clear form on success
-        setAddress("");
-        setAdditionalInfo("");
-        setShowAdditionalInfo(false);
+      console.log("Pin function result:", result);
 
-        // Set cooldown after successful post using environment variable
-        const cooldownUntil = Date.now() + SUCCESS_COOLDOWN;
-        localStorage.setItem("blockedUntil", cooldownUntil.toString());
+      // Clear form on success
+      setAddress("");
+      setAdditionalInfo("");
+      setShowAdditionalInfo(false);
 
-        setNotification(
-          t("form.success.message") ||
-            `Successfully added location: ${data.formattedAddress}`
-        );
-      }
+      // Set cooldown after successful post using environment variable
+      const cooldownUntil = Date.now() + SUCCESS_COOLDOWN;
+      localStorage.setItem("blockedUntil", cooldownUntil.toString());
     } catch (error) {
-      // Handle the error without logging to console to prevent propagation
-      if (error.response) {
-        const { status, data } = error.response;
+      // Handle Firebase callable function errors
+      console.error("Error calling pin function:", error);
 
-        if (status === 422) {
-          // Negative content detected - set block using environment variable
-          const blockUntil = Date.now() + NEGATIVE_COOLDOWN;
-          localStorage.setItem("blockedUntil", blockUntil.toString());
+      if (error.code) {
+        // Firebase function error codes
+        switch (error.code) {
+          case "functions/invalid-argument":
+            setNotification(
+              error.message ||
+                t("form.errors.invalidAddress") ||
+                "Please provide a valid address that can be found on the map"
+            );
+            break;
+          case "functions/failed-precondition":
+            // Negative content detected - set block using environment variable
+            const blockUntil = Date.now() + NEGATIVE_COOLDOWN;
+            localStorage.setItem("blockedUntil", blockUntil.toString());
 
-          setNotification(
-            data.message ||
-              t("form.errors.negativeContent") ||
-              "Please avoid using negative or abusive language. You are now blocked from submitting for 1 hour."
-          );
-        } else if (status === 400) {
-          // Address not found or invalid
-          setNotification(
-            data.message ||
-              t("form.errors.invalidAddress") ||
-              "Please provide a valid address that can be found on the map"
-          );
-        } else {
-          // Other errors
-          setNotification(
-            t("form.errors.generic") ||
-              "An error occurred while submitting the form"
-          );
+            setNotification(
+              error.message ||
+                t("form.errors.negativeContent") ||
+                "Please avoid using negative or abusive language. You are now blocked from submitting for 1 hour."
+            );
+            break;
+          case "functions/not-found":
+            setNotification(
+              error.message ||
+                t("form.errors.invalidAddress") ||
+                "Please provide a valid address that can be found on the map"
+            );
+            break;
+          case "functions/internal":
+            setNotification(
+              error.message ||
+                t("form.errors.generic") ||
+                "An error occurred while submitting the form"
+            );
+            break;
+          default:
+            setNotification(
+              error.message ||
+                t("form.errors.generic") ||
+                "An error occurred while submitting the form"
+            );
         }
       } else {
-        // Network error or request setup error
+        // Network error or other issues
         setNotification(
           t("form.errors.network") ||
             "Network error. Please check your connection and try again."

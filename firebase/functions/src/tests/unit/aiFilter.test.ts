@@ -1,5 +1,5 @@
-import { MockOpenAIService } from "./mockAiFilter";
-import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import {MockOpenAIService } from "../mockAiFilter";
+import {describe, it, expect, beforeEach, afterEach} from "@jest/globals";
 
 describe("OpenAIService", () => {
   let mockService: MockOpenAIService;

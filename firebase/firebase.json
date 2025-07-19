@@ -20,17 +20,14 @@
     "functions": {
       "port": 5001
     },
-    "ui": {
-      "enabled": true
+    "database": {
+      "port": 9000
     },
-    "singleProjectMode": true,
     "firestore": {
-      "host": "localhost",
       "port": 8080
     },
-    "database": {
-      "host": "localhost",
-      "port": 9000
+    "ui": {
+      "enabled": true
     }
   }
 }

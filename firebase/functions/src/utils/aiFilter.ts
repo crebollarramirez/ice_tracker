@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import * as logger from "firebase-functions/logger";
 
 /**
  * Interface for OpenAI API message structure.
@@ -65,8 +66,6 @@ export interface IOpenAIService {
  * OpenAI service implementation for content filtering.
  */
 export class OpenAIService implements IOpenAIService {
-  /** The OpenAI API key from environment variables. */
-  private readonly apiKey: string | undefined;
   /** The prompt template for content analysis. */
   private readonly prompt: string | undefined;
   /** Maximum tokens for API response. */
@@ -79,19 +78,14 @@ export class OpenAIService implements IOpenAIService {
   readonly MAX_INPUT_LENGTH = 100;
 
   /**
-   * Initializes the OpenAI service with API key and prompt.
+   * Initializes the OpenAI service with prompt.
    */
   constructor() {
-    this.apiKey = process.env.OPENAI_API_KEY;
-    if (!this.apiKey) {
-      console.warn("OpenAI API key not found in environment variables");
-    }
-
     try {
       const promptPath = path.resolve(__dirname, "../../assets/prompt.txt");
       this.prompt = fs.readFileSync(promptPath, "utf8");
     } catch (error) {
-      console.warn("Error reading prompt file, using default prompt:", error);
+      logger.warn("Error reading prompt file, using default prompt:", error);
       this.prompt =
         "You are a sentiment analyzer. Respond with only 'true' if the " +
         "text contains negative comments, complaints, or criticism. " +
@@ -106,8 +100,9 @@ export class OpenAIService implements IOpenAIService {
    */
   async isNegative(additionalInfo: string): Promise<boolean> {
     try {
-      if (!this.apiKey) {
-        console.error("OpenAI API key not found in environment variables");
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        // Error already logged in getOpenAIApiKey
         return false;
       }
 
@@ -117,7 +112,7 @@ export class OpenAIService implements IOpenAIService {
 
       // Check if input exceeds maximum allowed length
       if (additionalInfo.length > this.MAX_INPUT_LENGTH) {
-        console.warn(
+        logger.warn(
           `Input length (${additionalInfo.length}) exceeds maximum ` +
             `allowed length (${this.MAX_INPUT_LENGTH})`
         );
@@ -130,7 +125,7 @@ export class OpenAIService implements IOpenAIService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${this.apiKey}`,
+            "Authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             model: this.MODEL,
@@ -151,15 +146,11 @@ export class OpenAIService implements IOpenAIService {
       );
 
       if (!response.ok) {
-        console.error(
-          "OpenAI API error:",
-          response.status,
-          response.statusText
-        );
+        logger.error("OpenAI API error:", response.status, response.statusText);
         return false;
       }
 
-      const data: OpenAIResponse = await response.json();
+      const data = (await response.json()) as OpenAIResponse;
 
       if (data.choices && data.choices.length > 0) {
         const result = data.choices[0].message.content.toLowerCase().trim();
@@ -168,7 +159,7 @@ export class OpenAIService implements IOpenAIService {
 
       return false;
     } catch (error) {
-      console.error("OpenAI API error:", error);
+      logger.error("OpenAI API error:", error);
       return false;
     }
   }

@@ -1,5 +1,5 @@
-import { sanitizeInput } from "../../src/utils/addressHandling";
-import { MockGeocodingService } from "./mockGeocodingService";
+import { sanitizeInput } from "@utils/addressHandling";
+import { MockGeocodingService } from "../mockGeocodingService";
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 
 describe("sanitizeInput", () => {

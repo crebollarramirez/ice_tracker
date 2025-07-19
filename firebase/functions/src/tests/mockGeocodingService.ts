@@ -1,7 +1,7 @@
 import {
   IGeocodingService,
   GeocodeResult,
-} from "../../src/utils/geocodingService";
+} from "@utils/geocodingService";
 
 /**
  * Mock geocoding service for testing purposes.

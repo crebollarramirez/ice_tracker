@@ -1,5 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, connectDatabaseEmulator } from "firebase/database";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+  httpsCallable,
+} from "firebase/functions";
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -21,6 +26,9 @@ const app = initializeApp(firebaseConfig);
 // Initialize Realtime Database
 const database = getDatabase(app);
 
+// Initialize Firebase Functions
+const functions = getFunctions(app);
+
 // Connect to the emulator if running locally
 if (process.env.NODE_ENV === "development") {
   try {
@@ -36,8 +44,26 @@ if (process.env.NODE_ENV === "development") {
       );
     }
   }
+
+  // Connect to Functions emulator
+  try {
+    connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+    console.log("Connected to Firebase Functions Emulator");
+  } catch (error) {
+    if (error.message.includes("already")) {
+      console.log("Functions emulator connection already established");
+    } else {
+      console.error(
+        "❌ Failed to connect to functions emulator:",
+        error.message
+      );
+    }
+  }
 } else {
-  console.log("Using production Firebase database");
+  console.log("Using production Firebase database and functions");
 }
 
-export { database };
+// Create callable function reference
+const pinFunction = httpsCallable(functions, "pin");
+
+export { database, pinFunction};

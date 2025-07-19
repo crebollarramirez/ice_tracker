@@ -1,4 +1,4 @@
-import { IOpenAIService } from "../../src/utils/aiFilter";
+import { IOpenAIService } from "@utils/aiFilter";
 
 /**
  * Mock OpenAI service for testing purposes.
