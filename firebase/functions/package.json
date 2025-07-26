@@ -9,7 +9,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "jest"
+    "clean": "rm -rf lib",
+    "test": "npm run clean && jest"
   },
   "engines": {
     "node": "22"

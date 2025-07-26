@@ -1,6 +1,14 @@
 import { sanitizeInput } from "@utils/addressHandling";
-import { MockGeocodingService } from "../mockGeocodingService";
-import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
+import { GoogleGeocodingService } from "@utils/geocodingService";
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+
+// Mock the geocoding service module
+jest.mock("@utils/geocodingService");
+
+// Get the mocked constructor
+const MockedGoogleGeocodingService = GoogleGeocodingService as jest.MockedClass<
+  typeof GoogleGeocodingService
+>;
 
 describe("sanitizeInput", () => {
   it("should remove HTML tags", () => {
@@ -10,7 +18,7 @@ describe("sanitizeInput", () => {
   });
 
   it("should remove dangerous characters", () => {
-    const input = "Hello &' \"World\" <script>";
+    const input = 'Hello &\' "World" <script>';
     const result = sanitizeInput(input);
     expect(result).toBe("Hello & World");
   });
@@ -45,29 +53,36 @@ describe("sanitizeInput", () => {
   });
 
   it("should handle mixed HTML and dangerous characters", () => {
-    const input = "<div>Hello &amp; \"quoted\" text</div>";
+    const input = '<div>Hello &amp; "quoted" text</div>';
     const result = sanitizeInput(input);
     expect(result).toBe("Hello &amp; quoted text");
   });
 });
 
 describe("GoogleGeocodingService", () => {
-  let mockService: MockGeocodingService;
+  let mockGeocodingService: jest.Mocked<GoogleGeocodingService>;
 
   beforeEach(() => {
-    mockService = new MockGeocodingService();
-  });
+    // Clear all mocks before each test
+    jest.clearAllMocks();
 
-  afterEach(() => {
-    mockService.clearMockResponses();
+    // Create a new mocked instance
+    mockGeocodingService =
+      new MockedGoogleGeocodingService() as jest.Mocked<GoogleGeocodingService>;
   });
 
   it("should return null if address is invalid", async () => {
-    // Mock service will return null for unknown addresses by default
-    const result = await mockService.geocodeAddress(
+    // Mock the geocodeAddress method to return null for invalid addresses
+    mockGeocodingService.geocodeAddress.mockResolvedValue(null);
+
+    const result = await mockGeocodingService.geocodeAddress(
       "asdasdasdasdasdasdnonexistentaddress"
     );
+
     expect(result).toBeNull();
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenCalledWith(
+      "asdasdasdasdasdasdnonexistentaddress"
+    );
   });
 
   it("should return valid geocode result for a known address", async () => {
@@ -77,29 +92,37 @@ describe("GoogleGeocodingService", () => {
       formattedAddress: "N Main St & W College St, Los Angeles, CA, USA",
     };
 
-    mockService.setMockResponse(
-      "N Main St and W College st, los angeles, CA",
-      mockResult
-    );
+    // Mock the geocodeAddress method to return the mock result
+    mockGeocodingService.geocodeAddress.mockResolvedValue(mockResult);
 
-    const result = await mockService.geocodeAddress(
+    const result = await mockGeocodingService.geocodeAddress(
       "N Main St and W College st, los angeles, CA"
     );
 
     expect(result).toEqual(mockResult);
     expect(result?.lat).toBeCloseTo(34.052235, 5);
     expect(result?.lng).toBeCloseTo(-118.243683, 5);
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenCalledWith(
+      "N Main St and W College st, los angeles, CA"
+    );
   });
 
   it("should handle geocoding service errors", async () => {
-    mockService.setShouldThrowError(true);
-
-    const result = await mockService.geocodeAddress(
-      "N Main St and W College st, los angeles, CA"
+    // Mock the geocodeAddress method to reject with an error
+    mockGeocodingService.geocodeAddress.mockRejectedValue(
+      new Error("API Error")
     );
 
-    // The service should handle errors gracefully and return null (matching real service behavior)
-    expect(result).toBeNull();
+    // Test that the service handles errors gracefully
+    await expect(
+      mockGeocodingService.geocodeAddress(
+        "N Main St and W College st, los angeles, CA"
+      )
+    ).rejects.toThrow("API Error");
+
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenCalledWith(
+      "N Main St and W College st, los angeles, CA"
+    );
   });
 
   it("should work with different addresses", async () => {
@@ -123,10 +146,63 @@ describe("GoogleGeocodingService", () => {
       },
     ];
 
+    // Set up mock responses for each address
+    mockResults.forEach((mock) => {
+      mockGeocodingService.geocodeAddress.mockResolvedValueOnce(mock.result);
+    });
+
+    // Test each address
     for (const mock of mockResults) {
-      mockService.setMockResponse(mock.address, mock.result);
-      const result = await mockService.geocodeAddress(mock.address);
+      const result = await mockGeocodingService.geocodeAddress(mock.address);
       expect(result).toEqual(mock.result);
     }
+
+    // Verify all calls were made
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenCalledTimes(
+      mockResults.length
+    );
+    mockResults.forEach((mock, index) => {
+      expect(mockGeocodingService.geocodeAddress).toHaveBeenNthCalledWith(
+        index + 1,
+        mock.address
+      );
+    });
+  });
+
+  it("should handle multiple calls with different responses", async () => {
+    const firstAddress = "Address 1";
+    const secondAddress = "Address 2";
+
+    const firstResult = {
+      lat: 1.0,
+      lng: 1.0,
+      formattedAddress: "Formatted Address 1",
+    };
+
+    const secondResult = {
+      lat: 2.0,
+      lng: 2.0,
+      formattedAddress: "Formatted Address 2",
+    };
+
+    // Set up different responses for consecutive calls
+    mockGeocodingService.geocodeAddress
+      .mockResolvedValueOnce(firstResult)
+      .mockResolvedValueOnce(secondResult);
+
+    const result1 = await mockGeocodingService.geocodeAddress(firstAddress);
+    const result2 = await mockGeocodingService.geocodeAddress(secondAddress);
+
+    expect(result1).toEqual(firstResult);
+    expect(result2).toEqual(secondResult);
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenCalledTimes(2);
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenNthCalledWith(
+      1,
+      firstAddress
+    );
+    expect(mockGeocodingService.geocodeAddress).toHaveBeenNthCalledWith(
+      2,
+      secondAddress
+    );
   });
 });

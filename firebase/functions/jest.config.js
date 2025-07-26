@@ -1,15 +1,11 @@
-const { createDefaultPreset } = require("ts-jest");
-
-const tsJestTransformCfg = createDefaultPreset().transform;
-
-/** @type {import("jest").Config} **/
+/** @type {import('jest').Config} */
 module.exports = {
+  preset: "ts-jest",
   testEnvironment: "node",
-  transform: {
-    ...tsJestTransformCfg,
-  },
+  setupFiles: ["<rootDir>/src/tests/jest.setup.ts"],
+  roots: ["<rootDir>/src"],
+  modulePathIgnorePatterns: ["<rootDir>/lib"],
   moduleNameMapper: {
-    "^@utils/(.*)$": "<rootDir>/src/utils/$1", // Map @utils to src/utils
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1", // Map @utils/* to src/utils/*
   },
-  moduleDirectories: ["node_modules", "src"], // Allow Jest to resolve modules from src
 };
