@@ -1,11 +1,16 @@
 import { setGlobalOptions } from "firebase-functions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { OpenAIService } from "./utils/aiFilter";
 import { GoogleGeocodingService } from "./utils/geocodingService";
 import { sanitizeInput } from "./utils/addressHandling";
-import { isValidISO8601, isDateTodayUTC } from "./utils/utils";
+import {
+  isValidISO8601,
+  isDateTodayUTC,
+  isOlderThan7Days,
+} from "./utils/utils";
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -208,80 +213,142 @@ export const pin = onCall(async (request) => {
   }
 });
 
-// Extract the cleanup logic for testing
-// export const performDailyCleanup = async () => {
-//   logger.info("Database cleanup started");
+/**
+ * Performs daily cleanup of the Firebase Realtime Database and Firestore.
+ *
+ * This function is designed to:
+ * 1. Move pins older than 7 days from the Realtime Database (`locations` node) to Firestore (`old-pins` collection).
+ * 2. Reset the `today_pins` counter to 0 since a new day has started.
+ * 3. Adjust the `week_pins` counter by subtracting the number of pins older than 7 days.
+ *
+ * @async
+ * @function performDailyCleanup
+ *
+ * @throws {Error} If there is an issue during the cleanup process, such as database or Firestore errors.
+ *
+ * @description
+ * Processing flow:
+ * 1. Calculate the cutoff date (7 days ago) to identify old pins.
+ * 2. Retrieve all pins from the `locations` node in the Realtime Database.
+ * 3. Identify pins older than 7 days and move them to the `old-pins` collection in Firestore.
+ * 4. Remove the moved pins from the Realtime Database.
+ * 5. Update the `stats` node in the Realtime Database:
+ *    - Reset `today_pins` to 0.
+ *    - Adjust `week_pins` by subtracting the number of pins moved to Firestore.
+ * 6. Log the results of the cleanup process, including the number of pins moved and updated statistics.
+ *
+ * @example
+ * // This function is scheduled to run daily at 11:59 PM UTC:
+ */
+export const performDailyCleanup = async () => {
+  logger.info("Database cleanup started");
 
-//   try {
-//     const locationsRef = realtimeDb.ref("locations");
+  try {
+    const locationsRef = realtimeDb.ref("locations");
+    const statsRef = realtimeDb.ref("stats");
 
-//     // Calculate the cutoff date (7 days ago) for logging purposes
-//     const cutoffDate = new Date();
-//     cutoffDate.setDate(cutoffDate.getDate() - 7);
-//     const cutoffTimestamp = cutoffDate.toISOString();
+    // Calculate the cutoff date (7 days ago) for logging purposes
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 7);
+    const cutoffTimestamp = cutoffDate.toISOString();
 
-//     logger.info(
-//       "Moving old data to Firestore and cleaning up RTDB for data older than:",
-//       cutoffTimestamp
-//     );
+    logger.info(
+      "Moving old data to Firestore and cleaning up RTDB for data older than:",
+      cutoffTimestamp
+    );
 
-//     // Get all locations
-//     const snapshot = await locationsRef.once("value");
-//     const locations = snapshot.val();
+    // Get all locations
+    const snapshot = await locationsRef.once("value");
+    const locations = snapshot.val();
 
-//     if (!locations) {
-//       logger.info("No locations found in database");
-//       return;
-//     }
+    let movedCount = 0;
+    let weekOldCount = 0;
+    const movePromises: Promise<void>[] = [];
 
-//     let movedCount = 0;
-//     const movePromises: Promise<void>[] = [];
+    if (locations) {
+      // Iterate through all locations and identify old ones
+      Object.keys(locations).forEach((locationId) => {
+        const location = locations[locationId];
 
-//     // Iterate through all locations and identify old ones
-//     Object.keys(locations).forEach((locationId) => {
-//       const location = locations[locationId];
+        if (isOlderThan7Days(location.addedAt)) {
+          weekOldCount++;
+          // This location is older than a week, move it to Firestore and remove from RTDB
+          movePromises.push(
+            (async () => {
+              try {
+                // Add to Firestore old-pins collection
+                await firestoreDb.collection("old-pins").add(location);
 
-//       if (location.addedAt && isOlderThan7Days(location.addedAt)) {
-//         // This location is older than a week, move it to Firestore and remove from RTDB
-//         movePromises.push(
-//           (async () => {
-//             try {
-//               // Add to Firestore oldPins collection
-//               await firestoreDb.collection("oldPins").add(location);
+                // Remove from Realtime Database
+                await locationsRef.child(locationId).remove();
 
-//               // Remove from Realtime Database
-//               await locationsRef.child(locationId).remove();
+                logger.info("Moved old location to Firestore:", {
+                  locationId,
+                  addedAt: location.addedAt,
+                  address: location.address,
+                });
+              } catch (error) {
+                logger.error("Error moving location:", {
+                  locationId,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+                throw error;
+              }
+            })()
+          );
+          movedCount++;
+        }
+      });
 
-//               logger.info("Moved old location to Firestore:", {
-//                 locationId,
-//                 addedAt: location.addedAt,
-//                 address: location.address,
-//               });
-//             } catch (error) {
-//               logger.error("Error moving location:", {
-//                 locationId,
-//                 error: error instanceof Error ? error.message : String(error),
-//               });
-//               throw error;
-//             }
-//           })()
-//         );
-//         movedCount++;
-//       }
-//     });
+      // Execute all move operations
+      await Promise.all(movePromises);
+    }
 
-//     // Execute all move operations
-//     await Promise.all(movePromises);
+    // Update stats (this will run whether there are locations or not)
+    await statsRef.transaction((currentStats) => {
+      // Initialize stats if null or undefined
+      if (!currentStats) {
+        return {
+          total_pins: 0,
+          today_pins: 0,
+          week_pins: 0,
+        };
+      }
 
-//     logger.info("Database cleanup completed successfully", {
-//       totalLocations: Object.keys(locations).length,
-//       movedToFirestore: movedCount,
-//       cutoffDate: cutoffTimestamp,
-//     });
-//   } catch (error) {
-//     logger.error("Error during database cleanup:", error);
-//     throw error;
-//   }
-// };
+      // Ensure all required fields exist and are numbers
+      const stats = {
+        total_pins:
+          typeof currentStats.total_pins === "number"
+            ? currentStats.total_pins
+            : 0,
+        today_pins: 0, // Always reset today_pins during daily cleanup
+        week_pins:
+          typeof currentStats.week_pins === "number"
+            ? currentStats.week_pins
+            : 0,
+      };
 
-// export const dailyTask = onSchedule("every 24 hours", performDailyCleanup);
+      // Subtract the number of old pins that were removed from week_pins
+      stats.week_pins = Math.max(0, stats.week_pins - weekOldCount);
+
+      return stats;
+    });
+
+    if (!locations) {
+      logger.info("No locations found in database");
+    }
+
+    logger.info("Database cleanup completed successfully", {
+      totalLocations: locations ? Object.keys(locations).length : 0,
+      movedToFirestore: movedCount,
+      weekOldPinsRemoved: weekOldCount,
+      cutoffDate: cutoffTimestamp,
+      statsUpdated: "Reset today_pins to 0 and adjusted week_pins",
+    });
+  } catch (error) {
+    logger.error("Error during database cleanup:", error);
+    throw error;
+  }
+};
+
+export const dailyTask = onSchedule("59 23 * * *", performDailyCleanup);
