@@ -91,7 +91,7 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center gap-4 w-full">
           <MapComponent />
 
-          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full">
+          <div className="flex flex-col md:flex-row lg:flex-row gap-4 lg:gap-6 w-full">
             <div className="w-full md:w-1/2">
               <AddressForm />
             </div>

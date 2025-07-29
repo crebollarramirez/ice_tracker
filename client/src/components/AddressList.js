@@ -3,6 +3,7 @@ import { database } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import { useTranslations } from "next-intl";
 import { filterAddresses } from "../utils/filterAddresses";
+import ReportNumbers from "./ReportNumbers";
 
 export default function AddressList() {
   const t = useTranslations();
@@ -102,7 +103,7 @@ export default function AddressList() {
   }
 
   return (
-    <div className="flex flex-col gap-3 md:gap-4 p-3 md:p-4 border border-gray-300 rounded-lg bg-white shadow-md h-80 md:h-96">
+    <div className="flex flex-col gap-3 md:gap-4 px-3 pt-2 pb-1 md:pt-3 md:pb-2 border border-gray-300 rounded-lg bg-white shadow-md h-80 md:h-96">
       <div className="flex items-center justify-between">
         <h3 className="text-base md:text-lg font-semibold text-red-600">
           {t("reportsList.title")}
@@ -180,13 +181,12 @@ export default function AddressList() {
         </div>
       </div>
 
-      <div className="text-xs text-gray-500 border-t pt-2">
-        {searchTerm && filteredAddresses.length !== addresses.length
-          ? `${t("reportsList.filtered")} ${filteredAddresses.length}`
-          : t("reportsList.total", { count: addresses.length })}
-        <div className="text-xs text-red-600 mt-1">
-          {t("reportsList.warning")}
-        </div>
+      <div className="text-xs text-gray-500 border-t">
+        {searchTerm && filteredAddresses.length !== addresses.length ? (
+          <p className="pt-2">{t("reportsList.filtered")} {filteredAddresses.length}</p>
+        ) : (
+          <ReportNumbers />
+        )}
       </div>
     </div>
   );

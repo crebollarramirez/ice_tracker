@@ -127,5 +127,10 @@
         "close": "✕",
         "required": "*",
         "optional": "(opcional)"
+    },
+    "reportNumbers": {
+        "totalReports": "Total de Reportes",
+        "todayReports": "Reportes de Hoy",
+        "weekReports": "Reportes de la Semana"
     }
 }
