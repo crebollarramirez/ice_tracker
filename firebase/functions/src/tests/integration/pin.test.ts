@@ -65,13 +65,25 @@ const wrappedPin = testEnv.wrap(pin) as (
 ) => Promise<any>;
 
 describe("pin – integration", () => {
+  const FIXED_DATE = new Date("2025-07-26T00:00:00.000Z").getTime();
+
+  beforeEach(() => {
+    // Mock Date to ensure consistent test results
+    jest.useFakeTimers();
+    jest.setSystemTime(FIXED_DATE);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   afterAll(() => testEnv.cleanup());
 
   it("writes to RTDB & returns formatted address", async () => {
     // Wrap the data in the expected structure
     const request = {
       data: {
-        addedAt: "2025-07-26T12:34:56.000Z",
+        addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "123 Main St",
         additionalInfo: "Nice",
       },
@@ -97,7 +109,7 @@ describe("pin – integration", () => {
 
     const request = {
       data: {
-        addedAt: "2025-07-26T12:34:56.000Z",
+        addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "123 Main St",
         additionalInfo: "This is offensive content",
       },
@@ -129,7 +141,7 @@ describe("pin – integration", () => {
 
     const request = {
       data: {
-        addedAt: "2025-07-26T12:34:56.000Z",
+        addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "Invalid Address That Cannot Be Found",
         additionalInfo: "Nice place",
       },
@@ -196,7 +208,7 @@ describe("pin – integration", () => {
 
     const request = {
       data: {
-        addedAt: new Date().toISOString(), // Use current date to test today_pins increment
+        addedAt: "2025-07-26T00:00:00.000Z", // Use mocked date to test today_pins increment
         address: "123 Main St",
         additionalInfo: "Nice place",
       },
@@ -247,12 +259,12 @@ describe("pin – integration", () => {
   });
 
   it("should throw an error if addedAt is not today", async () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1); // Tomorrow's date
+    // Use a date that's not today (relative to our mocked date of 2025-07-26)
+    const notTodayDate = "2025-07-27T00:00:00.000Z"; // Tomorrow from mocked perspective
 
     const request = {
       data: {
-        addedAt: futureDate.toISOString(),
+        addedAt: notTodayDate,
         address: "123 Main St",
         additionalInfo: "Nice place",
       },

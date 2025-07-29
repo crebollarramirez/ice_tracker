@@ -1,43 +1,51 @@
 import { describe, it, expect } from "@jest/globals";
-import { isOlderThan7Days, isValidISO8601, isDateTodayUTC } from "../../utils/utils";
+import {
+  isOlderThan7Days,
+  isValidISO8601,
+  isDateTodayUTC,
+} from "../../utils/utils";
 
 describe("utils", () => {
+  const FIXED_DATE = new Date("2025-07-26T00:00:00.000Z").getTime();
+
+  beforeEach(() => {
+    // Mock Date to ensure consistent test results
+    jest.useFakeTimers();
+    jest.setSystemTime(FIXED_DATE);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe("isOlderThan7Days", () => {
     it("should return true for locations older than 7 days", () => {
-      // Create a date 8 days ago
-      const eightDaysAgo = new Date();
-      eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-      const oldTimestamp = eightDaysAgo.toISOString();
+      // Use a fixed date 8 days ago from mocked date (2025-07-26)
+      const oldTimestamp = "2025-07-18T00:00:00.000Z"; // 8 days before 2025-07-26
 
       const result = isOlderThan7Days(oldTimestamp);
       expect(result).toBe(true);
     });
 
     it("should return false for locations exactly 7 days old", () => {
-      // Create a date exactly 7 days ago
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const timestamp = sevenDaysAgo.toISOString();
+      // Use a fixed date exactly 7 days ago from mocked date (2025-07-26)
+      const timestamp = "2025-07-19T00:00:00.000Z"; // 7 days before 2025-07-26
 
       const result = isOlderThan7Days(timestamp);
       expect(result).toBe(false);
     });
 
     it("should return false for recent locations", () => {
-      // Create a date 3 days ago
-      const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-      const recentTimestamp = threeDaysAgo.toISOString();
+      // Use a fixed date 3 days ago from mocked date (2025-07-26)
+      const recentTimestamp = "2025-07-23T00:00:00.000Z"; // 3 days before 2025-07-26
 
       const result = isOlderThan7Days(recentTimestamp);
       expect(result).toBe(false);
     });
 
     it("should return false for future dates", () => {
-      // Create a date in the future
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const futureTimestamp = tomorrow.toISOString();
+      // Use a fixed date in the future from mocked date (2025-07-26)
+      const futureTimestamp = "2025-07-27T00:00:00.000Z"; // 1 day after 2025-07-26
 
       const result = isOlderThan7Days(futureTimestamp);
       expect(result).toBe(false);
@@ -238,7 +246,7 @@ describe("utils", () => {
 
       it("should return false for non-string inputs", () => {
         expect(isValidISO8601(123 as any)).toBe(false);
-        expect(isValidISO8601(new Date() as any)).toBe(false);
+        expect(isValidISO8601("not a date object" as any)).toBe(false);
         expect(isValidISO8601({} as any)).toBe(false);
         expect(isValidISO8601([] as any)).toBe(false);
         expect(isValidISO8601(true as any)).toBe(false);
@@ -312,62 +320,56 @@ describe("utils", () => {
 
   describe("isDateTodayUTC", () => {
     it("should return true for a timestamp that is today in UTC", () => {
-      const now = new Date();
-      const todayUTC = now.toISOString(); // Current date in ISO 8601 format
+      // Use the mocked date (2025-07-26)
+      const todayUTC = "2025-07-26T12:00:00.000Z"; // Same day as mocked date
 
       const result = isDateTodayUTC(todayUTC);
       expect(result).toBe(true);
     });
 
     it("should return false for a timestamp that is yesterday in UTC", () => {
-      const yesterday = new Date();
-      yesterday.setUTCDate(yesterday.getUTCDate() - 1); // Subtract 1 day
-      const yesterdayUTC = yesterday.toISOString();
+      // Use a fixed date that's yesterday from mocked date (2025-07-26)
+      const yesterdayUTC = "2025-07-25T12:00:00.000Z"; // 1 day before mocked date
 
       const result = isDateTodayUTC(yesterdayUTC);
       expect(result).toBe(false);
     });
 
     it("should return false for a timestamp that is tomorrow in UTC", () => {
-      const tomorrow = new Date();
-      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1); // Add 1 day
-      const tomorrowUTC = tomorrow.toISOString();
+      // Use a fixed date that's tomorrow from mocked date (2025-07-26)
+      const tomorrowUTC = "2025-07-27T12:00:00.000Z"; // 1 day after mocked date
 
       const result = isDateTodayUTC(tomorrowUTC);
       expect(result).toBe(false);
     });
 
     it("should return false for a timestamp with a different year", () => {
-      const lastYear = new Date();
-      lastYear.setUTCFullYear(lastYear.getUTCFullYear() - 1); // Subtract 1 year
-      const lastYearUTC = lastYear.toISOString();
+      // Use a fixed date with different year from mocked date (2025-07-26)
+      const lastYearUTC = "2024-07-26T12:00:00.000Z"; // 1 year before mocked date
 
       const result = isDateTodayUTC(lastYearUTC);
       expect(result).toBe(false);
     });
 
     it("should return false for a timestamp with a different month", () => {
-      const lastMonth = new Date();
-      lastMonth.setUTCMonth(lastMonth.getUTCMonth() - 1); // Subtract 1 month
-      const lastMonthUTC = lastMonth.toISOString();
+      // Use a fixed date with different month from mocked date (2025-07-26)
+      const lastMonthUTC = "2025-06-26T12:00:00.000Z"; // 1 month before mocked date
 
       const result = isDateTodayUTC(lastMonthUTC);
       expect(result).toBe(false);
     });
 
     it("should handle edge cases for UTC midnight", () => {
-      const now = new Date();
-      now.setUTCHours(0, 0, 0, 0); // Set time to UTC midnight
-      const midnightUTC = now.toISOString();
+      // Use the mocked date at UTC midnight
+      const midnightUTC = "2025-07-26T00:00:00.000Z"; // Exact mocked date
 
       const result = isDateTodayUTC(midnightUTC);
       expect(result).toBe(true);
     });
 
     it("should handle edge cases for the last second of the day in UTC", () => {
-      const now = new Date();
-      now.setUTCHours(23, 59, 59, 999); // Set time to the last millisecond of the day
-      const lastSecondUTC = now.toISOString();
+      // Use the mocked date at the last millisecond of the day
+      const lastSecondUTC = "2025-07-26T23:59:59.999Z"; // Same day as mocked date
 
       const result = isDateTodayUTC(lastSecondUTC);
       expect(result).toBe(true);

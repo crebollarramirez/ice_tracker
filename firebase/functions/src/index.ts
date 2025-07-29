@@ -11,6 +11,8 @@ import {
   isDateTodayUTC,
   isOlderThan7Days,
 } from "./utils/utils";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 // Initialize Firebase Admin
 admin.initializeApp();
