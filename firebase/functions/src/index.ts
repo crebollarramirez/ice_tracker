@@ -354,3 +354,88 @@ export const performDailyCleanup = async () => {
 };
 
 export const dailyTask = onSchedule("59 23 * * *", performDailyCleanup);
+
+/**
+ * Callable function to recalculate statistics based on existing database data.
+ *
+ * This function aggregates pin statistics from both the Firebase Realtime Database
+ * and Firestore. It is useful for one-time recalculations when statistics might
+ * be inaccurate due to data inconsistencies or missing updates.
+ *
+ * @async
+ * @function recalculateStats
+ *
+ * @returns {Promise<{message: string}>} A promise that resolves to an object containing:
+ *   - message: A success message indicating the stats were recalculated.
+ *
+ * @throws {HttpsError} Throws an error with the following codes:
+ *   - 'internal': If there is an issue during the recalculation process.
+ *
+ * @description
+ * Processing flow:
+ * 1. Fetches all live pins from the `locations` node in the Firebase Realtime Database.
+ * 2. Fetches the count of old pins from the `old-pins` collection in Firestore.
+ * 3. Aggregates the following statistics:
+ *    - `total_pins`: Total number of pins (live + old).
+ *    - `today_pins`: Number of pins added today.
+ *    - `week_pins`: Number of pins added in the last 7 days.
+ * 4. Updates the `stats` node in the Firebase Realtime Database with the aggregated values.
+ * 5. Logs the results of the recalculation process.
+ *
+ */
+export const recalculateStats = onCall(async () => {
+  logger.info("Recalculating stats...");
+
+  const locationsRef = realtimeDb.ref("locations");
+  const statsRef = realtimeDb.ref("stats");
+  const oldPinsCollection = firestoreDb.collection("old-pins");
+
+  try {
+    const snapshot = await locationsRef.once("value");
+    const locations = snapshot.val();
+
+    const oldPinsSnapshot = await oldPinsCollection.get();
+    const oldPinsCount = oldPinsSnapshot.size;
+
+    let totalPins = oldPinsCount; // Start with the count of old pins in Firestore
+    let todayPins = 0;
+    let weekPins = 0;
+
+    const now = new Date();
+    const today = now.toISOString().split("T")[0]; // Today's date in YYYY-MM-DD format
+    const weekAgo = new Date();
+    weekAgo.setDate(now.getDate() - 7);
+
+    if (locations) {
+      Object.values(locations).forEach((location: any) => {
+        totalPins++;
+
+        const addedAt = new Date(location.addedAt);
+        if (addedAt.toISOString().split("T")[0] === today) {
+          todayPins++;
+        }
+        if (addedAt >= weekAgo) {
+          weekPins++;
+        }
+      });
+    }
+
+    // Update the stats in the database
+    await statsRef.set({
+      total_pins: totalPins,
+      today_pins: todayPins,
+      week_pins: weekPins,
+    });
+
+    logger.info("Stats recalculated successfully", {
+      totalPins,
+      todayPins,
+      weekPins,
+    });
+
+    return { message: "Stats recalculated successfully" };
+  } catch (error) {
+    logger.error("Error recalculating stats:", error);
+    throw new HttpsError("internal", "Error recalculating stats");
+  }
+});
