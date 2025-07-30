@@ -1,7 +1,7 @@
 /**
  * Helper function to determine if a location should be archived (older than 7 days)
- * @param addedAt - ISO timestamp string when the location was added
- * @returns true if the location is older than 7 days, false otherwise
+ * @param {string} addedAt - ISO timestamp string when the location was added
+ * @return {boolean} true if the location is older than 7 days, false otherwise
  */
 export function isOlderThan7Days(addedAt: string): boolean {
   const cutoffDate = new Date();
@@ -13,8 +13,8 @@ export function isOlderThan7Days(addedAt: string): boolean {
 
 /**
  * Helper function to check if a date string is in valid ISO 8601 format
- * @param dateString - The date string to validate
- * @returns true if the string is a valid ISO 8601 date, false otherwise
+ * @param {string} dateString - The date string to validate
+ * @return {boolean} true if the string is a valid ISO 8601 date, false otherwise
  *
  * @example
  * isValidISO8601("2025-07-25T23:21:27.427Z") // true
@@ -47,10 +47,8 @@ export function isValidISO8601(dateString: string): boolean {
 
 /**
  * Checks if the given ISO 8601 timestamp is for today in UTC.
- *
- * @param addedAt - ISO 8601 timestamp string (e.g., "2025-07-26T12:00:00.000Z")
- * @returns True if the date is today (UTC), false otherwise.
- * 
+ * @param {string} addedAt - ISO 8601 timestamp string (e.g., "2025-07-26T12:00:00.000Z")
+ * @return {boolean} True if the date is today (UTC), false otherwise.
  * @precondition The `addedAt` string must pass `isValidISO8601(addedAt) === true`
  */
 export function isDateTodayUTC(addedAt: string): boolean {

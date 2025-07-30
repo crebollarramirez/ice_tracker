@@ -11,6 +11,7 @@ import {
   isDateTodayUTC,
   isOlderThan7Days,
 } from "./utils/utils";
+import { PinLocation } from "./types/index";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -28,7 +29,7 @@ const firestoreDb = admin.firestore();
 
 /**
  * Updates pin statistics in the realtime database
- * @param addedAt - ISO timestamp string when the location was added
+ * @param {string} addedAt - ISO timestamp string when the location was added
  */
 async function updatePinStats(addedAt: string): Promise<void> {
   const statsRef = realtimeDb.ref("stats");
@@ -320,14 +321,14 @@ export const performDailyCleanup = async () => {
       // Ensure all required fields exist and are numbers
       const stats = {
         total_pins:
-          typeof currentStats.total_pins === "number"
-            ? currentStats.total_pins
-            : 0,
+          typeof currentStats.total_pins === "number" ?
+          currentStats.total_pins :
+          0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
-          typeof currentStats.week_pins === "number"
-            ? currentStats.week_pins
-            : 0,
+          typeof currentStats.week_pins === "number" ?
+          currentStats.week_pins :
+          0,
       };
 
       // Subtract the number of old pins that were removed from week_pins
@@ -407,10 +408,12 @@ export const recalculateStats = onCall(async () => {
     weekAgo.setDate(now.getDate() - 7);
 
     if (locations) {
-      Object.values(locations).forEach((location: any) => {
+      Object.values(locations).forEach((location) => {
         totalPins++;
 
-        const addedAt = new Date(location.addedAt);
+        const pinLocation = location as PinLocation;
+
+        const addedAt = new Date(pinLocation.addedAt);
         if (addedAt.toISOString().split("T")[0] === today) {
           todayPins++;
         }
