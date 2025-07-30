@@ -14,12 +14,6 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIRE_BASE_APP_ID,
 };
 
-console.log("Firebase config:", {
-  databaseURL: firebaseConfig.databaseURL,
-  projectId: firebaseConfig.projectId,
-  nodeEnv: process.env.NODE_ENV,
-});
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -66,4 +60,4 @@ if (process.env.NODE_ENV === "development") {
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
 
-export { database, pinFunction};
+export { database, pinFunction };
