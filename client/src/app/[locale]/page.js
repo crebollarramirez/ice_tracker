@@ -6,6 +6,7 @@ import AddressList from "../../components/AddressList";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import {useTranslations} from 'next-intl';
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
   ssr: false,
@@ -17,6 +18,8 @@ export default function Home() {
   return (
     <main className="flex items-start justify-center min-h-screen w-full mb-4 mt-4 md:mt-8">
         <Analytics />
+        <SpeedInsights />
+        
       <div className="container flex flex-col items-center gap-4 md:gap-6 px-2 md:px-4">
         {/* Language Switcher - Top Right */}
         <div className="w-full flex justify-end mb-2">

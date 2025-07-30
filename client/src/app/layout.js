@@ -12,6 +12,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+  ),
   title: "ICE Activity Tracker - Community Safety Alert System",
   description:
     "Anonymous community-driven tool to report and track ICE (Immigration and Customs Enforcement) activity. Help protect undocumented immigrants and their families by sharing real-time safety alerts.",
@@ -45,7 +48,7 @@ export const viewport = {
   initialScale: 1,
 };
 
-export const themeColor = "#dc2626";
+export const themeColor = "#1a1a1a";
 
 export default function RootLayout({ children }) {
   return children;
