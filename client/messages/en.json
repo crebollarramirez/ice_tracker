@@ -4,15 +4,15 @@
         "subtitle": "Community Safety Alert System"
     },
     "safetyAlert": {
-        "title": "Important Safety Information",
-        "description": "This tool helps community members report and track ICE (Immigration and Customs Enforcement) sightings to help protect undocumented immigrants and their families."
+        "title": "Important Information",
+        "description": "This tool enables the public to report and track ICE sightings in realtime."
     },
     "howToUse": {
         "title": "How to Use This Tool",
         "reporting": {
             "title": "📍 Reporting ICE Activity:",
             "items": [
-                "Report ICE vehicles, checkpoints, or enforcement activity",
+                "Report ICE vehicles, checkpoints, or detainments",
                 "Include specific intersections or addresses",
                 "Report as soon as it's safe to do so",
                 "All reports are anonymous"
@@ -111,10 +111,10 @@
         "emergencyContacts": {
             "title": "Emergency Contacts:",
             "items": [
-                "Keep emergency contact numbers readily available",
+                "It is suggested to keep emergency contact numbers readily available.",
                 "Know your consulate's phone number",
                 "Have a legal aid hotline number saved",
-                "Make sure family knows your location"
+                "Ensure that someone has access to your location at all times."
             ]
         }
     },

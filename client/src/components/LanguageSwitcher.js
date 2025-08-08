@@ -18,7 +18,7 @@ export default function LanguageSwitcher() {
     <div className="flex items-center space-x-2 text-sm font-medium">
       <button
         onClick={() => handleLanguageChange("en")}
-        className={`transition-colors duration-200 ${
+        className={`transition-colors duration-200 cursor-pointer ${
           locale === "en"
             ? "text-red-600 font-bold underline"
             : "text-gray-600 hover:text-red-500"
@@ -30,7 +30,7 @@ export default function LanguageSwitcher() {
       <span className="text-gray-400">|</span>
       <button
         onClick={() => handleLanguageChange("es")}
-        className={`transition-colors duration-200 ${
+        className={`transition-colors duration-200 cursor-pointer ${
           locale === "es"
             ? "text-red-600 font-bold underline"
             : "text-gray-600 hover:text-red-500"

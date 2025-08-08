@@ -4,15 +4,15 @@
         "subtitle": "Sistema Comunitario de Alertas de Seguridad"
     },
     "safetyAlert": {
-        "title": "Información Importante de Seguridad",
-        "description": "Esta herramienta ayuda a los miembros de la comunidad a reportar y rastrear avistamientos de ICE (Inmigración y Control de Aduanas) para proteger a inmigrantes indocumentados y sus familias."
+        "title": "Información Importante",
+        "description": "Esta herramienta permite al público reportar y rastrear avistamientos de ICE en tiempo real."
     },
     "howToUse": {
         "title": "Cómo Usar Esta Herramienta",
         "reporting": {
             "title": "📍 Reportar Actividad de ICE:",
             "items": [
-                "Reporta vehículos de ICE, retenes o actividades de cumplimiento",
+                "Reporta vehículos de ICE, puntos de control o detenciones",
                 "Incluye cruces o direcciones específicas",
                 "Haz el reporte tan pronto como sea seguro hacerlo",
                 "Todos los reportes son anónimos"
@@ -111,10 +111,10 @@
         "emergencyContacts": {
             "title": "Contactos de Emergencia:",
             "items": [
-                "Ten a la mano números de contacto de emergencia",
+                "Se sugiere tener los números de contacto de emergencia fácilmente accesibles.",
                 "Conoce el número de tu consulado",
                 "Guarda el número de una línea directa de ayuda legal",
-                "Asegúrate de que tu familia sepa dónde estás"
+                "Asegúrate de que alguien tenga acceso a tu ubicación en todo momento."
             ]
         }
     },
