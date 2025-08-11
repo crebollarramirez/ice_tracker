@@ -6,6 +6,10 @@ module.exports = {
   roots: ["<rootDir>/src"],
   modulePathIgnorePatterns: ["<rootDir>/lib"],
   moduleNameMapper: {
-    "^@utils/(.*)$": "<rootDir>/src/utils/$1", // Map @utils/* to src/utils/*
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1",
   },
+  testMatch: [
+    "**/*.test.ts", // Include unit and integration tests
+    "**/*.e2e.ts", // Include end-to-end tests
+  ],
 };
