@@ -4,12 +4,13 @@
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "jest --runInBand --testMatch '**/e2e/**/*.e2e.ts' --testTimeout=60000",
+    "test:emulators": "firebase emulators:start --only database,firestore,functions --project iceinmyarea"
   },
   "engines": {
     "node": "22"

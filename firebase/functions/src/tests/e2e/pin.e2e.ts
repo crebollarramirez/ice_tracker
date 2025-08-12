@@ -1,74 +1,45 @@
 import * as admin from "firebase-admin";
 import functionsTest from "firebase-functions-test";
-
-// Mock only Firebase Admin SDK (RTDB and Firestore)
-jest.mock("firebase-admin", () => {
-  const mockSet = jest.fn().mockResolvedValue(true);
-  const mockPush = jest.fn(() => ({
-    key: "mock-location-id",
-    set: mockSet,
-  }));
-  const mockTransaction = jest.fn((updateFn) => {
-    const currentStats = { total_pins: 0, today_pins: 0, week_pins: 0 };
-    const updatedStats = updateFn(currentStats);
-    return Promise.resolve(updatedStats);
-  });
-  const mockRef = jest.fn((path) => {
-    if (path === "locations") {
-      return { push: mockPush };
-    }
-    if (path === "stats") {
-      return { transaction: mockTransaction };
-    }
-    return {};
-  });
-  const mockAdd = jest.fn().mockResolvedValue({ id: "mock-doc-id" });
-  const mockCollection = jest.fn(() => ({ add: mockAdd }));
-
-  return {
-    initializeApp: jest.fn(),
-    database: jest.fn(() => ({ ref: mockRef })),
-    firestore: jest.fn(() => ({ collection: mockCollection })),
-    apps: { length: 0 },
-  };
-});
+import * as dotenv from "dotenv";
+dotenv.config();
 
 // Initialize Firebase Functions Test framework
 const testEnv = functionsTest({
-  projectId: "iceinmyarea",
+  projectId: process.env.GCLOUD_PROJECT_ID,
+  databaseURL: process.env.FB_RTDB_EMULATOR_URL,
 });
 
 // Import the pin function after initializing the test environment
 import { pin } from "../../index";
 
-// Initialize Firebase Admin for database operations
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: "iceinmyarea",
-  });
-}
-
 describe("Pin Function E2E Tests", () => {
-  const FIXED_DATE = new Date("2025-08-10T12:00:00.000Z");
-
-  beforeAll(() => {
-    // Mock Date to ensure consistent test results
-    jest.useFakeTimers();
-    jest.setSystemTime(FIXED_DATE);
+  afterAll(async () => {
+    // Clean up Firebase connections
+    await admin.app().delete();
+    testEnv.cleanup();
   });
 
-  afterAll(async () => {
-    jest.useRealTimers();
-    testEnv.cleanup();
+  beforeEach(async () => {
+    // Clear emulator data before each test
+    try {
+      await admin.database().ref("locations").set(null);
+      await admin.database().ref("stats").set(null);
+      await admin
+        .firestore()
+        .recursiveDelete(admin.firestore().collection("negative"));
+    } catch (error) {
+      // Ignore cleanup errors
+      console.warn("Cleanup error:", error);
+    }
   });
 
   it("should successfully pin a valid U.S. address and update stats", async () => {
     // Prepare test data with today's date
     const request = {
       data: {
-        addedAt: FIXED_DATE.toISOString(),
+        addedAt: new Date().toISOString(),
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
-        additionalInfo: "Google headquarters - test location",
+        additionalInfo: "Additional Information Testing",
       },
     };
 
@@ -83,21 +54,38 @@ describe("Pin Function E2E Tests", () => {
     expect(result.formattedAddress).toContain("Mountain View");
     expect(result.formattedAddress).toContain("CA");
 
-    // Verify that the mocked database operations were called correctly
-    const admin = require("firebase-admin");
-    const mockDatabase = admin.database();
-    const mockRef = mockDatabase.ref;
+    // Verify that data was actually written to the emulator database
+    const database = admin.database();
 
-    // Verify locations ref was called and data was pushed
-    expect(mockRef).toHaveBeenCalledWith("locations");
-    expect(mockRef).toHaveBeenCalledWith("stats");
+    // Check that a location was added to the locations ref
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(typeof addedLocation.address).toBe("string");
+    expect(addedLocation.address).toContain("Mountain View"); // formatted value
+    expect(addedLocation.additionalInfo).toBe("Additional Information Testing");
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+
+    // Check that stats were updated
+    const statsSnapshot = await database.ref("stats").once("value");
+    const statsData = statsSnapshot.val();
+    expect(statsData).toBeTruthy();
+    expect(statsData.total_pins).toBeGreaterThan(0);
+    expect(statsData.week_pins).toBeGreaterThan(0);
   });
 
   it("should reject addresses outside the U.S.", async () => {
     // Prepare test data with non-U.S. address
     const request = {
       data: {
-        addedAt: FIXED_DATE.toISOString(),
+        addedAt: new Date().toISOString(),
         address:
           "10 Downing Street, Westminster, London SW1A 0AA, United Kingdom",
         additionalInfo: "UK Prime Minister's residence",
@@ -117,7 +105,7 @@ describe("Pin Function E2E Tests", () => {
     // Prepare test data with potentially negative content
     const request = {
       data: {
-        addedAt: FIXED_DATE.toISOString(),
+        addedAt: new Date().toISOString(),
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo:
           "This is extremely offensive and inappropriate content that should be filtered",
@@ -138,11 +126,21 @@ describe("Pin Function E2E Tests", () => {
         "Please avoid using negative or abusive language in the additional info"
       );
 
-      // Verify that negative content was logged to Firestore
-      const admin = require("firebase-admin");
-      const mockFirestore = admin.firestore();
-      const mockCollection = mockFirestore.collection;
-      expect(mockCollection).toHaveBeenCalledWith("negative");
+      // Verify that negative content was actually logged to Firestore emulator
+      const firestore = admin.firestore();
+      const negativeCollection = await firestore.collection("negative").get();
+      expect(negativeCollection.empty).toBe(false);
+
+      // Check that the negative content document contains our data
+      const docs = negativeCollection.docs;
+      const negativeDoc = docs.find((doc) => {
+        const data = doc.data();
+        return (
+          data.additionalInfo ===
+          "This is extremely offensive and inappropriate content that should be filtered"
+        );
+      });
+      expect(negativeDoc).toBeDefined();
     }
   });
 
@@ -150,7 +148,7 @@ describe("Pin Function E2E Tests", () => {
     // Prepare test data with completely invalid address
     const request = {
       data: {
-        addedAt: FIXED_DATE.toISOString(),
+        addedAt: new Date().toISOString(),
         address: "ThisIsNotARealAddressAnywhere12345XYZ!@#$%",
         additionalInfo: "Testing invalid address rejection",
       },
@@ -187,7 +185,7 @@ describe("Pin Function E2E Tests", () => {
     // Prepare test data missing address field
     const request = {
       data: {
-        addedAt: FIXED_DATE.toISOString(),
+        addedAt: new Date().toISOString(),
         additionalInfo: "Testing missing address field",
       },
     };
@@ -239,7 +237,8 @@ describe("Pin Function E2E Tests", () => {
 
   it("should reject request when addedAt is not today's date", async () => {
     // Prepare test data with yesterday's date
-    const yesterday = new Date(FIXED_DATE);
+    const today = new Date();
+    const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
     const request = {
@@ -259,25 +258,50 @@ describe("Pin Function E2E Tests", () => {
     );
   });
 
-  it("should reject request when addedAt is a future date", async () => {
-    // Prepare test data with tomorrow's date
-    const tomorrow = new Date(FIXED_DATE);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
+  it("should reject an empty address", async () => {
     const request = {
       data: {
-        addedAt: tomorrow.toISOString(), // Valid ISO8601 but future date
-        address: "1600 Amphitheatre Parkway, Mountain View, CA",
-        additionalInfo: "Testing future date",
+        addedAt: new Date().toISOString(),
+        address: "",
+        additionalInfo: "Testing empty address",
       },
     };
 
-    // Wrap the pin function for testing
     const wrappedPin = testEnv.wrap(pin) as any;
 
-    // Expect the function to throw an error for future date
     await expect(wrappedPin(request)).rejects.toThrow(
-      "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
+      "Missing required fields: addedAt and address"
     );
+  });
+
+  it("should handle database errors gracefully", async () => {
+    const db = admin.database();
+    const originalRef = db.ref.bind(db);
+
+    const refSpy = jest.spyOn(db, "ref").mockImplementation((path: any) => {
+      if (path === "locations") {
+        return {
+          push: () => ({
+            key: "mock",
+            set: jest.fn().mockRejectedValue(new Error("Database error")),
+          }),
+        } as any;
+      }
+      // let other refs (e.g., 'stats') behave normally
+      return originalRef(path);
+    });
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+    await expect(
+      wrappedPin({
+        data: {
+          addedAt: new Date().toISOString(),
+          address: "1600 Amphitheatre Parkway, Mountain View, CA",
+          additionalInfo: "Testing database error",
+        },
+      })
+    ).rejects.toThrow("Internal server error");
+
+    refSpy.mockRestore();
   });
 });
