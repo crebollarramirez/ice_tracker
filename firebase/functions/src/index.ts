@@ -1,4 +1,4 @@
-import { setGlobalOptions } from "firebase-functions";
+import {setGlobalOptions } from "firebase-functions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
@@ -295,7 +295,10 @@ export const performDailyCleanup = async () => {
                   locationId,
                   error: error instanceof Error ? error.message : String(error),
                 });
-                throw error;
+                throw new HttpsError(
+                  "aborted",
+                  "Error moving old location to Firestore"
+                );
               }
             })()
           );
@@ -321,14 +324,14 @@ export const performDailyCleanup = async () => {
       // Ensure all required fields exist and are numbers
       const stats = {
         total_pins:
-          typeof currentStats.total_pins === "number" ?
-          currentStats.total_pins :
-          0,
+          typeof currentStats.total_pins === "number"
+            ? currentStats.total_pins
+            : 0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
-          typeof currentStats.week_pins === "number" ?
-          currentStats.week_pins :
-          0,
+          typeof currentStats.week_pins === "number"
+            ? currentStats.week_pins
+            : 0,
       };
 
       // Subtract the number of old pins that were removed from week_pins
@@ -349,8 +352,7 @@ export const performDailyCleanup = async () => {
       statsUpdated: "Reset today_pins to 0 and adjusted week_pins",
     });
   } catch (error) {
-    logger.error("Error during database cleanup:", error);
-    throw error;
+    throw new HttpsError("aborted", "database cleanup failed");
   }
 };
 
