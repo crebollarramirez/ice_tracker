@@ -1,4 +1,4 @@
-import {setGlobalOptions } from "firebase-functions";
+import { setGlobalOptions } from "firebase-functions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
@@ -291,10 +291,28 @@ export const performDailyCleanup = async () => {
                   address: location.address,
                 });
               } catch (error) {
-                logger.error("Error moving location:", {
-                  locationId,
-                  error: error instanceof Error ? error.message : String(error),
-                });
+                // Defensive logging to prevent logger failures
+                try {
+                  logger.error("Error moving location:", {
+                    locationId: String(locationId || "unknown"),
+                    address: location?.address || "unknown",
+                    errorMessage:
+                      error instanceof Error ? error.message : "Unknown error",
+                    errorType:
+                      error instanceof Error ? error.name : typeof error,
+                  });
+                } catch (logError) {
+                  // Fallback if structured logging fails
+                  console.error(
+                    `Failed to log error for location ${locationId}:`,
+                    logError
+                  );
+                  console.error(
+                    "Original error:",
+                    error instanceof Error ? error.message : error
+                  );
+                }
+
                 throw new HttpsError(
                   "aborted",
                   "Error moving old location to Firestore"
@@ -326,12 +344,12 @@ export const performDailyCleanup = async () => {
         total_pins:
           typeof currentStats.total_pins === "number" ?
           currentStats.total_pins :
-          0,
+            0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
           typeof currentStats.week_pins === "number" ?
-          currentStats.week_pins :
-          0,
+          currentStats.week_pins:
+            0,
       };
 
       // Subtract the number of old pins that were removed from week_pins
