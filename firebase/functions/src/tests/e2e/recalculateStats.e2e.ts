@@ -1,7 +1,4 @@
 // src/tests/e2e/recalculateStats.e2e.ts
-import * as dotenv from "dotenv";
-dotenv.config();
-
 process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST;
 process.env.FIREBASE_CONFIG = JSON.stringify({
   projectId: process.env.GCLOUD_PROJECT_ID,
