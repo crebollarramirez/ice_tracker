@@ -132,5 +132,26 @@
         "totalReports": "Total Reports",
         "todayReports": "Today Reports",
         "weekReports": "Week Reports"
+    },
+    "resources": {
+        "title": "Resources",
+        "subtitle": "Here are some helpful resources to know your rights and find legal assistance.",
+        "resourceLinks": {
+            "resource1": {
+                "title": "Find Legal Help Near You",
+                "description": "Search the National Immigration Legal Services Directory to locate free or low-cost legal aid organizations across the U.S., and quickly connect with trusted resources in your area.",
+                "link": "https://www.immigrationadvocates.org/nonprofit/legaldirectory"
+            },
+            "resource2": {
+                "title": "Carry Your Rights With You",
+                "description": "This wallet-sized Know Your Rights card, created by the Immigrant Legal Resource Center (ILRC), helps you assert your rights during encounters with ICE or law enforcement. Available in multiple languages, it's easy to print, carry, and show when needed.",
+                "link": "https://www.nilc.org/resources/know-your-rights-card/"
+            },
+            "resource3": {
+                "title": "We Have Rights– Emergency Plan and Resources",
+                "description": "Prepare yourself and your loved ones with the We Have Rights Emergency Plan, a free publicly available guide from Brooklyn Defender Services. It provides step-by-step instructions for ICE encounters and includes links to videos and additional legal resources. Available in English, Spanish, and other languages for easy access and printing.",
+                "link": "https://www.wehaverights.us/"
+            }
+        }
     }
 }

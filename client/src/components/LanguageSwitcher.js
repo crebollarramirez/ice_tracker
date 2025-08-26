@@ -25,7 +25,7 @@ export default function LanguageSwitcher() {
         }`}
         aria-label="Switch to English"
       >
-        EN
+        English
       </button>
       <span className="text-gray-400">|</span>
       <button
@@ -37,7 +37,7 @@ export default function LanguageSwitcher() {
         }`}
         aria-label="Cambiar a Español"
       >
-        ES
+        Español
       </button>
     </div>
   );
