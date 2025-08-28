@@ -302,4 +302,20 @@ describe("Pin Function E2E Tests", () => {
 
     refSpy.mockRestore();
   });
+
+  it("should handle non specific addresses like just a city", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Los Angeles, CA",
+        additionalInfo: "Testing invalid address rejection",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    await expect(wrappedPin(request)).rejects.toThrow(
+      "Please provide a valid address that can be found on the map"
+    );
+  });
 });

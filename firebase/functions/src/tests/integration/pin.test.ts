@@ -276,4 +276,25 @@ describe("pin – integration", () => {
       "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
     );
   });
+
+  it("should throw an error if the address is not specific (like a city)", async () => {
+    // Get the geocoding mock function that was exported
+    const { __mockGeocodeAddress } = require("../../utils/geocodingService");
+
+    // Configure the geocoding service to return null (address not found)
+    __mockGeocodeAddress.mockResolvedValueOnce(null);
+
+    const request = {
+      data: {
+        addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
+        address: "New York", // Too generic
+        additionalInfo: "Nice place",
+      },
+    };
+
+    const context = { auth: { uid: "test-user-id" } };
+    await expect(wrappedPin(request, context)).rejects.toThrow(
+      "Please provide a valid address that can be found on the map"
+    );
+  });
 });
