@@ -5,7 +5,7 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { OpenAIService } from "./utils/aiFilter";
 import { GoogleGeocodingService } from "./utils/geocodingService";
-import { sanitizeInput } from "./utils/addressHandling";
+import { sanitizeInput, makeAddressKey } from "./utils/addressHandling";
 import {
   isValidISO8601,
   isDateTodayUTC,
@@ -195,19 +195,55 @@ export const pin = onCall(async (request) => {
 
   // Database operations need error handling since they can throw exceptions
   try {
-    const newLocationRef = realtimeDb.ref("locations").push();
-    await newLocationRef.set(finalLocationData);
+    // Create a sanitized key from the formatted address
+    const addressKey = makeAddressKey(geocodeResult.formattedAddress);
 
-    // Update pin statistics
-    await updatePinStats(data.addedAt);
+    if (!addressKey) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Could not generate valid address key"
+      );
+    }
+
+    // Check if this address already exists
+    const existingLocationRef = realtimeDb.ref(`locations/${addressKey}`);
+    const existingSnapshot = await existingLocationRef.once("value");
+
+    let locationId = addressKey;
+    let isNewLocation = true;
+
+    if (existingSnapshot.exists()) {
+      // Address already exists, update it instead of creating duplicate
+      isNewLocation = false;
+      logger.info("Updating existing location:", {
+        addressKey,
+        formattedAddress: geocodeResult.formattedAddress,
+      });
+    } else {
+      logger.info("Creating new location:", {
+        addressKey,
+        formattedAddress: geocodeResult.formattedAddress,
+      });
+    }
+
+    // Set/update the location data
+    await existingLocationRef.set(finalLocationData);
+
+    // Only update pin statistics if this is a new location
+    if (isNewLocation) {
+      await updatePinStats(data.addedAt);
+    }
 
     logger.info("POST request received and saved to database:", {
-      locationId: newLocationRef.key,
+      locationId,
+      isNewLocation,
       ...finalLocationData,
     });
 
     return {
-      message: "Data logged and saved successfully",
+      message: isNewLocation
+        ? "Data logged and saved successfully"
+        : "Location updated successfully",
       formattedAddress: finalLocationData.address,
     };
   } catch (error) {
@@ -342,14 +378,14 @@ export const performDailyCleanup = async () => {
       // Ensure all required fields exist and are numbers
       const stats = {
         total_pins:
-          typeof currentStats.total_pins === "number" ?
-          currentStats.total_pins :
-            0,
+          typeof currentStats.total_pins === "number"
+            ? currentStats.total_pins
+            : 0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
-          typeof currentStats.week_pins === "number" ?
-          currentStats.week_pins:
-            0,
+          typeof currentStats.week_pins === "number"
+            ? currentStats.week_pins
+            : 0,
       };
 
       // Subtract the number of old pins that were removed from week_pins
