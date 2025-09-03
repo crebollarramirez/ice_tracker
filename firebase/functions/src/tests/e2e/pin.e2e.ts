@@ -508,4 +508,182 @@ describe("Pin Function E2E Tests", () => {
       expect(statsData.total_pins).toBe(1);
     }
   });
+
+  it("should accept intersection addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Hollywood Boulevard and Highland Avenue, Los Angeles, CA",
+        additionalInfo: "Testing intersection address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept intersection with ampersand format", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Sunset Boulevard & Vine Street, Hollywood, CA",
+        additionalInfo: "Testing intersection with ampersand",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection with ampersand without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept exact street addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "123 Main Street, Los Angeles, CA 90210",
+        additionalInfo: "Testing exact street address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the exact street address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing exact street address acceptance"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+  });
+
+  it("should accept premise addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Apple Park, 1 Apple Park Way, Cupertino, CA",
+        additionalInfo: "Testing premise address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the premise address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing premise address acceptance"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+  });
+
+  it("should accept business addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Starbucks, 1912 Pike Place, Seattle, WA 98101",
+        additionalInfo: "Testing business address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept exact residential house addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1234 Elm Street, Springfield, IL 62701",
+        additionalInfo: "Testing exact residential house address",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the exact house address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing exact residential house address"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+
+    // Verify the address contains expected components of a valid US address
+    expect(result.formattedAddress).toMatch(/IL|Illinois/i);
+    expect(result.formattedAddress).toMatch(/USA|United States/i);
+  });
 });
