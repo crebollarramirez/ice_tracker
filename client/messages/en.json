@@ -12,10 +12,10 @@
         "reporting": {
             "title": "📍 Reporting ICE Activity:",
             "items": [
-                "Report ICE vehicles, checkpoints, or detainments",
-                "Include specific intersections or addresses",
-                "Report as soon as it's safe to do so",
-                "All reports are anonymous"
+                "What to Report: ICE vehicles, checkpoints, or detainments.",
+                "Where: Use the Location bar to share exact details (intersections, addresses, or landmarks).",
+                "When: Submit reports as soon as it’s safe for you to do so.",
+                "Privacy: All reports are completely anonymous."
             ]
         },
         "stayingSafe": {
@@ -102,19 +102,38 @@
         "iceApproaches": {
             "title": "If ICE Approaches You:",
             "items": [
-                "You have the right to remain silent",
-                "You do not have to answer questions about your immigration status",
-                "You do not have to show documents unless you're driving",
-                "You can refuse to let them search you or your belongings"
+                [
+                    "You have the right to remain silent.",
+                    "You do not have to answer questions about your immigration status, where you were born, or your citizenship."
+                ],
+                [
+                    "You do not have to show documents unless you are driving a vehicle",
+                    "and legally required to show your license and registration."
+                ],
+                [
+                    "You have the right to refuse searches.",
+                    "You do not have to consent to a search of yourself, your belongings, or your home without a warrant. "
+                ],
+                [
+                    "Request an attorney.",
+                    "You have the right to speak with a lawyer before answering questions. "
+                ],
+                [
+                    "Do not sign anything.",
+                    "Never sign documents from ICE without consulting a lawyer."
+                ],
+                [
+                    "If detained, you have the right to make a phone call",
+                    "to a lawyer or trusted contact."
+                ]
             ]
         },
         "emergencyContacts": {
             "title": "Emergency Contacts:",
             "items": [
-                "It is suggested to keep emergency contact numbers readily available.",
-                "Know your consulate's phone number",
-                "Have a legal aid hotline number saved",
-                "Ensure that someone has access to your location at all times."
+                "Legal aid Hotlines: Keep the phone numbers for reliable immigration legal aid organizations handy. They can explain your rights, connect you with attorneys, and guide you through ICE encounters.",
+                "Rapid Response Networks: Identify local immigrant or rapid-response groups that can assist if someone is detained. They may provide on-the-ground support, advocacy, and connections to bail or legal resources.",
+                "Trusted Contacts: Make sure at least one friend, family member, or trusted person knows your location and can check in if needed. "
             ]
         }
     },
@@ -136,7 +155,18 @@
     "resources": {
         "title": "Resources",
         "subtitle": "Here are some helpful resources to know your rights and find legal assistance.",
-        "resourceLinks": {
+
+        "resourcesLinks": {
+            "resource1": {
+                "title" :"Confirming Detainment by Ice",
+                "link": "https://locator.ice.gov "
+            },
+            "resource2": {
+                "title": "Reach Your Loved One",
+                "link": "https://ice.gov/detention-facilities"
+            }
+        },
+        "additionalResources": {
             "resource1": {
                 "title": "Find Legal Help Near You",
                 "description": "Search the National Immigration Legal Services Directory to locate free or low-cost legal aid organizations across the U.S., and quickly connect with trusted resources in your area.",

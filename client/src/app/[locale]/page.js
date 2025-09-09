@@ -115,9 +115,12 @@ export default function Home() {
               <h3 className="font-semibold mb-2">
                 {t("rights.iceApproaches.title")}
               </h3>
-              <ul className="list-disc list-inside space-y-1">
+              <ul className="list-disc list-inside space-y-2">
                 {t.raw("rights.iceApproaches.items").map((item, index) => (
-                  <li key={index}>{item}</li>
+                  <li key={index}>
+                    <strong className="text-black">{item[0]}</strong> {" "}
+                   {item[1]}
+                  </li>
                 ))}
               </ul>
             </div>
