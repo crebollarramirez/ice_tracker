@@ -171,7 +171,7 @@ export default function AddressForm() {
       {/* Compact Header */}
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">🚨</span>
-        <h3 className="text-sm md:text-base font-semibold text-red-600">
+        <h3 className="text-base md:text-lg font-semibold text-red-600">
           {t("form.title")}
         </h3>
       </div>

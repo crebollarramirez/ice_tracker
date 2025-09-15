@@ -5,7 +5,7 @@
     },
     "safetyAlert": {
         "title": "Important Information",
-        "description": "This tool enables the public to report and track ICE sightings in realtime."
+        "description": "This tool lets the public report and track ICE sightings in real time—check the map before traveling, share alerts, avoid recent activity areas, and know your rights if approached."
     },
     "howToUse": {
         "title": "How to Use This Tool",
@@ -134,7 +134,9 @@
                 "Legal aid Hotlines: Keep the phone numbers for reliable immigration legal aid organizations handy. They can explain your rights, connect you with attorneys, and guide you through ICE encounters.",
                 "Rapid Response Networks: Identify local immigrant or rapid-response groups that can assist if someone is detained. They may provide on-the-ground support, advocacy, and connections to bail or legal resources.",
                 "Trusted Contacts: Make sure at least one friend, family member, or trusted person knows your location and can check in if needed. "
-            ]
+            ],
+            "top": "Keeping important contacts accessible can help you and your loved ones stay safe in unexpected situations.",
+            "bottom": "Store these numbers in your phone, in a wallet, or on a “Know Your Rights” card. Consider keeping a small paper list as backup in case your phone is lost or confiscated."
         }
     },
     "footer": {
@@ -155,10 +157,11 @@
     "resources": {
         "title": "Resources",
         "subtitle": "Here are some helpful resources to know your rights and find legal assistance.",
-
+        "resourceSection1": "Steps to Take if a Loved One is Detained",
+        "resourceSection2": "Additional Resources",
         "resourcesLinks": {
             "resource1": {
-                "title" :"Confirming Detainment by Ice",
+                "title": "Confirming Detainment by Ice",
                 "link": "https://locator.ice.gov "
             },
             "resource2": {

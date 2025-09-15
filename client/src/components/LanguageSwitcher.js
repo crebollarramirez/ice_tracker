@@ -21,7 +21,7 @@ export default function LanguageSwitcher() {
         className={`transition-colors duration-200 cursor-pointer ${
           locale === "en"
             ? "text-red-600 font-bold underline"
-            : "text-gray-600 hover:text-red-500"
+            : "text-gray-400 hover:text-red-500"
         }`}
         aria-label="Switch to English"
       >
@@ -33,7 +33,7 @@ export default function LanguageSwitcher() {
         className={`transition-colors duration-200 cursor-pointer ${
           locale === "es"
             ? "text-red-600 font-bold underline"
-            : "text-gray-600 hover:text-red-500"
+            : "text-gray-400 hover:text-red-500"
         }`}
         aria-label="Cambiar a Español"
       >

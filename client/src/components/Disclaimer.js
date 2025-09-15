@@ -5,7 +5,7 @@ const Disclaimer = () => {
     const t  = useTranslations();
 
     return (
-        <footer className="text-center text-xs text-gray-500">
+        <footer className="mt-auto w-full text-center text-xs text-gray-500 border-t border-gray-500 pt-2">
             <p className="mb-2">{t("footer.disclaimer")}</p>
             <p>{t("footer.emergency")}</p>
         </footer>

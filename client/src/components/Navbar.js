@@ -9,7 +9,7 @@ export default function Navbar() {
   const locale = pathname.split("/")[1] || "en";
 
   return (
-    <div className="w-full">
+    <div className="w-full mt-0 p-1 md:mt-2 md:p-0">
       <nav className="w-full flex justify-between items-center">
         <div className="flex gap-4">
           <Link 
@@ -17,7 +17,7 @@ export default function Navbar() {
             className={`transition-colors duration-200 ${
               pathname === `/${locale}` || pathname === `/${locale}/`
                 ? "text-red-600 font-bold underline"
-                : "text-white hover:text-red-500"
+                : "text-gray-400 hover:text-red-500"
             }`}
           >
             Home
@@ -27,7 +27,7 @@ export default function Navbar() {
             className={`transition-colors duration-200 ${
               pathname === `/${locale}/resources`
                 ? "text-red-600 font-bold underline"
-                : "text-white hover:text-red-500"
+                : "text-gray-400 hover:text-red-500"
             }`}
           >
             Resources
