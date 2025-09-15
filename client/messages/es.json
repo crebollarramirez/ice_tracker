@@ -5,17 +5,17 @@
     },
     "safetyAlert": {
         "title": "Información Importante",
-        "description": "Esta herramienta permite al público reportar y rastrear avistamientos de ICE en tiempo real."
+        "description": "Esta herramienta permite al público reportar y rastrear avistamientos de ICE en tiempo real: revisa el mapa antes de viajar, comparte alertas, evita áreas con actividad reciente y conoce tus derechos si te abordan."
     },
     "howToUse": {
         "title": "Cómo Usar Esta Herramienta",
         "reporting": {
             "title": "📍 Reportar Actividad de ICE:",
             "items": [
-                "Reporta vehículos de ICE, puntos de control o detenciones",
-                "Incluye cruces o direcciones específicas",
-                "Haz el reporte tan pronto como sea seguro hacerlo",
-                "Todos los reportes son anónimos"
+                "Qué reportar: vehículos de ICE, retenes o detenciones.",
+                "Dónde: usa la barra de ubicación para compartir detalles exactos (intersecciones, direcciones o puntos de referencia).",
+                "Cuándo: envía reportes tan pronto como sea seguro hacerlo.",
+                "Privacidad: todos los reportes son completamente anónimos."
             ]
         },
         "stayingSafe": {
@@ -100,22 +100,43 @@
     "rights": {
         "title": "Conoce Tus Derechos",
         "iceApproaches": {
-            "title": "Si ICE se te Acerca:",
+            "title": "Si ICE Se Acerca a Ti:",
             "items": [
-                "Tienes derecho a guardar silencio",
-                "No estás obligado a responder preguntas sobre tu estatus migratorio",
-                "No tienes que mostrar documentos a menos que estés conduciendo",
-                "Puedes negarte a que revisen tus pertenencias o a ti mismo"
+                [
+                    "Tienes el derecho de permanecer en silencio.",
+                    "No tienes que responder preguntas sobre tu estatus migratorio, dónde naciste o tu ciudadanía."
+                ],
+                [
+                    "No tienes que mostrar documentos a menos que estés conduciendo un vehículo",
+                    "y la ley te exija mostrar tu licencia y registro."
+                ],
+                [
+                    "Tienes el derecho de negarte a registros.",
+                    "No tienes que dar consentimiento para que registren tu persona, tus pertenencias o tu hogar sin una orden judicial."
+                ],
+                [
+                    "Pide un abogado.",
+                    "Tienes el derecho de hablar con un abogado antes de responder preguntas."
+                ],
+                [
+                    "No firmes nada.",
+                    "Nunca firmes documentos de ICE sin consultar con un abogado."
+                ],
+                [
+                    "Si eres detenido, tienes el derecho de hacer una llamada telefónica",
+                    "a un abogado o a un contacto de confianza."
+                ]
             ]
         },
         "emergencyContacts": {
             "title": "Contactos de Emergencia:",
             "items": [
-                "Se sugiere tener los números de contacto de emergencia fácilmente accesibles.",
-                "Conoce el número de tu consulado",
-                "Guarda el número de una línea directa de ayuda legal",
-                "Asegúrate de que alguien tenga acceso a tu ubicación en todo momento."
-            ]
+                "Líneas directas de ayuda legal: Ten a la mano los números de teléfono de organizaciones confiables de asistencia legal en inmigración. Ellos pueden explicarte tus derechos, conectarte con abogados y guiarte durante encuentros con ICE.",
+                "Redes de Respuesta Rápida: Identifica grupos locales de inmigrantes o de respuesta rápida que puedan ayudar si alguien es detenido. Pueden brindar apoyo en el terreno, defensa y conexiones con recursos de fianza o legales.",
+                "Contactos de Confianza: Asegúrate de que al menos un amigo, familiar o persona de confianza conozca tu ubicación y pueda comunicarse contigo si es necesario."
+            ],
+            "top": "Mantener contactos importantes accesibles puede ayudarte a ti y a tus seres queridos a mantenerse seguros en situaciones inesperadas.",
+            "bottom": "Guarda estos números en tu teléfono, en tu cartera o en una tarjeta de “Conozca Sus Derechos”. Considera llevar una pequeña lista en papel como respaldo en caso de que tu teléfono se pierda o sea confiscado."
         }
     },
     "footer": {
@@ -132,5 +153,38 @@
         "totalReports": "Total de Reportes",
         "todayReports": "Reportes de Hoy",
         "weekReports": "Reportes de la Semana"
+    },
+    "resources": {
+        "title": "Recursos",
+        "subtitle": "Aquí encontrarás recursos útiles para conocer tus derechos y obtener asistencia legal.",
+        "resourceSection1": "Pasos a Seguir si un Ser Querido es Detenido",
+        "resourceSection2": "Recursos Adicionales",
+        "resourcesLinks": {
+            "resource1": {
+                "title": "Confirmar Detención por ICE",
+                "link": "https://locator.ice.gov"
+            },
+            "resource2": {
+                "title": "Contactar a tu Ser Querido",
+                "link": "https://ice.gov/detention-facilities"
+            }
+        },
+        "additionalResources": {
+            "resource1": {
+                "title": "Encuentra Ayuda Legal Cerca de Ti",
+                "description": "Busca en el Directorio Nacional de Servicios Legales de Inmigración para localizar organizaciones que ofrecen asistencia legal gratuita o de bajo costo en todo EE. UU., y conéctate rápidamente con recursos de confianza en tu área.",
+                "link": "https://www.immigrationadvocates.org/nonprofit/legaldirectory"
+            },
+            "resource2": {
+                "title": "Lleva Tus Derechos Contigo",
+                "description": "Esta tarjeta de bolsillo de Conozca Sus Derechos, creada por el Immigrant Legal Resource Center (ILRC), te ayuda a hacer valer tus derechos durante encuentros con ICE o las fuerzas del orden. Disponible en varios idiomas, es fácil de imprimir, llevar y mostrar cuando sea necesario.",
+                "link": "https://www.nilc.org/resources/know-your-rights-card/"
+            },
+            "resource3": {
+                "title": "Tenemos Derechos – Plan de Emergencia y Recursos",
+                "description": "Prepárate tú y tus seres queridos con el Plan de Emergencia de Tenemos Derechos, una guía gratuita y pública del Brooklyn Defender Services. Proporciona instrucciones paso a paso para encuentros con ICE e incluye enlaces a videos y recursos legales adicionales. Disponible en inglés, español y otros idiomas para un fácil acceso e impresión.",
+                "link": "https://www.wehaverights.us/"
+            }
+        }
     }
 }
