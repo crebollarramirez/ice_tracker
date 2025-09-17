@@ -116,6 +116,9 @@ async function updatePinStats(addedAt: string): Promise<void> {
  * 7. Saves location data with coordinates to Firebase Realtime Database
  * 8. Updates pin statistics (total_pins, today_pins, week_pins) atomically
  * 9. Returns success message with formatted address
+ *
+ * TODO: when the pin function gets called with an address that already exists in the db,
+ * it should update the addedAt, additionalInfo (if not empty), and update the reported count.
  */
 export const pin = onCall(async (request) => {
   logger.info("pin called", { data: request.data });
@@ -184,15 +187,6 @@ export const pin = onCall(async (request) => {
     );
   }
 
-  // Create final location data with geocoded coordinates and formatted address
-  const finalLocationData = {
-    addedAt: data.addedAt,
-    address: geocodeResult.formattedAddress,
-    additionalInfo: sanitizedAdditionalInfo,
-    lat: geocodeResult.lat,
-    lng: geocodeResult.lng,
-  };
-
   // Database operations need error handling since they can throw exceptions
   try {
     // Create a sanitized key from the formatted address
@@ -210,15 +204,26 @@ export const pin = onCall(async (request) => {
     const existingSnapshot = await existingLocationRef.once("value");
 
     let locationId = addressKey;
+
+    // Create final location data with geocoded coordinates and formatted address
+    const finalLocationData: PinLocation = {
+      addedAt: data.addedAt,
+      address: geocodeResult.formattedAddress,
+      additionalInfo: sanitizedAdditionalInfo,
+      lat: geocodeResult.lat,
+      lng: geocodeResult.lng,
+      reported: existingSnapshot.exists() ? existingSnapshot.val().reported + 1 : 1,
+    };
+    
     let isNewLocation = true;
 
     if (existingSnapshot.exists()) {
       // Address already exists, update it instead of creating duplicate
-      isNewLocation = false;
       logger.info("Updating existing location:", {
         addressKey,
         formattedAddress: geocodeResult.formattedAddress,
       });
+      isNewLocation = false;
     } else {
       logger.info("Creating new location:", {
         addressKey,
@@ -229,14 +234,11 @@ export const pin = onCall(async (request) => {
     // Set/update the location data
     await existingLocationRef.set(finalLocationData);
 
-    // Only update pin statistics if this is a new location
-    if (isNewLocation) {
-      await updatePinStats(data.addedAt);
-    }
+    // update stats regarless of new or existing location since we are counting reports
+    await updatePinStats(data.addedAt);
 
     logger.info("POST request received and saved to database:", {
       locationId,
-      isNewLocation,
       ...finalLocationData,
     });
 
@@ -278,6 +280,8 @@ export const pin = onCall(async (request) => {
  *
  * @example
  * // This function is scheduled to run daily at 11:59 PM UTC:
+ *
+ * TODO: if the pin that is being moved already exists in firestore, we will just update the (addedAt, {most recently addedAt}, additionalInfo (if not empty), and increment a reported count)
  */
 export const performDailyCleanup = async () => {
   logger.info("Database cleanup started");
@@ -438,7 +442,7 @@ export const dailyTask = onSchedule("59 23 * * *", performDailyCleanup);
  *    - `week_pins`: Number of pins added in the last 7 days.
  * 4. Updates the `stats` node in the Firebase Realtime Database with the aggregated values.
  * 5. Logs the results of the recalculation process.
- *
+ * TODO: Move this to migrations.
  */
 export const recalculateStats = onCall(async () => {
   logger.info("Recalculating stats...");

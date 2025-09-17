@@ -4,4 +4,5 @@ export interface PinLocation {
   additionalInfo?: string;
   lat: number;
   lng: number;
+  reported: number;
 }

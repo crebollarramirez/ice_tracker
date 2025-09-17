@@ -448,9 +448,11 @@ describe("Pin Function E2E Tests", () => {
     // Verify stats were NOT incremented (since it's an update, not new location)
     statsSnapshot = await database.ref("stats").once("value");
     statsData = statsSnapshot.val();
-    expect(statsData.total_pins).toBe(1); // Should still be 1
-    expect(statsData.today_pins).toBe(1); // Should still be 1
-    expect(statsData.week_pins).toBe(1); // Should still be 1
+
+    // stats are incremened by 2 since we count reports, no unique locations
+    expect(statsData.total_pins).toBe(2); // Should still be 1
+    expect(statsData.today_pins).toBe(2); // Should still be 1
+    expect(statsData.week_pins).toBe(2); // Should still be 1
 
     // Verify still only one location exists (no duplicate)
     locationsSnapshot = await database.ref("locations").once("value");
@@ -505,7 +507,7 @@ describe("Pin Function E2E Tests", () => {
       // Stats should still be 1 (no increment for updates)
       statsSnapshot = await database.ref("stats").once("value");
       statsData = statsSnapshot.val();
-      expect(statsData.total_pins).toBe(1);
+      expect(statsData.total_pins).toBe(3); // since we count reports, no unique locations
     }
   });
 
