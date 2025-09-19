@@ -28,8 +28,17 @@ const realtimeDb = admin.database();
 const firestoreDb = admin.firestore();
 
 /**
- * Updates pin statistics in the realtime database
- * @param {string} addedAt - ISO timestamp string when the location was added
+ * Updates pin statistics in the realtime database.
+ *
+ * This function increments the total, weekly, and daily pin counts
+ * in the Firebase Realtime Database. It ensures atomic updates
+ * using transactions.
+ *
+ * @async
+ * @function updatePinStats
+ * @param {string} addedAt - ISO timestamp string when the location was added.
+ * @returns {Promise<void>} A promise that resolves when the stats are updated.
+ * @throws {Error} If there is an issue during the transaction.
  */
 async function updatePinStats(addedAt: string): Promise<void> {
   const statsRef = realtimeDb.ref("stats");
@@ -76,49 +85,17 @@ async function updatePinStats(addedAt: string): Promise<void> {
  * geocodes the address to get precise coordinates, stores the location in Firebase Realtime Database,
  * and updates pin statistics.
  *
- * @param {CallableRequest} request - The Firebase functions request object
- * @param {object} request.data - The data payload containing location information
- * @param {string} request.data.addedAt - ISO 8601 timestamp when the location was added (must be today's date in UTC)
- * @param {string} request.data.address - The physical address to be pinned (required)
- * @param {string} [request.data.additionalInfo] - Optional additional information about the location
- *
- * @returns {Promise<{message: string, formattedAddress: string}>} Promise that resolves to an object containing:
- *   - message: Success confirmation message
- *   - formattedAddress: The geocoded and formatted address from Google Maps API
- *
- * @throws {HttpsError}
- *   - 'invalid-argument': When required fields are missing, date format is invalid, or address is invalid
- *   - 'failed-precondition': When additional info contains negative or abusive language
- *   - 'not-found': When the provided address cannot be geocoded or found on the map
- *   - 'internal': When there's a database error during save operation
- *
- * @example
- * // Call from client using Firebase SDK:
- * import { getFunctions, httpsCallable } from 'firebase/functions';
- *
- * const functions = getFunctions();
- * const pinLocation = httpsCallable(functions, 'pin');
- *
- * const result = await pinLocation({
- *   addedAt: new Date().toISOString(), // Must be today's date
- *   address: "1600 Amphitheatre Parkway, Mountain View, CA",
- *   additionalInfo: "Google headquarters"
- * });
- *
- * @description
- * Processing flow:
- * 1. Validates required fields (addedAt, address) are present
- * 2. Validates addedAt is in ISO 8601 format and represents today's date in UTC
- * 3. Sanitizes address and additionalInfo inputs to prevent XSS attacks
- * 4. Uses AI service to detect negative content in additionalInfo
- * 5. Logs detected negative content to Firestore for monitoring
- * 6. Geocodes address using Google Maps Geocoding API to get coordinates
- * 7. Saves location data with coordinates to Firebase Realtime Database
- * 8. Updates pin statistics (total_pins, today_pins, week_pins) atomically
- * 9. Returns success message with formatted address
- *
- * TODO: when the pin function gets called with an address that already exists in the db,
- * it should update the addedAt, additionalInfo (if not empty), and update the reported count.
+ * @async
+ * @function pin
+ * @param {CallableRequest} request - The Firebase functions request object.
+ * @param {object} request.data - The data payload containing location information.
+ * @param {string} request.data.addedAt - ISO 8601 timestamp when the location was added (must be today's date in UTC).
+ * @param {string} request.data.address - The physical address to be pinned (required).
+ * @param {string} [request.data.additionalInfo] - Optional additional information about the location.
+ * @returns {Promise<{message: string, formattedAddress: string}>} A promise that resolves to an object containing:
+ *   - message: Success confirmation message.
+ *   - formattedAddress: The geocoded and formatted address from Google Maps API.
+ * @throws {HttpsError} If validation fails, geocoding fails, or database operations encounter an error.
  */
 export const pin = onCall(async (request) => {
   logger.info("pin called", { data: request.data });
@@ -212,9 +189,11 @@ export const pin = onCall(async (request) => {
       additionalInfo: sanitizedAdditionalInfo,
       lat: geocodeResult.lat,
       lng: geocodeResult.lng,
-      reported: existingSnapshot.exists() ? existingSnapshot.val().reported + 1 : 1,
+      reported: existingSnapshot.exists()
+        ? existingSnapshot.val().reported + 1
+        : 1,
     };
-    
+
     let isNewLocation = true;
 
     if (existingSnapshot.exists()) {
@@ -255,33 +234,17 @@ export const pin = onCall(async (request) => {
 });
 
 /**
+ * 
+ * @description
  * Performs daily cleanup of the Firebase Realtime Database and Firestore.
  *
- * This function is designed to:
- * 1. Move pins older than 7 days from the Realtime Database (`locations` node) to Firestore (`old-pins` collection).
- * 2. Reset the `today_pins` counter to 0 since a new day has started.
- * 3. Adjust the `week_pins` counter by subtracting the number of pins older than 7 days.
+ * This function moves pins older than 7 days from the Realtime Database (`locations` node) to Firestore (`old-pins` collection),
+ * resets the `today_pins` counter to 0, and adjusts the `week_pins` counter by subtracting the number of pins older than 7 days.
  *
  * @async
  * @function performDailyCleanup
- *
- * @throws {Error} If there is an issue during the cleanup process, such as database or Firestore errors.
- *
- * @description
- * Processing flow:
- * 1. Calculate the cutoff date (7 days ago) to identify old pins.
- * 2. Retrieve all pins from the `locations` node in the Realtime Database.
- * 3. Identify pins older than 7 days and move them to the `old-pins` collection in Firestore.
- * 4. Remove the moved pins from the Realtime Database.
- * 5. Update the `stats` node in the Realtime Database:
- *    - Reset `today_pins` to 0.
- *    - Adjust `week_pins` by subtracting the number of pins moved to Firestore.
- * 6. Log the results of the cleanup process, including the number of pins moved and updated statistics.
- *
- * @example
- * // This function is scheduled to run daily at 11:59 PM UTC:
- *
- * TODO: if the pin that is being moved already exists in firestore, we will just update the (addedAt, {most recently addedAt}, additionalInfo (if not empty), and increment a reported count)
+ * @returns {Promise<void>} A promise that resolves when the cleanup is complete.
+ * @throws {HttpsError} If there is an issue during the cleanup process, such as database or Firestore errors.
  */
 export const performDailyCleanup = async () => {
   logger.info("Database cleanup started");
@@ -319,18 +282,52 @@ export const performDailyCleanup = async () => {
           movePromises.push(
             (async () => {
               try {
-                // Add to Firestore old-pins collection
-                await firestoreDb.collection("old-pins").add(location);
+                // Check if this location already exists in Firestore using the locationId as document ID
+                const existingDocRef = firestoreDb
+                  .collection("old-pins")
+                  .doc(locationId);
+                const existingDoc = await existingDocRef.get();
+
+                if (existingDoc.exists) {
+                  // Document exists, update it
+                  const existingData = existingDoc.data() as PinLocation;
+                  const updatedData: Partial<PinLocation> = {
+                    addedAt: location.addedAt, // Update with most recent addedAt
+                    reported:
+                      (existingData.reported || 0) + (location.reported || 1), // Increment reported count
+                  };
+
+                  // Update additionalInfo only if it's provided and not empty
+                  if (
+                    location.additionalInfo &&
+                    location.additionalInfo.trim()
+                  ) {
+                    updatedData.additionalInfo = location.additionalInfo;
+                  }
+
+                  await existingDocRef.update(updatedData);
+
+                  logger.info("Updated existing location in Firestore:", {
+                    locationId,
+                    addedAt: location.addedAt,
+                    address: location.address,
+                    reported: updatedData.reported,
+                  });
+                } else {
+                  // Document doesn't exist, create it with the locationId as document ID
+                  await existingDocRef.set(location);
+
+                  logger.info("Added new location to Firestore:", {
+                    locationId,
+                    addedAt: location.addedAt,
+                    address: location.address,
+                  });
+                }
 
                 // Remove from Realtime Database
                 await locationsRef.child(locationId).remove();
-
-                logger.info("Moved old location to Firestore:", {
-                  locationId,
-                  addedAt: location.addedAt,
-                  address: location.address,
-                });
               } catch (error) {
+                // throw new HttpsError("aborted", "Error moving old location to Firestore")
                 // Defensive logging to prevent logger failures
                 try {
                   logger.error("Error moving location:", {
@@ -414,91 +411,11 @@ export const performDailyCleanup = async () => {
   }
 };
 
-export const dailyTask = onSchedule("59 23 * * *", performDailyCleanup);
-
 /**
- * Callable function to recalculate statistics based on existing database data.
+ * Scheduled task to perform daily cleanup at 11:59 PM UTC.
  *
- * This function aggregates pin statistics from both the Firebase Realtime Database
- * and Firestore. It is useful for one-time recalculations when statistics might
- * be inaccurate due to data inconsistencies or missing updates.
+ * This task invokes the `performDailyCleanup` function to handle database maintenance.
  *
- * @async
- * @function recalculateStats
- *
- * @returns {Promise<{message: string}>} A promise that resolves to an object containing:
- *   - message: A success message indicating the stats were recalculated.
- *
- * @throws {HttpsError} Throws an error with the following codes:
- *   - 'internal': If there is an issue during the recalculation process.
- *
- * @description
- * Processing flow:
- * 1. Fetches all live pins from the `locations` node in the Firebase Realtime Database.
- * 2. Fetches the count of old pins from the `old-pins` collection in Firestore.
- * 3. Aggregates the following statistics:
- *    - `total_pins`: Total number of pins (live + old).
- *    - `today_pins`: Number of pins added today.
- *    - `week_pins`: Number of pins added in the last 7 days.
- * 4. Updates the `stats` node in the Firebase Realtime Database with the aggregated values.
- * 5. Logs the results of the recalculation process.
- * TODO: Move this to migrations.
+ * @function dailyTask
  */
-export const recalculateStats = onCall(async () => {
-  logger.info("Recalculating stats...");
-
-  const locationsRef = realtimeDb.ref("locations");
-  const statsRef = realtimeDb.ref("stats");
-  const oldPinsCollection = firestoreDb.collection("old-pins");
-
-  try {
-    const snapshot = await locationsRef.once("value");
-    const locations = snapshot.val();
-
-    const oldPinsSnapshot = await oldPinsCollection.get();
-    const oldPinsCount = oldPinsSnapshot.size;
-
-    let totalPins = oldPinsCount; // Start with the count of old pins in Firestore
-    let todayPins = 0;
-    let weekPins = 0;
-
-    const now = new Date();
-    const today = now.toISOString().split("T")[0]; // Today's date in YYYY-MM-DD format
-    const weekAgo = new Date();
-    weekAgo.setDate(now.getDate() - 7);
-
-    if (locations) {
-      Object.values(locations).forEach((location) => {
-        totalPins++;
-
-        const pinLocation = location as PinLocation;
-
-        const addedAt = new Date(pinLocation.addedAt);
-        if (addedAt.toISOString().split("T")[0] === today) {
-          todayPins++;
-        }
-        if (addedAt >= weekAgo) {
-          weekPins++;
-        }
-      });
-    }
-
-    // Update the stats in the database
-    await statsRef.set({
-      total_pins: totalPins,
-      today_pins: todayPins,
-      week_pins: weekPins,
-    });
-
-    logger.info("Stats recalculated successfully", {
-      totalPins,
-      todayPins,
-      weekPins,
-    });
-
-    return { message: "Stats recalculated successfully" };
-  } catch (error) {
-    logger.error("Error recalculating stats:", error);
-    throw new HttpsError("internal", "Error recalculating stats");
-  }
-});
+export const dailyTask = onSchedule("59 23 * * *", performDailyCleanup);

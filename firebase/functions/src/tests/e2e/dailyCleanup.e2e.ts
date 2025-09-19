@@ -7,7 +7,6 @@ process.env.FIREBASE_CONFIG = JSON.stringify({
 import * as admin from "firebase-admin";
 import functionsTest from "firebase-functions-test";
 import { performDailyCleanup } from "../../index";
-import { CollectionReference } from "@google-cloud/firestore";
 
 const testEnv = functionsTest({
   projectId: process.env.GCLOUD_PROJECT_ID,
@@ -189,19 +188,19 @@ describe("performDailyCleanup E2E", () => {
       },
     });
 
-    // Mock add on all CollectionReference instances so the first add fails
-    const originalAdd = CollectionReference.prototype.add;
-    const addSpy = jest
-      .spyOn(CollectionReference.prototype as any, "add")
+    // Mock DocumentReference.set to fail on the first call
+    const originalSet = admin.firestore.DocumentReference.prototype.set;
+    const setSpy = jest
+      .spyOn(admin.firestore.DocumentReference.prototype as any, "set")
       .mockRejectedValueOnce(new Error("Firestore connection failed"))
       .mockImplementation(function (this: any, ...args: any[]) {
-        return originalAdd.apply(this, args as any);
+        return originalSet.apply(this, args as any);
       });
 
     await expect(performDailyCleanup()).rejects.toThrow(
       "database cleanup failed"
     );
 
-    addSpy.mockRestore();
+    setSpy.mockRestore();
   });
 });
