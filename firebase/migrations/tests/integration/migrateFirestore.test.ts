@@ -1,3 +1,5 @@
+import { migrateFirestore } from "../../migrations";
+
 // Mock Firebase Admin SDK before importing the migration module
 jest.mock("firebase-admin", () => {
   const batchSetCalls: Array<[any, any]> = [];
@@ -72,6 +74,7 @@ describe("migrateFirestore Integration Tests", () => {
   let mockBatch: any;
   let mockCommit: any;
   let batchInstance: any;
+  let mockFirestoreDb: any;
 
   beforeEach(() => {
     // Get the mocked admin module
@@ -82,6 +85,12 @@ describe("migrateFirestore Integration Tests", () => {
     mockBatch = mockFirestore.batch;
     batchInstance = mockBatch();
     mockCommit = batchInstance.commit;
+
+    // Create a mock firestoreDb instance to pass to the function
+    mockFirestoreDb = {
+      collection: mockCollection,
+      batch: mockBatch,
+    };
 
     // Clear batch calls before each test
     batchInstance._setCalls.length = 0;
@@ -138,12 +147,8 @@ describe("migrateFirestore Integration Tests", () => {
       empty: false,
       docs: mockFirestoreData,
     });
-
-    // Import and execute the migration function
-    const { migrateFirestore } = await import("../../migrations");
-
     // Execute the migration
-    await migrateFirestore();
+    await migrateFirestore(mockFirestoreDb);
 
     // Verify that the collection was queried
     expect(mockCollection).toHaveBeenCalledWith("old-pins");
@@ -193,7 +198,7 @@ describe("migrateFirestore Integration Tests", () => {
     const { migrateFirestore } = await import("../../migrations");
 
     // Execute the migration
-    await migrateFirestore();
+    await migrateFirestore(mockFirestoreDb);
 
     // Verify that the collection was queried
     expect(mockCollection).toHaveBeenCalledWith("old-pins");
@@ -213,7 +218,7 @@ describe("migrateFirestore Integration Tests", () => {
     const { migrateFirestore } = await import("../../migrations");
 
     // Execute the migration and expect it to throw
-    await expect(migrateFirestore()).rejects.toThrow(
+    await expect(migrateFirestore(mockFirestoreDb)).rejects.toThrow(
       "Firestore connection failed"
     );
 
@@ -267,7 +272,7 @@ describe("migrateFirestore Integration Tests", () => {
     const { migrateFirestore } = await import("../../migrations");
 
     // Execute the migration
-    await migrateFirestore();
+    await migrateFirestore(mockFirestoreDb);
 
     // Get the batch set calls to verify the keys
     const setBatchCalls = batchInstance._setCalls;
@@ -356,7 +361,7 @@ describe("migrateFirestore Integration Tests", () => {
     const { migrateFirestore } = await import("../../migrations");
 
     // Execute the migration
-    await migrateFirestore();
+    await migrateFirestore(mockFirestoreDb);
 
     // Get the batch set calls to verify the consolidated data
     const setBatchCalls = batchInstance._setCalls;
@@ -456,7 +461,7 @@ describe("migrateFirestore Integration Tests", () => {
     const { migrateFirestore } = await import("../../migrations");
 
     // Execute the migration
-    await migrateFirestore();
+    await migrateFirestore(mockFirestoreDb);
 
     // Get the batch set calls to verify the consolidated data
     const setBatchCalls = batchInstance._setCalls;

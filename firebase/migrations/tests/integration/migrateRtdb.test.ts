@@ -1,3 +1,5 @@
+import { migrateRealtimeDatabase } from "../../migrations";
+
 // Mock Firebase Admin SDK before importing the migration module
 jest.mock("firebase-admin", () => {
   const mockSet = jest.fn().mockResolvedValue(true);
@@ -53,6 +55,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
   let mockDatabase: any;
   let mockRef: any;
   let mockOnce: any;
+  let mockRealtimeDb: any;
 
   beforeEach(() => {
     // Get the mocked admin module
@@ -60,6 +63,11 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     mockDatabase = mockAdmin.database();
     mockRef = mockDatabase.ref;
     mockOnce = mockRef().once;
+
+    // Create a mock realtimeDb instance to pass to the function
+    mockRealtimeDb = {
+      ref: mockRef,
+    };
   });
 
   it("should successfully migrate RTDB data with duplicates and consolidate them", async () => {
@@ -101,10 +109,9 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     });
 
     // Import and execute the migration function
-    const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration
-    await migrateRealtimeDatabase();
+    await migrateRealtimeDatabase(mockRealtimeDb);
 
     // Verify that the database was queried
     expect(mockRef).toHaveBeenCalledWith("locations");
@@ -148,7 +155,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration
-    await migrateRealtimeDatabase();
+    await migrateRealtimeDatabase(mockRealtimeDb);
 
     // Verify that the database was queried
     expect(mockRef).toHaveBeenCalledWith("locations");
@@ -168,7 +175,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration and expect it to throw
-    await expect(migrateRealtimeDatabase()).rejects.toThrow(
+    await expect(migrateRealtimeDatabase(mockRealtimeDb)).rejects.toThrow(
       "Database connection failed"
     );
 
@@ -212,7 +219,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration
-    await migrateRealtimeDatabase();
+    await migrateRealtimeDatabase(mockRealtimeDb);
 
     // Get the data that was written
     const updateCall = (mockRef().update as jest.MockedFunction<any>).mock
@@ -237,21 +244,21 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
       "key-1": {
         addedAt: "2025-09-16T10:00:00.000Z",
         additionalInfo: "Ice reported here",
-        address: "123 Main Street", 
+        address: "123 Main Street",
         lat: 40.7128,
         lng: -74.006,
       },
       "key-2": {
         addedAt: "2025-09-16T11:00:00.000Z",
         additionalInfo: "Slippery sidewalk",
-        address: "123 Main Street", 
+        address: "123 Main Street",
         lat: 40.7128,
         lng: -74.006,
       },
       "key-3": {
         addedAt: "2025-09-16T12:00:00.000Z",
         additionalInfo: "Icy conditions",
-        address: "123 Main Street", // Hyphens instead of spaces
+        address: "123 Main Street", 
         lat: 40.7128,
         lng: -74.006,
       },
@@ -280,7 +287,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration
-    await migrateRealtimeDatabase();
+    await migrateRealtimeDatabase(mockRealtimeDb);
 
     // Get the data that was written
     const updateCall = (mockRef().update as jest.MockedFunction<any>).mock
@@ -359,7 +366,7 @@ describe("migrateRealtimeDatabase Integration Tests", () => {
     const { migrateRealtimeDatabase } = await import("../../migrations");
 
     // Execute the migration
-    await migrateRealtimeDatabase();
+    await migrateRealtimeDatabase(mockRealtimeDb);
 
     // Get the data that was written
     const updateCall = (mockRef().update as jest.MockedFunction<any>).mock
