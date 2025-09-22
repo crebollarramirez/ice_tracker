@@ -1,11 +1,9 @@
 "use client";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
 import L from "leaflet";
-import { database } from "../firebase";
-import { ref, onValue } from "firebase/database";
 import { useTranslations } from "next-intl";
+import { useLocations } from "../contexts/LocationsContext";
 
 // Fix for default markers not showing in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -18,44 +16,12 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-export default function MapComponent({ locations = [] }) {
+export default function MapComponent() {
   const t = useTranslations();
-  const [firebaseLocations, setFirebaseLocations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { locations, isLoading } = useLocations();
 
-  // Fetch locations from Firebase
-  useEffect(() => {
-    const locationsRef = ref(database, "locations");
-
-    const unsubscribe = onValue(
-      locationsRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          // Convert Firebase object to array and add Firebase IDs
-          const locationsArray = Object.entries(data).map(([id, location]) => ({
-            id,
-            ...location,
-          }));
-          console.log("Loaded locations from Firebase:", locationsArray);
-          setFirebaseLocations(locationsArray);
-        } else {
-          console.log("No locations found in Firebase");
-          setFirebaseLocations([]);
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching locations from Firebase:", error);
-        setIsLoading(false);
-      }
-    );
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
-  // Combine Firebase locations and any prop locations
-  const allLocations = [...firebaseLocations, ...locations];
+  // Use locations from context
+  const allLocations = [...locations];
 
   // Show loading state while fetching Firebase data
   if (isLoading) {
@@ -78,10 +44,17 @@ export default function MapComponent({ locations = [] }) {
         style={{ height: "40vh", minHeight: "300px" }}
       >
         <MapContainer
-          center={[33.9303, -118.2115]}
-          zoom={13}
+          center={[39.8283, -98.5795]}
+          zoom={4}
           style={{ height: "100%", width: "100%" }}
           className="z-0"
+          maxBounds={[
+            [18.0, -170.0], // Southwest corner (includes Alaska and Hawaii)
+            [72.0, -60.0], // Northeast corner
+          ]}
+          maxBoundsViscosity={1.0}
+          minZoom={3}
+          maxZoom={18}
           whenCreated={(mapInstance) => {
             // Ensure map is properly initialized
             setTimeout(() => {

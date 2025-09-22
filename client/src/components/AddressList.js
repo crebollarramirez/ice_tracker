@@ -1,55 +1,15 @@
 import { useState, useEffect } from "react";
-import { database } from "../firebase";
-import { ref, onValue } from "firebase/database";
 import { useTranslations } from "next-intl";
 import { filterAddresses } from "../utils/filterAddresses";
 import ReportNumbers from "./ReportNumbers";
+import { useLocations } from "../contexts/LocationsContext";
 
 export default function AddressList() {
   const t = useTranslations();
-  const [addresses, setAddresses] = useState([]);
+  const { locations: addresses, isLoading } = useLocations();
   const [filteredAddresses, setFilteredAddresses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch addresses from Firebase
-  useEffect(() => {
-    const locationsRef = ref(database, "locations");
-
-    const unsubscribe = onValue(
-      locationsRef,
-      (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          // Convert Firebase object to array and add Firebase IDs
-          const addressesArray = Object.entries(data).map(([id, location]) => ({
-            id,
-            ...location,
-          }));
-
-          // Sort by addedAt date (most recent first)
-          const sortedAddresses = addressesArray.sort((a, b) => {
-            return new Date(b.addedAt) - new Date(a.addedAt);
-          });
-
-          console.log("Loaded addresses from Firebase:", sortedAddresses);
-          setAddresses(sortedAddresses);
-        } else {
-          console.log("No addresses found in Firebase");
-          setAddresses([]);
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching addresses from Firebase:", error);
-        setIsLoading(false);
-      }
-    );
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
 
   // Handle search functionality - now triggers on every search term change
   useEffect(() => {
@@ -183,7 +143,9 @@ export default function AddressList() {
 
       <div className="text-xs text-gray-500 border-t">
         {searchTerm && filteredAddresses.length !== addresses.length ? (
-          <p className="pt-2">{t("reportsList.filtered")} {filteredAddresses.length}</p>
+          <p className="pt-2">
+            {t("reportsList.filtered")} {filteredAddresses.length}
+          </p>
         ) : (
           <ReportNumbers />
         )}
