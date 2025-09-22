@@ -48,3 +48,5 @@ coverage/
 # SvelteKit specific (if applicable)
 .svelte-kit/
 .local.env
+
+keys/
