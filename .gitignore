@@ -1,1 +1,50 @@
-.vscode
+# Node dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build artifacts
+dist/
+build/
+out/
+es/
+lib/
+*.d.ts
+*.map
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and OS specific files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Editor specific
+*.sublime-project
+*.sublime-workspace
+
+# Next.js specific (if applicable)
+.next/
+
+# SvelteKit specific (if applicable)
+.svelte-kit/
+.local.env

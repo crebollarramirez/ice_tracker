@@ -34,11 +34,16 @@ jest.mock("firebase-admin", () => {
     key: "mock-location-id",
     set: mockSet,
   }));
+  const mockOnce = jest.fn().mockResolvedValue({
+    exists: () => false,
+    val: () => null,
+  });
   const mockTransaction = jest.fn((updateFn) => {
     const currentStats = { total_pins: 0, today_pins: 0, week_pins: 0 };
     const updatedStats = updateFn(currentStats);
     return Promise.resolve(updatedStats);
   });
+
   const mockRef = jest.fn((path) => {
     if (path === "locations") {
       return { push: mockPush };
@@ -46,7 +51,20 @@ jest.mock("firebase-admin", () => {
     if (path === "stats") {
       return { transaction: mockTransaction };
     }
-    return {};
+    // Handle specific location paths (locations/addressKey pattern)
+    if (typeof path === "string" && path.startsWith("locations/")) {
+      return {
+        once: mockOnce,
+        set: mockSet,
+      };
+    }
+    // Default fallback
+    return {
+      once: mockOnce,
+      set: mockSet,
+      push: mockPush,
+      transaction: mockTransaction,
+    };
   });
   const mockAdd = jest.fn().mockResolvedValue({ id: "mock-doc-id" });
   const mockCollection = jest.fn(() => ({ add: mockAdd }));
@@ -203,7 +221,29 @@ describe("pin – integration", () => {
       if (path === "stats") {
         return { transaction: mockTransaction };
       }
-      return {};
+      // Handle specific location paths (locations/addressKey pattern)
+      if (typeof path === "string" && path.startsWith("locations/")) {
+        return {
+          once: jest.fn().mockResolvedValue({
+            exists: () => false,
+            val: () => null,
+          }),
+          set: jest.fn().mockResolvedValue(true),
+        };
+      }
+      // Default fallback - never return empty object
+      return {
+        once: jest.fn().mockResolvedValue({
+          exists: () => false,
+          val: () => null,
+        }),
+        set: jest.fn().mockResolvedValue(true),
+        push: jest.fn(() => ({
+          key: "mock-location-id",
+          set: jest.fn().mockResolvedValue(true),
+        })),
+        transaction: jest.fn(),
+      };
     });
 
     const request = {
@@ -274,6 +314,27 @@ describe("pin – integration", () => {
 
     await expect(wrappedPin(request, context)).rejects.toThrow(
       "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
+    );
+  });
+
+  it("should throw an error if the address is not specific (like a city)", async () => {
+    // Get the geocoding mock function that was exported
+    const { __mockGeocodeAddress } = require("../../utils/geocodingService");
+
+    // Configure the geocoding service to return null (address not found)
+    __mockGeocodeAddress.mockResolvedValueOnce(null);
+
+    const request = {
+      data: {
+        addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
+        address: "New York", // Too generic
+        additionalInfo: "Nice place",
+      },
+    };
+
+    const context = { auth: { uid: "test-user-id" } };
+    await expect(wrappedPin(request, context)).rejects.toThrow(
+      "Please provide a valid address that can be found on the map"
     );
   });
 });

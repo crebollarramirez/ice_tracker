@@ -15,10 +15,20 @@ jest.mock("firebase-admin", () => {
   const mockChild = jest.fn();
   const mockRemove = jest.fn().mockResolvedValue(true);
   const mockSet = jest.fn().mockResolvedValue(true);
+  const mockUpdate = jest.fn().mockResolvedValue(true);
+  const mockGet = jest.fn();
   const mockTransaction = jest.fn();
   const mockRef = jest.fn();
   const mockAdd = jest.fn().mockResolvedValue({ id: "mock-doc-id" });
-  const mockCollection = jest.fn(() => ({ add: mockAdd }));
+  const mockDoc = jest.fn(() => ({
+    get: mockGet,
+    set: mockSet,
+    update: mockUpdate,
+  }));
+  const mockCollection = jest.fn(() => ({
+    add: mockAdd,
+    doc: mockDoc,
+  }));
 
   return {
     initializeApp: jest.fn(),
@@ -28,9 +38,12 @@ jest.mock("firebase-admin", () => {
     __mockChild: mockChild,
     __mockRemove: mockRemove,
     __mockSet: mockSet,
+    __mockUpdate: mockUpdate,
+    __mockGet: mockGet,
     __mockTransaction: mockTransaction,
     __mockRef: mockRef,
     __mockAdd: mockAdd,
+    __mockDoc: mockDoc,
     __mockCollection: mockCollection,
   };
 });
@@ -44,6 +57,10 @@ describe("dailyCleanup – integration", () => {
   let mockTransaction: jest.Mock;
   let mockRef: jest.Mock;
   let mockAdd: jest.Mock;
+  let mockDoc: jest.Mock;
+  let mockGet: jest.Mock;
+  let mockSet: jest.Mock;
+  let mockUpdate: jest.Mock;
   let mockCollection: jest.Mock;
 
   const FIXED_DATE = new Date("2025-07-26T00:00:00.000Z").getTime();
@@ -61,6 +78,10 @@ describe("dailyCleanup – integration", () => {
     mockTransaction = admin.__mockTransaction;
     mockRef = admin.__mockRef;
     mockAdd = admin.__mockAdd;
+    mockDoc = admin.__mockDoc;
+    mockGet = admin.__mockGet;
+    mockSet = admin.__mockSet;
+    mockUpdate = admin.__mockUpdate;
     mockCollection = admin.__mockCollection;
 
     // Reset all mocks
@@ -73,7 +94,18 @@ describe("dailyCleanup – integration", () => {
     mockTransaction.mockReset();
     mockRef.mockReset();
     mockAdd.mockReset().mockResolvedValue({ id: "mock-doc-id" });
-    mockCollection.mockReset().mockReturnValue({ add: mockAdd });
+    mockGet.mockReset().mockResolvedValue({ exists: false }); // Default: document doesn't exist
+    mockSet.mockReset().mockResolvedValue(true);
+    mockUpdate.mockReset().mockResolvedValue(true);
+    mockDoc.mockReset().mockReturnValue({
+      get: mockGet,
+      set: mockSet,
+      update: mockUpdate,
+    });
+    mockCollection.mockReset().mockReturnValue({
+      add: mockAdd,
+      doc: mockDoc,
+    });
 
     // Setup default mock implementations
     mockChild.mockReturnValue({ remove: mockRemove });
@@ -129,6 +161,7 @@ describe("dailyCleanup – integration", () => {
         additionalInfo: "Old info 1",
         lat: 40.7128,
         lng: -74.006,
+        reported: 1,
       },
       "location-2": {
         addedAt: "2025-07-25T12:00:00.000Z", // 1 day ago from mocked date (recent)
@@ -136,6 +169,7 @@ describe("dailyCleanup – integration", () => {
         additionalInfo: "Recent info",
         lat: 40.7129,
         lng: -74.007,
+        reported: 1,
       },
       "location-3": {
         addedAt: "2025-07-10T12:00:00.000Z", // 16 days ago from mocked date (older than 7 days)
@@ -143,6 +177,7 @@ describe("dailyCleanup – integration", () => {
         additionalInfo: "Old info 2",
         lat: 40.713,
         lng: -74.008,
+        reported: 1,
       },
     };
 
@@ -165,11 +200,19 @@ describe("dailyCleanup – integration", () => {
 
     // Verify old locations were moved to Firestore
     expect(mockCollection).toHaveBeenCalledWith("old-pins");
-    expect(mockAdd).toHaveBeenCalledTimes(2); // 2 old locations
+    expect(mockDoc).toHaveBeenCalledTimes(2); // 2 old locations
 
-    // Verify calls to add old locations to Firestore
-    expect(mockAdd).toHaveBeenCalledWith(mockLocations["location-1"]);
-    expect(mockAdd).toHaveBeenCalledWith(mockLocations["location-3"]);
+    // Verify calls to get document references for old locations
+    expect(mockDoc).toHaveBeenCalledWith("location-1");
+    expect(mockDoc).toHaveBeenCalledWith("location-3");
+
+    // Verify documents were checked for existence
+    expect(mockGet).toHaveBeenCalledTimes(2);
+
+    // Verify documents were set (since they don't exist by default)
+    expect(mockSet).toHaveBeenCalledTimes(2);
+    expect(mockSet).toHaveBeenCalledWith(mockLocations["location-1"]);
+    expect(mockSet).toHaveBeenCalledWith(mockLocations["location-3"]);
 
     // Verify old locations were removed from RTDB
     expect(mockChild).toHaveBeenCalledWith("location-1");
@@ -260,8 +303,8 @@ describe("dailyCleanup – integration", () => {
     mockOnce.mockResolvedValue({ val: () => mockLocations });
 
     // Make one Firestore operation fail
-    mockAdd
-      .mockResolvedValueOnce({ id: "mock-doc-id" }) // First call succeeds
+    mockSet
+      .mockResolvedValueOnce(true) // First call succeeds
       .mockRejectedValueOnce(new Error("Firestore error")); // Second call fails
 
     mockRef.mockImplementation((path: string) => {
@@ -278,7 +321,7 @@ describe("dailyCleanup – integration", () => {
     await expect(performDailyCleanup()).rejects.toThrow();
 
     // Verify that at least one operation was attempted
-    expect(mockAdd).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalled();
   });
 
   it("should handle missing fields in stats gracefully", async () => {
@@ -349,7 +392,7 @@ describe("dailyCleanup – integration", () => {
 
       // Verify the exactly 7-day-old location is NOT moved (should be > 7 days)
       expect(mockCollection).not.toHaveBeenCalled();
-      expect(mockAdd).not.toHaveBeenCalled();
+      expect(mockDoc).not.toHaveBeenCalled();
       expect(mockChild).not.toHaveBeenCalledWith("boundary-location");
       expect(mockRemove).not.toHaveBeenCalled();
     });
@@ -383,7 +426,7 @@ describe("dailyCleanup – integration", () => {
       const endTime = FIXED_DATE;
 
       // Verify all 100 locations were processed
-      expect(mockAdd).toHaveBeenCalledTimes(100);
+      expect(mockSet).toHaveBeenCalledTimes(100);
       expect(mockRemove).toHaveBeenCalledTimes(100);
 
       // Verify reasonable performance (should complete within a few seconds)
@@ -409,13 +452,14 @@ describe("dailyCleanup – integration", () => {
           additionalInfo: "Test info",
           lat: 40.7128,
           lng: -74.006,
+          reported: 1,
         },
       };
 
       mockOnce.mockResolvedValue({ val: () => mockLocations });
 
       // Firestore succeeds, but RTDB removal fails
-      mockAdd.mockResolvedValue({ id: "mock-doc-id" });
+      mockSet.mockResolvedValue(true);
       mockRemove.mockRejectedValue(new Error("RTDB removal failed"));
 
       mockRef.mockImplementation((path: string) => {
@@ -432,7 +476,7 @@ describe("dailyCleanup – integration", () => {
       await expect(performDailyCleanup()).rejects.toThrow();
 
       // Verify Firestore operation succeeded before the failure
-      expect(mockAdd).toHaveBeenCalledWith(mockLocations["location-1"]);
+      expect(mockSet).toHaveBeenCalledWith(mockLocations["location-1"]);
       expect(mockRemove).toHaveBeenCalled();
     });
 

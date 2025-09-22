@@ -285,6 +285,16 @@ describe("Pin Function E2E Tests", () => {
           }),
         } as any;
       }
+      // Mock the locations/addressKey pattern to also fail
+      if (typeof path === "string" && path.startsWith("locations/")) {
+        return {
+          once: jest.fn().mockResolvedValue({
+            exists: () => false,
+            val: () => null,
+          }),
+          set: jest.fn().mockRejectedValue(new Error("Database error")),
+        } as any;
+      }
       // let other refs (e.g., 'stats') behave normally
       return originalRef(path);
     });
@@ -301,5 +311,381 @@ describe("Pin Function E2E Tests", () => {
     ).rejects.toThrow("Internal server error");
 
     refSpy.mockRestore();
+  });
+
+  it("should handle non specific addresses like just a city", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Los Angeles, CA",
+        additionalInfo: "Testing invalid address rejection",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    await expect(wrappedPin(request)).rejects.toThrow(
+      "Please provide a valid address that can be found on the map"
+    );
+  });
+
+  it("should generate correct address key for stored location", async () => {
+    // Prepare test data with a known address
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1600 Amphitheatre Parkway, Mountain View, CA",
+        additionalInfo: "Testing address key generation",
+      },
+    };
+
+    // Wrap the pin function for testing
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Call the pin function
+    const result = await wrappedPin(request);
+
+    // Verify the function succeeded
+    expect(result.message).toBe("Data logged and saved successfully");
+
+    // Get the formatted address from the result
+    const formattedAddress = result.formattedAddress;
+    expect(formattedAddress).toBeDefined();
+
+    // Import the makeAddressKey function to test key generation
+    const { makeAddressKey } = await import("../../utils/addressHandling");
+
+    // Generate the expected key from the formatted address
+    const expectedKey = makeAddressKey(formattedAddress);
+    expect(expectedKey).toBeTruthy();
+    expect(expectedKey.length).toBeGreaterThan(0);
+
+    // Verify that the location was stored with the correct key
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+
+    expect(locationsData).toBeTruthy();
+
+    // Check that the expected key exists in the database
+    expect(locationsData[expectedKey]).toBeDefined();
+
+    // Verify the stored data matches what we expect
+    const storedLocation = locationsData[expectedKey];
+    expect(storedLocation.address).toBe(formattedAddress);
+    expect(storedLocation.additionalInfo).toBe(
+      "Testing address key generation"
+    );
+    expect(storedLocation.addedAt).toBe(request.data.addedAt);
+    expect(storedLocation.lat).toBeDefined();
+    expect(storedLocation.lng).toBeDefined();
+
+    // Verify the key format follows our expected pattern
+    // Expected format: lowercase, no special chars, underscores for spaces
+    expect(expectedKey).toMatch(/^[a-z0-9_]+$/);
+    expect(expectedKey).not.toContain(" ");
+    expect(expectedKey).not.toContain(",");
+    expect(expectedKey).not.toContain(".");
+
+    // Verify key generation is consistent
+    const duplicateKey = makeAddressKey(formattedAddress);
+    expect(duplicateKey).toBe(expectedKey);
+  });
+
+  it("should update existing location when same address is submitted twice", async () => {
+    const address = "1600 Amphitheatre Parkway, Mountain View, CA";
+
+    // First submission - create initial location
+    const firstRequest = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address,
+        additionalInfo: "First submission",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Submit first location
+    const firstResult = await wrappedPin(firstRequest);
+    expect(firstResult.message).toBe("Data logged and saved successfully");
+
+    const formattedAddress = firstResult.formattedAddress;
+    expect(formattedAddress).toBeDefined();
+
+    // Verify initial stats were updated
+    const database = admin.database();
+    let statsSnapshot = await database.ref("stats").once("value");
+    let statsData = statsSnapshot.val();
+    expect(statsData.total_pins).toBe(1);
+    expect(statsData.today_pins).toBe(1);
+    expect(statsData.week_pins).toBe(1);
+
+    // Verify only one location exists
+    let locationsSnapshot = await database.ref("locations").once("value");
+    let locationsData = locationsSnapshot.val();
+    let locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBe(1);
+
+    // Get the initial location data
+    const initialLocation = Object.values(locationsData)[0] as any;
+    expect(initialLocation.additionalInfo).toBe("First submission");
+
+    // Second submission with same address but different info
+    const secondRequest = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address, // Same address should generate same key
+        additionalInfo: "Updated information - second submission",
+      },
+    };
+
+    // Submit second location with same address
+    const secondResult = await wrappedPin(secondRequest);
+    expect(secondResult.message).toBe("Location updated successfully");
+    expect(secondResult.formattedAddress).toBe(formattedAddress); // Same formatted address
+
+    // Verify stats were NOT incremented (since it's an update, not new location)
+    statsSnapshot = await database.ref("stats").once("value");
+    statsData = statsSnapshot.val();
+
+    // stats are incremened by 2 since we count reports, no unique locations
+    expect(statsData.total_pins).toBe(2); // Should still be 1
+    expect(statsData.today_pins).toBe(2); // Should still be 1
+    expect(statsData.week_pins).toBe(2); // Should still be 1
+
+    // Verify still only one location exists (no duplicate)
+    locationsSnapshot = await database.ref("locations").once("value");
+    locationsData = locationsSnapshot.val();
+    locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBe(1); // Still only one location
+
+    // Verify the location was updated with new information
+    const updatedLocation = Object.values(locationsData)[0] as any;
+    expect(updatedLocation.additionalInfo).toBe(
+      "Updated information - second submission"
+    );
+    expect(updatedLocation.address).toBe(formattedAddress);
+    expect(updatedLocation.addedAt).toBe(secondRequest.data.addedAt); // Updated timestamp
+    expect(updatedLocation.lat).toBeDefined();
+    expect(updatedLocation.lng).toBeDefined();
+
+    // Verify the same key was used for both submissions
+    const { makeAddressKey } = await import("../../utils/addressHandling");
+    const expectedKey = makeAddressKey(formattedAddress);
+    expect(locationsData[expectedKey]).toBeDefined();
+    expect(locationKeys[0]).toBe(expectedKey);
+
+    // Verify the key is the same for both addresses (even if input format differs slightly)
+    const thirdRequest = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1600 Amphitheatre Pkwy, Mountain View, CA", // Slightly different input format
+        additionalInfo:
+          "Third submission with slightly different address format",
+      },
+    };
+
+    const thirdResult = await wrappedPin(thirdRequest);
+
+    // If geocoding returns the same formatted address, it should update again
+    if (thirdResult.formattedAddress === formattedAddress) {
+      expect(thirdResult.message).toBe("Location updated successfully");
+
+      // Verify still only one location
+      locationsSnapshot = await database.ref("locations").once("value");
+      locationsData = locationsSnapshot.val();
+      locationKeys = Object.keys(locationsData);
+      expect(locationKeys.length).toBe(1);
+
+      // Verify info was updated again
+      const finalLocation = Object.values(locationsData)[0] as any;
+      expect(finalLocation.additionalInfo).toBe(
+        "Third submission with slightly different address format"
+      );
+
+      // Stats should still be 1 (no increment for updates)
+      statsSnapshot = await database.ref("stats").once("value");
+      statsData = statsSnapshot.val();
+      expect(statsData.total_pins).toBe(3); // since we count reports, no unique locations
+    }
+  });
+
+  it("should accept intersection addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Hollywood Boulevard and Highland Avenue, Los Angeles, CA",
+        additionalInfo: "Testing intersection address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept intersection with ampersand format", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Sunset Boulevard & Vine Street, Hollywood, CA",
+        additionalInfo: "Testing intersection with ampersand",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection with ampersand without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept exact street addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "123 Main Street, Los Angeles, CA 90210",
+        additionalInfo: "Testing exact street address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the exact street address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing exact street address acceptance"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+  });
+
+  it("should accept premise addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Apple Park, 1 Apple Park Way, Cupertino, CA",
+        additionalInfo: "Testing premise address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the premise address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing premise address acceptance"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+  });
+
+  it("should accept business addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "Starbucks, 1912 Pike Place, Seattle, WA 98101",
+        additionalInfo: "Testing business address acceptance",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the intersection without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+  });
+
+  it("should accept exact residential house addresses", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1234 Elm Street, Springfield, IL 62701",
+        additionalInfo: "Testing exact residential house address",
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Should accept the exact house address without throwing an error
+    const result = await wrappedPin(request);
+
+    // Verify successful response
+    expect(result.message).toMatch(/successfully/);
+    expect(result.formattedAddress).toBeDefined();
+    expect(result.formattedAddress.length).toBeGreaterThan(0);
+
+    // Verify that data was actually written to the database
+    const database = admin.database();
+    const locationsSnapshot = await database.ref("locations").once("value");
+    const locationsData = locationsSnapshot.val();
+    expect(locationsData).toBeTruthy();
+
+    // Find our added location
+    const locationKeys = Object.keys(locationsData);
+    expect(locationKeys.length).toBeGreaterThan(0);
+
+    const addedLocation = Object.values(locationsData)[0] as any;
+    expect(addedLocation.address).toBe(result.formattedAddress);
+    expect(addedLocation.additionalInfo).toBe(
+      "Testing exact residential house address"
+    );
+    expect(addedLocation.lat).toBeDefined();
+    expect(addedLocation.lng).toBeDefined();
+
+    // Verify the address contains expected components of a valid US address
+    expect(result.formattedAddress).toMatch(/IL|Illinois/i);
+    expect(result.formattedAddress).toMatch(/USA|United States/i);
   });
 });

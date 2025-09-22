@@ -42,21 +42,31 @@ export interface IGeocodingService {
  */
 export class GoogleGeocodingService implements IGeocodingService {
   /**
-   * Geocodes a physical address using the Google Maps Geocoding API.
+   * Geocodes a specific physical address using the Google Maps Geocoding API.
    *
-   * This method sends a request to the Google Maps Geocoding API to retrieve
-   * geolocation data for a given address. It validates the response to ensure
-   * the result is within the United States and rejects generic or fallback results.
+   * This method sends a request to the Google Maps Geocoding API with strict filtering
+   * to only accept specific address types (street addresses, premises, subpremises, or
+   * intersections). It validates the response to ensure the result is within the United
+   * States and rejects generic or overly broad addresses.
    *
-   * @param {string} address - The physical address to geocode.
+   * The function applies different validation rules based on address type:
+   * - For intersections: Requires route, sublocality, or locality components
+   * - For other addresses: Requires street number, route, or establishment
+   * - All addresses: Must have at least 3 address components and be US-based
+   *
+   * @param {string} address - The physical address to geocode (e.g., "123 Main St, City, State",
+   *   "Hollywood Blvd & Vine St, Los Angeles, CA", "Apple Park, Cupertino, CA").
    * @return {Promise<GeocodeResult | null>} A promise that resolves to a GeocodeResult object
    * containing latitude, longitude, and the formatted address if successful, or null if:
-   *   - The API key is missing.
-   *   - No results are found.
-   *   - The best result is outside the U.S.
-   *   - The result is too generic (e.g., "United States").
+   *   - The Google Maps API key is missing from environment variables
+   *   - No geocoding results are found for the given address
+   *   - The result is located outside the United States
+   *   - The result is too generic (e.g., "United States" or city-only like "Los Angeles, CA")
+   *   - The result has fewer than 3 address components
+   *   - For non-intersections: lacks street number, route, or establishment
+   *   - For intersections: lacks route, sublocality, or locality information
    *
-   * @throws {Error} Logs and returns null if the Google Maps API request fails.
+   * @throws {Error} Does not throw errors; logs API failures and returns null instead.
    */
   async geocodeAddress(address: string): Promise<GeocodeResult | null> {
     try {
@@ -68,6 +78,8 @@ export class GoogleGeocodingService implements IGeocodingService {
         key: apiKey,
         components: "country:US",
         region: "us",
+        // limit it to more specific addresses like exact addresses, premises, or intersections
+        result_type: "street_address|premise|subpremise|intersection",
       });
 
       const url = `https://maps.googleapis.com/maps/api/geocode/json?${params.toString()}`;
@@ -99,15 +111,66 @@ export class GoogleGeocodingService implements IGeocodingService {
       }
 
       // Additional validation: Reject generic or fallback results
+      const addressComponents = result.address_components;
+      const hasStreetNumber = addressComponents.some((c) =>
+        c.types.includes("street_number")
+      );
+      const hasRoute = addressComponents.some((c) => c.types.includes("route"));
+      const hasEstablishment = addressComponents.some((c) =>
+        c.types.includes("establishment")
+      );
+      const isIntersection = addressComponents.some((c) =>
+        c.types.includes("intersection")
+      );
+
+      // Check if it's just a city/locality pattern (e.g., "Los Angeles, CA" or "Los Angeles, CA, USA")
+      const isCityPattern = /^[^,]+,\s*[A-Z]{2}(,\s*USA)?$/i.test(
+        result.formatted_address
+      );
+
+      // Check if the input address looks like an intersection
+      const isIntersectionInput = /\b(and|\&)\b/i.test(address);
+
       if (
         result.formatted_address === "United States" ||
-        result.address_components.length < 2
+        addressComponents.length < 3 ||
+        isCityPattern
       ) {
         logger.warn(
           "Geocoding result is too generic; returning null for address:",
           address
         );
         return null;
+      }
+
+      // For intersection addresses, be more permissive - just check if we have meaningful components
+      if (isIntersection || isIntersectionInput) {
+        // Allow intersections if they have route, sublocality, or other meaningful location data
+        const hasSublocality = addressComponents.some(
+          (c) =>
+            c.types.includes("sublocality") ||
+            c.types.includes("sublocality_level_1")
+        );
+        const hasLocality = addressComponents.some((c) =>
+          c.types.includes("locality")
+        );
+
+        if (!hasRoute && !hasSublocality && !hasLocality) {
+          logger.warn(
+            "Intersection result lacks meaningful location information; returning null for address:",
+            address
+          );
+          return null;
+        }
+      } else {
+        // For non-intersection addresses, require more specificity
+        if (!hasStreetNumber && !hasRoute && !hasEstablishment) {
+          logger.warn(
+            "Geocoding result lacks specificity; returning null for address:",
+            address
+          );
+          return null;
+        }
       }
 
       return {
