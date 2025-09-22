@@ -37,7 +37,7 @@ const firestoreDb = admin.firestore();
  * @async
  * @function updatePinStats
  * @param {string} addedAt - ISO timestamp string when the location was added.
- * @returns {Promise<void>} A promise that resolves when the stats are updated.
+ * @return {Promise<void>} A promise that resolves when the stats are updated.
  * @throws {Error} If there is an issue during the transaction.
  */
 async function updatePinStats(addedAt: string): Promise<void> {
@@ -180,7 +180,7 @@ export const pin = onCall(async (request) => {
     const existingLocationRef = realtimeDb.ref(`locations/${addressKey}`);
     const existingSnapshot = await existingLocationRef.once("value");
 
-    let locationId = addressKey;
+    const locationId = addressKey;
 
     // Create final location data with geocoded coordinates and formatted address
     const finalLocationData: PinLocation = {
@@ -189,9 +189,9 @@ export const pin = onCall(async (request) => {
       additionalInfo: sanitizedAdditionalInfo,
       lat: geocodeResult.lat,
       lng: geocodeResult.lng,
-      reported: existingSnapshot.exists()
-        ? existingSnapshot.val().reported + 1
-        : 1,
+      reported: existingSnapshot.exists() ?
+      existingSnapshot.val().reported + 1 :
+      1,
     };
 
     let isNewLocation = true;
@@ -222,9 +222,9 @@ export const pin = onCall(async (request) => {
     });
 
     return {
-      message: isNewLocation
-        ? "Data logged and saved successfully"
-        : "Location updated successfully",
+      message: isNewLocation ?
+      "Data logged and saved successfully" :
+      "Location updated successfully",
       formattedAddress: finalLocationData.address,
     };
   } catch (error) {
@@ -234,7 +234,7 @@ export const pin = onCall(async (request) => {
 });
 
 /**
- * 
+ *
  * @description
  * Performs daily cleanup of the Firebase Realtime Database and Firestore.
  *
@@ -243,7 +243,7 @@ export const pin = onCall(async (request) => {
  *
  * @async
  * @function performDailyCleanup
- * @returns {Promise<void>} A promise that resolves when the cleanup is complete.
+ * @return {Promise<void>} A promise that resolves when the cleanup is complete.
  * @throws {HttpsError} If there is an issue during the cleanup process, such as database or Firestore errors.
  */
 export const performDailyCleanup = async () => {
@@ -379,14 +379,14 @@ export const performDailyCleanup = async () => {
       // Ensure all required fields exist and are numbers
       const stats = {
         total_pins:
-          typeof currentStats.total_pins === "number"
-            ? currentStats.total_pins
-            : 0,
+          typeof currentStats.total_pins === "number" ?
+          currentStats.total_pins :
+          0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
-          typeof currentStats.week_pins === "number"
-            ? currentStats.week_pins
-            : 0,
+          typeof currentStats.week_pins === "number" ?
+          currentStats.week_pins :
+          0,
       };
 
       // Subtract the number of old pins that were removed from week_pins

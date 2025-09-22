@@ -129,7 +129,7 @@ export class GoogleGeocodingService implements IGeocodingService {
       );
 
       // Check if the input address looks like an intersection
-      const isIntersectionInput = /\b(and|\&)\b/i.test(address);
+      const isIntersectionInput = /\b(and|&)\b/i.test(address);
 
       if (
         result.formatted_address === "United States" ||
