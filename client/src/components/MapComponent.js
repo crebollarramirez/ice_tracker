@@ -86,7 +86,7 @@ export default function MapComponent() {
                   )}
                   <div className="text-xs text-gray-500 mt-1">
                     {t("map.popup.reported", {
-                      date: new Date(loc.addedAt).toLocaleDateString(),
+                      date: loc.addedAt,
                     })}
                   </div>
                 </div>

@@ -22,18 +22,6 @@ export default function AddressList() {
     // This function can be used for additional search actions if needed
   };
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   useEffect(() => {
     setFilteredAddresses(addresses);
   }, [addresses]);
@@ -121,7 +109,7 @@ export default function AddressList() {
                   </div>
                   <div className="text-xs text-red-600 mt-1 font-medium">
                     {t("reportsList.reported", {
-                      date: formatDate(address.addedAt),
+                      date: address.addedAt,
                     })}
                   </div>
                   {address.additionalInfo && (
