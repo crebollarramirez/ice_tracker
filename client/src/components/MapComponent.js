@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-export default function MapComponent() {
+export default function Component() {
   const t = useTranslations();
   const { locations, isLoading } = useLocations();
 

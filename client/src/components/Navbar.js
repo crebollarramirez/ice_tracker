@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import LanguageSwitcher from "./LanguageSwitcher";
+import DonateButton from "./Donate/DonateButton";
 
 export default function Navbar() {
   const pathname = usePathname() || "/en"; // fallback to en when pathname isn't available
@@ -12,8 +13,8 @@ export default function Navbar() {
     <div className="w-full mt-0 p-1 md:mt-2 md:p-0">
       <nav className="w-full flex justify-between items-center">
         <div className="flex gap-4">
-          <Link 
-            href={`/${locale}/`} 
+          <Link
+            href={`/${locale}/`}
             className={`transition-colors duration-200 ${
               pathname === `/${locale}` || pathname === `/${locale}/`
                 ? "text-red-600 font-bold underline"
@@ -22,8 +23,8 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link 
-            href={`/${locale}/resources`} 
+          <Link
+            href={`/${locale}/resources`}
             className={`transition-colors duration-200 ${
               pathname === `/${locale}/resources`
                 ? "text-red-600 font-bold underline"
@@ -33,8 +34,11 @@ export default function Navbar() {
             Resources
           </Link>
         </div>
-
-        <LanguageSwitcher />
+        <div className="flex flex-row gap-4">
+          
+          <LanguageSwitcher />
+          <DonateButton />
+        </div>
       </nav>
     </div>
   );
