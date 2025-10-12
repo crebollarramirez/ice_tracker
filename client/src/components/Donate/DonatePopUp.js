@@ -1,16 +1,11 @@
 import { X, Heart } from "lucide-react";
 import { useDonate } from "@/contexts/DonateContext";
+import { DONATE_LINK } from "@/constants";
 
 export const DonatePopUp = () => {
   const { isVisible, hideDonatePopup, hideNotice } = useDonate();
 
   if (!isVisible) return null;
-
-  const handleDonate = () => {
-    // Add your donation link/logic here
-    window.open("https://your-donation-link.com", "_blank");
-    hideDonatePopup();
-  };
 
   const handleClose = () => {
     hideDonatePopup();
@@ -89,13 +84,17 @@ export const DonatePopUp = () => {
               {/* Bottom layer */}
               <div className="absolute top-1 left-1 w-full h-full bg-red-200 rounded-xl"></div>
               {/* Top layer */}
-              <button
-                onClick={handleDonate}
+              <a
+                href={DONATE_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                role="button"
+                aria-label="Donate (opens in a new tab)"
                 className="relative w-full inline-flex items-center justify-center px-4 py-4 bg-red-600 text-white rounded-xl font-semibold border-2 border-red-700 hover:bg-red-700 hover:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-400 gap-2 transition-all duration-200 hover:translate-x-0.5 hover:translate-y-0.5 shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <Heart className="w-5 h-5" />
                 Donate Now
-              </button>
+              </a>
             </div>
 
             {/* Maybe Later Button with layered effect */}
@@ -114,7 +113,7 @@ export const DonatePopUp = () => {
 
           {/* Small note */}
           <p className="text-xs text-center text-gray-500 mt-4">
-            We're a community-driven initiative. Thank you for your
+            We&apos;re a community-driven initiative. Thank you for your
             consideration.
           </p>
         </div>

@@ -1,7 +1,9 @@
 import React from "react";
+import { DONATE_LINK } from "@/constants";
+
 
 export const DonateButton = ({
-  href = "https://www.paypal.com/donate",
+  href = DONATE_LINK,
   children = "Donate",
 }) => {
   return (
