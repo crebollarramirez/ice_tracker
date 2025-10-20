@@ -23,15 +23,22 @@ export function LocationsProvider({ children }) {
             return {
               id,
               ...location,
-              addedAt: formatDate(location.addedAt), // Local time with timezone abbreviation
+              originalAddedAt: location.addedAt, // Keep original for sorting
             };
           });
 
-          // Sort by addedAt date (most recent first)
+          // Sort by original addedAt date (most recent first) BEFORE formatting
           const sortedLocations = locationsArray.sort((a, b) => {
-            return new Date(b.addedAt) - new Date(a.addedAt);
+            return new Date(b.originalAddedAt) - new Date(a.originalAddedAt);
           });
-          setLocations(sortedLocations);
+
+          // Now format the dates for display
+          const formattedLocations = sortedLocations.map((location) => ({
+            ...location,
+            addedAt: formatDate(location.originalAddedAt), // Format for display
+          }));
+
+          setLocations(formattedLocations);
         } else {
           console.log("No locations found in Firebase");
           setLocations([]);
