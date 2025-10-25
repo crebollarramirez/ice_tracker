@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Navbar from "@/components/Navbar";
 import Disclaimer from "@/components/Disclaimer";
+import Maintenance from "@/components/Maintenance";
 import { LocationsProvider } from "@/contexts/LocationsContext";
 
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
@@ -16,6 +17,10 @@ const MapComponent = dynamic(() => import("../../components/MapComponent"), {
 
 export default function Home() {
   const t = useTranslations();
+
+  // Set this to true to show maintenance message for Map and Form section only
+  const isMapFormMaintenanceMode =
+    process.env.NEXT_PUBLIC_MAP_FORM_MAINTENANCE === "true";
 
   return (
     <LocationsProvider>
@@ -92,20 +97,24 @@ export default function Home() {
           </div>
 
           {/* Map and Form Section */}
-          <div className="flex flex-col items-center justify-center gap-4 w-full">
-            <div className="w-full max-w-full overflow-hidden">
-              <MapComponent />
-            </div>
+          {isMapFormMaintenanceMode ? (
+            <Maintenance />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 w-full">
+              <div className="w-full max-w-full overflow-hidden">
+                <MapComponent />
+              </div>
 
-            <div className="flex flex-col md:flex-row lg:flex-row gap-4 lg:gap-6 w-full">
-              <div className="w-full md:w-1/2">
-                <AddressForm />
-              </div>
-              <div className="w-full md:w-1/2">
-                <AddressList />
+              <div className="flex flex-col md:flex-row lg:flex-row gap-4 lg:gap-6 w-full">
+                <div className="w-full md:w-1/2">
+                  <AddressForm />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <AddressList />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Legal Rights Section */}
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-6 w-full">
