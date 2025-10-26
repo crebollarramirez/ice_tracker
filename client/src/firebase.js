@@ -6,7 +6,9 @@ import {
   httpsCallable,
 } from "firebase/functions";
 
-// Firebase configuration using environment variables
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+// Firebase configuration using env
+// ironment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DB_URL, // This is for production
@@ -16,6 +18,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// this is for appcheck
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+  isTokenAutoRefreshEnabled: true,
+})
 
 // Initialize Realtime Database
 const database = getDatabase(app);
