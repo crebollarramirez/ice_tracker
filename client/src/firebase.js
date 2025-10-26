@@ -7,11 +7,11 @@ import {
 } from "firebase/functions";
 
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
-// Firebase configuration using env
-// ironment variables
+
+// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DB_URL, // This is for production
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DB_URL,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIRE_BASE_APP_ID,
 };
@@ -19,11 +19,20 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// this is for appcheck
-initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
-  isTokenAutoRefreshEnabled: true,
-})
+// Initialize App Check only on client side
+if (typeof window !== "undefined") {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(
+        process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+      ),
+      isTokenAutoRefreshEnabled: true,
+    });
+    console.log("App Check initialized successfully");
+  } catch (error) {
+    console.warn("App Check initialization failed:", error);
+  }
+}
 
 // Initialize Realtime Database
 const database = getDatabase(app);
