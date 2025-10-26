@@ -186,5 +186,9 @@
                 "link": "https://www.wehaverights.us/"
             }
         }
+    },
+    "maintenance": {
+        "title": "Sección en Mantenimiento",
+        "message": "Estamos haciendo mantenimiento. La parte de reportes va a estar disponible muy pronto."
     }
 }

@@ -186,5 +186,9 @@
                 "link": "https://www.wehaverights.us/"
             }
         }
+    },
+    "maintenance": {
+        "title": "Section Under Maintenance",
+        "message": "Maintenance is currently ongoing, reporting will be available as soon as possible."
     }
 }

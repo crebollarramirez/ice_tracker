@@ -97,24 +97,24 @@ export default function Home() {
           </div>
 
           {/* Map and Form Section */}
-          {isMapFormMaintenanceMode ? (
-            <Maintenance />
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-4 w-full">
-              <div className="w-full max-w-full overflow-hidden">
-                <MapComponent />
-              </div>
+          <div className="flex flex-col items-center justify-center gap-4 w-full">
+            <div className="w-full max-w-full overflow-hidden">
+              <MapComponent />
+            </div>
 
-              <div className="flex flex-col md:flex-row lg:flex-row gap-4 lg:gap-6 w-full">
+            <div className="flex flex-col md:flex-row lg:flex-row gap-4 lg:gap-6 w-full">
+              {isMapFormMaintenanceMode ? (
+                <Maintenance />
+              ) : (
                 <div className="w-full md:w-1/2">
                   <AddressForm />
                 </div>
-                <div className="w-full md:w-1/2">
-                  <AddressList />
-                </div>
+              )}
+              <div className="w-full md:w-1/2">
+                <AddressList />
               </div>
             </div>
-          )}
+          </div>
 
           {/* Legal Rights Section */}
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-6 w-full">
