@@ -189,9 +189,9 @@ export const pin = onCall({ enforceAppCheck: true }, async (request) => {
       additionalInfo: sanitizedAdditionalInfo,
       lat: geocodeResult.lat,
       lng: geocodeResult.lng,
-      reported: existingSnapshot.exists()
-        ? existingSnapshot.val().reported + 1
-        : 1,
+      reported: existingSnapshot.exists() ?
+      existingSnapshot.val().reported + 1 :
+      1,
     };
 
     let isNewLocation = true;
@@ -222,9 +222,9 @@ export const pin = onCall({ enforceAppCheck: true }, async (request) => {
     });
 
     return {
-      message: isNewLocation
-        ? "Data logged and saved successfully"
-        : "Location updated successfully",
+      message: isNewLocation ?
+      "Data logged and saved successfully" :
+      "Location updated successfully",
       formattedAddress: finalLocationData.address,
     };
   } catch (error) {
@@ -379,14 +379,14 @@ export const performDailyCleanup = async () => {
       // Ensure all required fields exist and are numbers
       const stats = {
         total_pins:
-          typeof currentStats.total_pins === "number"
-            ? currentStats.total_pins
-            : 0,
+          typeof currentStats.total_pins === "number" ?
+          currentStats.total_pins :
+            0,
         today_pins: 0, // Always reset today_pins during daily cleanup
         week_pins:
-          typeof currentStats.week_pins === "number"
-            ? currentStats.week_pins
-            : 0,
+          typeof currentStats.week_pins === "number" ?
+          currentStats.week_pins :
+            0,
       };
 
       // Subtract the number of old pins that were removed from week_pins
