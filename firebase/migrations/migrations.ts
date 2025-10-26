@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import * as dotenv from "dotenv";
+import * as readline from "readline";
 
 // Load environment variables
 dotenv.config();
@@ -47,6 +48,166 @@ export const makeAddressKey = (address: string): string => {
     .replace(/^_|_$/g, "") // Remove leading/trailing underscores
     .substring(0, 200); // Limit length for Firebase key constraints
 };
+
+/**
+ * Helper function to prompt user for confirmation
+ */
+const promptConfirmation = (message: string): Promise<boolean> => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(message, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === "y" || answer.toLowerCase() === "yes");
+    });
+  });
+};
+
+/**
+ * @async
+ * @function deleteAfter
+ * @description
+ * Deletes all pins from both Realtime Database and Firestore that were added on or after the specified date.
+ *
+ * This function:
+ * - Scans both databases for pins with `addedAt` >= the specified date
+ * - Counts the total number of pins to be deleted
+ * - Prompts for user confirmation before deletion
+ * - Deletes pins from both databases if confirmed
+ *
+ * @param {string} date - ISO 8601 date string (e.g., "2024-10-25T00:00:00.000Z" or "2024-10-25")
+ * @param {admin.database.Database} realtimeDb - The Realtime Database instance
+ * @param {admin.firestore.Firestore} firestoreDb - The Firestore instance
+ *
+ * @throws {Error} If the date format is invalid or if an error occurs during deletion
+ *
+ * @returns {Promise<{ message: string, deleted: { rtdb: number, firestore: number } }>}
+ *          Resolves with a summary of the deletion operation
+ *
+ */
+export async function deleteAfter(
+  date: string,
+  realtimeDb: admin.database.Database,
+  firestoreDb: admin.firestore.Firestore
+): Promise<{ message: string; deleted: { rtdb: number; firestore: number } }> {
+  console.log(`🗑️  Scanning for pins to delete from ${date} onwards...`);
+
+  // Validate and parse the date
+  const targetDate = new Date(date);
+  if (isNaN(targetDate.getTime())) {
+    throw new Error(
+      `Invalid date format: ${date}. Please use ISO 8601 format (e.g., "2024-10-25" or "2024-10-25T12:30:00.000Z")`
+    );
+  }
+
+  const locationsRef = realtimeDb.ref("locations");
+  const oldPinsCollection = firestoreDb.collection("old-pins");
+
+  try {
+    // Scan Realtime Database
+    const rtdbSnapshot = await locationsRef.once("value");
+    const rtdbLocations = rtdbSnapshot.val() || {};
+
+    const rtdbToDelete: string[] = [];
+    Object.entries(rtdbLocations).forEach(([key, location]: [string, any]) => {
+      const addedAt = new Date(location.addedAt);
+      if (addedAt >= targetDate) {
+        rtdbToDelete.push(key);
+      }
+    });
+
+    // Scan Firestore
+    const firestoreSnapshot = await oldPinsCollection.get();
+    const firestoreToDelete: string[] = [];
+
+    firestoreSnapshot.docs.forEach((doc) => {
+      const data = doc.data();
+      const addedAt = new Date(data.addedAt);
+      if (addedAt >= targetDate) {
+        firestoreToDelete.push(doc.id);
+      }
+    });
+
+    const totalToDelete = rtdbToDelete.length + firestoreToDelete.length;
+
+    if (totalToDelete === 0) {
+      console.log(`✅ No pins found to delete from ${date} onwards.`);
+      return {
+        message: "No pins found to delete",
+        deleted: { rtdb: 0, firestore: 0 },
+      };
+    }
+
+    // Show summary
+    console.log(`\n📊 Pins found to delete:`);
+    console.log(`   Realtime Database: ${rtdbToDelete.length} pins`);
+    console.log(`   Firestore: ${firestoreToDelete.length} pins`);
+    console.log(`   Total: ${totalToDelete} pins`);
+    console.log(`   Date threshold: ${targetDate.toISOString()}`);
+
+    // Prompt for confirmation
+    const confirmed = await promptConfirmation(
+      `\n❓ Delete ${totalToDelete} pins? [y/n]: `
+    );
+
+    if (!confirmed) {
+      console.log("❌ Deletion cancelled by user.");
+      return {
+        message: "Deletion cancelled by user",
+        deleted: { rtdb: 0, firestore: 0 },
+      };
+    }
+
+    // Delete from Realtime Database
+    console.log(
+      `\n🔄 Deleting ${rtdbToDelete.length} pins from Realtime Database...`
+    );
+    const rtdbUpdates: { [key: string]: null } = {};
+    rtdbToDelete.forEach((key) => {
+      rtdbUpdates[key] = null;
+    });
+
+    if (Object.keys(rtdbUpdates).length > 0) {
+      await locationsRef.update(rtdbUpdates);
+    }
+
+    // Delete from Firestore in batches
+    console.log(
+      `🔄 Deleting ${firestoreToDelete.length} pins from Firestore...`
+    );
+    const deletePromises = [];
+    for (let i = 0; i < firestoreToDelete.length; i += 500) {
+      const batch = firestoreDb.batch();
+      const batchIds = firestoreToDelete.slice(i, i + 500);
+      batchIds.forEach((id) => {
+        batch.delete(oldPinsCollection.doc(id));
+      });
+      deletePromises.push(batch.commit());
+    }
+
+    if (deletePromises.length > 0) {
+      await Promise.all(deletePromises);
+    }
+
+    console.log(`\n✅ Successfully deleted ${totalToDelete} pins:`);
+    console.log(`   Realtime Database: ${rtdbToDelete.length} pins deleted`);
+    console.log(`   Firestore: ${firestoreToDelete.length} pins deleted`);
+
+    return {
+      message: `Successfully deleted ${totalToDelete} pins from ${date} onwards`,
+      deleted: {
+        rtdb: rtdbToDelete.length,
+        firestore: firestoreToDelete.length,
+      },
+    };
+  } catch (error) {
+    console.error("❌ Error during deletion:", error);
+    throw new Error(`Failed to delete pins: ${error}`);
+  }
+}
 
 export async function migrateRealtimeDatabase(
   realtimeDb: admin.database.Database
@@ -341,6 +502,35 @@ async function runStatsRecalculation() {
   }
 }
 
+async function runDeleteAfter(date: string) {
+  console.log(`🗑️  Starting deletion of pins from ${date} onwards...`);
+  console.log("=====================================");
+  console.log("This will delete pins from both databases:");
+  console.log("- Realtime Database: Live pins");
+  console.log("- Firestore: Old pins");
+  console.log("=====================================\n");
+
+  // Initialize database references
+  const realtimeDb = admin.database();
+  const firestoreDb = admin.firestore();
+
+  try {
+    const result = await deleteAfter(date, realtimeDb, firestoreDb);
+    console.log("\n🎉 Deletion process completed!");
+    console.log("=====================================");
+    console.log(`✅ ${result.message}`);
+    console.log(
+      `📊 Deleted: ${result.deleted.rtdb} from RTDB, ${result.deleted.firestore} from Firestore`
+    );
+  } catch (error) {
+    console.error("❌ Deletion failed:", error);
+    process.exit(1);
+  } finally {
+    // Close the app
+    await admin.app().delete();
+  }
+}
+
 function showUsage() {
   console.log("Firebase Migration Tool");
   console.log("======================");
@@ -352,10 +542,14 @@ function showUsage() {
   console.log(
     "  npm run migrate recalculateStats  - Recalculate statistics from both databases"
   );
+  console.log(
+    "  npm run migrate deleteAfter <date> - Delete all pins from specified date onwards"
+  );
   console.log("");
   console.log("Alternative usage:");
   console.log("  node migrations.js migrateDBs");
   console.log("  node migrations.js recalculateStats");
+  console.log("  node migrations.js deleteAfter <date>");
   console.log("");
   console.log("Commands:");
   console.log(
@@ -364,6 +558,13 @@ function showUsage() {
   console.log(
     "  recalculateStats  Recalculate pin statistics from both databases"
   );
+  console.log(
+    "  deleteAfter       Delete all pins from specified date onwards (ISO 8601 format)"
+  );
+  console.log("");
+  console.log("Examples:");
+  console.log("  npm run migrate deleteAfter 2024-10-25");
+  console.log("  npm run migrate deleteAfter 2024-10-25T12:30:00.000Z");
   console.log("");
 }
 
@@ -473,6 +674,21 @@ if (require.main === module) {
     case "recalculateStats":
       runStatsRecalculation().catch((error) => {
         console.error("Failed to recalculate stats:", error);
+        process.exit(1);
+      });
+      break;
+
+    case "deleteAfter":
+      const date = args[1];
+      if (!date) {
+        console.error("❌ Date parameter required for deleteAfter command.\n");
+        console.error("Usage: npm run migrate deleteAfter <date>");
+        console.error("Example: npm run migrate deleteAfter 2024-10-25\n");
+        showUsage();
+        process.exit(1);
+      }
+      runDeleteAfter(date).catch((error) => {
+        console.error("Failed to delete pins:", error);
         process.exit(1);
       });
       break;

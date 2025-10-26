@@ -86,6 +86,25 @@ npm run migrate migrateDBs
 npm run migrate recalculateStats
 ```
 
+### Delete pins from a specific date onwards:
+
+```bash
+npm run migrate deleteAfter <date>
+```
+
+**Examples:**
+
+```bash
+# Delete all pins from October 25, 2024 onwards
+npm run migrate deleteAfter 2024-10-25
+
+# Delete all pins from a specific timestamp onwards
+npm run migrate deleteAfter 2024-10-25T12:30:00.000Z
+
+# Delete all pins from today onwards
+npm run migrate deleteAfter $(date -u +"%Y-%m-%d")
+```
+
 ### Alternative usage:
 
 Run the script directly with Node.js:
@@ -93,6 +112,7 @@ Run the script directly with Node.js:
 ```bash
 node migrations.js migrateDBs
 node migrations.js recalculateStats
+node migrations.js deleteAfter 2024-10-25
 ```
 
 ## What the script does:
@@ -110,6 +130,16 @@ node migrations.js recalculateStats
 1. **Aggregates statistics** for total pins, today's pins, and weekly pins.
 2. **Sums up `reported` counts** from both databases, defaulting to 1 if missing.
 3. **Updates the calculated statistics** in the Realtime Database.
+
+### Pin Deletion (`deleteAfter <date>`):
+
+1. **Scans both databases** for pins with `addedAt` date >= the specified date.
+2. **Counts and displays** the total number of pins to be deleted.
+3. **Prompts for confirmation** before proceeding with deletion.
+4. **Deletes pins** from both databases if confirmed by user.
+5. **Supports ISO 8601 date formats** including date-only (`2024-10-25`) and full timestamps (`2024-10-25T12:30:00.000Z`).
+
+**⚠️ Warning**: The `deleteAfter` command permanently deletes data. Always backup your data before using this command.
 
 ## Example Output
 
@@ -149,6 +179,31 @@ Total unique addresses: 120
 ✅ Today's pins: 15
 ✅ Weekly pins: 50
 🎉 Stats recalculation completed successfully!
+=====================================
+```
+
+### Pin Deletion Summary:
+
+```
+🗑️  Starting deletion of pins from 2024-10-25 onwards...
+=====================================
+🗑️  Scanning for pins to delete from 2024-10-25 onwards...
+
+📊 Pins found to delete:
+   Realtime Database: 15 pins
+   Firestore: 8 pins
+   Total: 23 pins
+   Date threshold: 2024-10-25T00:00:00.000Z
+
+❓ Delete 23 pins? [y/n]: y
+
+🔄 Deleting 15 pins from Realtime Database...
+🔄 Deleting 8 pins from Firestore...
+
+✅ Successfully deleted 23 pins:
+   Realtime Database: 15 pins deleted
+   Firestore: 8 pins deleted
+🎉 Deletion process completed!
 =====================================
 ```
 
