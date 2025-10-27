@@ -1,3 +1,29 @@
+import * as crypto from "crypto";
+import dotenv from "dotenv";
+dotenv.config();
+
+/**
+ * Retrieves the client IP address from the request headers or the request object.
+ *
+ * - Extracts the first IP address from the `x-forwarded-for` header if available.
+ * - Falls back to the `req.ip` property if the header is not present.
+ * - Returns "unknown" if no IP address can be determined.
+ *
+ * @function clientIp
+ * @param {any} req - The request object containing headers and IP information.
+ * @return {string} The client IP address or "unknown" if it cannot be determined.
+ */
+export function clientIp(req: any): string {
+  // For Firebase callable functions, the request structure is different
+  // Try Firebase callable structure first, then fall back to regular HTTP request structure
+  const headers = req.rawRequest?.headers || req.headers || {};
+  const ip = req.rawRequest?.ip || req.ip;
+
+  const xff = (headers["x-forwarded-for"] as string | undefined) || "";
+  const first = xff.split(",")[0].trim();
+  return first || (ip ?? "unknown");
+}
+
 /**
  * Helper function to determine if a location should be archived (older than 7 days)
  * @param {string} addedAt - ISO timestamp string when the location was added
@@ -62,3 +88,39 @@ export function isDateTodayUTC(addedAt: string): boolean {
   );
 }
 
+/**
+ * Generates a unique key for an IP address using a salted SHA-256 hash.
+ *
+ * - Combines the IP address with a salt value from the environment variable `RATE_SALT`.
+ * - Creates a SHA-256 hash of the combined string.
+ * - Returns the resulting hash as a hexadecimal string.
+ *
+ * @function ipKey
+ * @param {string} ip - The IP address to generate a key for.
+ * @return {string} A unique hashed key for the IP address.
+ */
+export function ipKey(ip: string) {
+  const SALT = process.env.RATE_SALT || "";
+  return crypto
+    .createHash("sha256")
+    .update(ip + SALT)
+    .digest("hex");
+}
+
+/**
+ * Gets the current date in UTC as a string in the format `YYYY-MM-DD`.
+ *
+ * - Retrieves the current date and time.
+ * - Formats the date components (year, month, day) as a zero-padded string.
+ * - Returns the formatted date string.
+ *
+ * @function todayUTC
+ * @return {string} The current date in UTC formatted as `YYYY-MM-DD`.
+ */
+export function todayUTC(): string {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}

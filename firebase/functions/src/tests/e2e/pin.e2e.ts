@@ -25,6 +25,10 @@ describe("Pin Function E2E Tests", () => {
       await admin
         .firestore()
         .recursiveDelete(admin.firestore().collection("negative"));
+      // Clear rate limiting data
+      await admin
+        .firestore()
+        .recursiveDelete(admin.firestore().collection("rate_daily_ip"));
     } catch (error) {
       // Ignore cleanup errors
       console.warn("Cleanup error:", error);
@@ -38,6 +42,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo: "Additional Information Testing",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.100",
       },
     };
 
@@ -88,6 +95,9 @@ describe("Pin Function E2E Tests", () => {
           "10 Downing Street, Westminster, London SW1A 0AA, United Kingdom",
         additionalInfo: "UK Prime Minister's residence",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.101",
+      },
     };
 
     // Wrap the pin function for testing
@@ -107,6 +117,9 @@ describe("Pin Function E2E Tests", () => {
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo:
           "This is extremely offensive and inappropriate content that should be filtered",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.102",
       },
     };
 
@@ -150,6 +163,9 @@ describe("Pin Function E2E Tests", () => {
         address: "ThisIsNotARealAddressAnywhere12345XYZ!@#$%",
         additionalInfo: "Testing invalid address rejection",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.103",
+      },
     };
 
     // Wrap the pin function for testing
@@ -167,6 +183,9 @@ describe("Pin Function E2E Tests", () => {
       data: {
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo: "Testing missing addedAt field",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.104",
       },
     };
 
@@ -186,6 +205,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         additionalInfo: "Testing missing address field",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.105",
+      },
     };
 
     // Wrap the pin function for testing
@@ -202,6 +224,9 @@ describe("Pin Function E2E Tests", () => {
     const request = {
       data: {
         additionalInfo: "Testing missing required fields",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.106",
       },
     };
 
@@ -221,6 +246,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: "08/10/2025", // Invalid format (should be ISO8601)
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo: "Testing invalid date format",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.107",
       },
     };
 
@@ -245,6 +273,9 @@ describe("Pin Function E2E Tests", () => {
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo: "Testing date that is not today",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.108",
+      },
     };
 
     // Wrap the pin function for testing
@@ -262,6 +293,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "",
         additionalInfo: "Testing empty address",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.109",
       },
     };
 
@@ -307,6 +341,9 @@ describe("Pin Function E2E Tests", () => {
           address: "1600 Amphitheatre Parkway, Mountain View, CA",
           additionalInfo: "Testing database error",
         },
+        headers: {
+          "x-forwarded-for": "192.168.1.110",
+        },
       })
     ).rejects.toThrow("Internal server error");
 
@@ -319,6 +356,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "Los Angeles, CA",
         additionalInfo: "Testing invalid address rejection",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.111",
       },
     };
 
@@ -336,6 +376,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "1600 Amphitheatre Parkway, Mountain View, CA",
         additionalInfo: "Testing address key generation",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.112",
       },
     };
 
@@ -402,6 +445,9 @@ describe("Pin Function E2E Tests", () => {
         address,
         additionalInfo: "First submission",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.113",
+      },
     };
 
     const wrappedPin = testEnv.wrap(pin) as any;
@@ -437,6 +483,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address, // Same address should generate same key
         additionalInfo: "Updated information - second submission",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.113", // Same IP to avoid rate limiting
       },
     };
 
@@ -484,6 +533,9 @@ describe("Pin Function E2E Tests", () => {
         additionalInfo:
           "Third submission with slightly different address format",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.113", // Same IP to avoid rate limiting
+      },
     };
 
     const thirdResult = await wrappedPin(thirdRequest);
@@ -518,6 +570,9 @@ describe("Pin Function E2E Tests", () => {
         address: "Hollywood Boulevard and Highland Avenue, Los Angeles, CA",
         additionalInfo: "Testing intersection address acceptance",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.114",
+      },
     };
 
     const wrappedPin = testEnv.wrap(pin) as any;
@@ -538,6 +593,9 @@ describe("Pin Function E2E Tests", () => {
         address: "Sunset Boulevard & Vine Street, Hollywood, CA",
         additionalInfo: "Testing intersection with ampersand",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.115",
+      },
     };
 
     const wrappedPin = testEnv.wrap(pin) as any;
@@ -557,6 +615,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "123 Main Street, Los Angeles, CA 90210",
         additionalInfo: "Testing exact street address acceptance",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.116",
       },
     };
 
@@ -596,6 +657,9 @@ describe("Pin Function E2E Tests", () => {
         address: "Apple Park, 1 Apple Park Way, Cupertino, CA",
         additionalInfo: "Testing premise address acceptance",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.117",
+      },
     };
 
     const wrappedPin = testEnv.wrap(pin) as any;
@@ -634,6 +698,9 @@ describe("Pin Function E2E Tests", () => {
         address: "Starbucks, 1912 Pike Place, Seattle, WA 98101",
         additionalInfo: "Testing business address acceptance",
       },
+      headers: {
+        "x-forwarded-for": "192.168.1.118",
+      },
     };
 
     const wrappedPin = testEnv.wrap(pin) as any;
@@ -653,6 +720,9 @@ describe("Pin Function E2E Tests", () => {
         addedAt: new Date().toISOString(),
         address: "1234 Elm Street, Springfield, IL 62701",
         additionalInfo: "Testing exact residential house address",
+      },
+      headers: {
+        "x-forwarded-for": "192.168.1.119",
       },
     };
 
@@ -687,5 +757,135 @@ describe("Pin Function E2E Tests", () => {
     // Verify the address contains expected components of a valid US address
     expect(result.formattedAddress).toMatch(/IL|Illinois/i);
     expect(result.formattedAddress).toMatch(/USA|United States/i);
+  });
+
+  it("should enforce rate limiting after 3 requests from same IP", async () => {
+    const testIP = "192.168.1.200";
+    const baseRequest = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1600 Amphitheatre Parkway, Mountain View, CA",
+        additionalInfo: "Rate limiting test",
+      },
+      headers: {
+        "x-forwarded-for": testIP,
+      },
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // First 3 requests should succeed
+    for (let i = 1; i <= 3; i++) {
+      const request = {
+        ...baseRequest,
+        data: {
+          ...baseRequest.data,
+          additionalInfo: `Rate limiting test request ${i}`,
+        },
+      };
+
+      const result = await wrappedPin(request);
+      expect(result.message).toMatch(/successfully/);
+    }
+
+    // 4th request should be blocked by rate limiting
+    const fourthRequest = {
+      ...baseRequest,
+      data: {
+        ...baseRequest.data,
+        additionalInfo: "Rate limiting test request 4 - should be blocked",
+      },
+    };
+
+    await expect(wrappedPin(fourthRequest)).rejects.toThrow(
+      "Daily limit reached. Try again tomorrow."
+    );
+  });
+
+  it("should allow requests from different IPs even after rate limit", async () => {
+    const firstIP = "192.168.1.201";
+    const secondIP = "192.168.1.202";
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    // Exhaust rate limit for first IP
+    for (let i = 1; i <= 3; i++) {
+      const request = {
+        data: {
+          addedAt: new Date().toISOString(),
+          address: `${1000 + i} Main Street, Los Angeles, CA`, // Different addresses to avoid conflicts
+          additionalInfo: `Request ${i} from first IP`,
+        },
+        headers: {
+          "x-forwarded-for": firstIP,
+        },
+      };
+
+      const result = await wrappedPin(request);
+      expect(result.message).toMatch(/successfully/);
+    }
+
+    // 4th request from first IP should be blocked
+    await expect(
+      wrappedPin({
+        data: {
+          addedAt: new Date().toISOString(),
+          address: "1004 Main Street, Los Angeles, CA",
+          additionalInfo: "4th request from first IP - should be blocked",
+        },
+        headers: {
+          "x-forwarded-for": firstIP,
+        },
+      })
+    ).rejects.toThrow("Daily limit reached. Try again tomorrow.");
+
+    // But requests from second IP should still work
+    const requestFromSecondIP = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "2000 Second Street, Los Angeles, CA",
+        additionalInfo: "Request from second IP - should succeed",
+      },
+      headers: {
+        "x-forwarded-for": secondIP,
+      },
+    };
+
+    const result = await wrappedPin(requestFromSecondIP);
+    expect(result.message).toMatch(/successfully/);
+  });
+
+  it("should reject requests with no IP headers", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1600 Amphitheatre Parkway, Mountain View, CA",
+        additionalInfo: "Testing no IP headers",
+      },
+      headers: {}, // Empty headers - will result in "unknown" IP
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    await expect(wrappedPin(request)).rejects.toThrow(
+      "Unable to determine client IP address. Request blocked for security."
+    );
+  });
+
+  it("should allow requests with IP in request.ip when x-forwarded-for is missing", async () => {
+    const request = {
+      data: {
+        addedAt: new Date().toISOString(),
+        address: "1600 Amphitheatre Parkway, Mountain View, CA",
+        additionalInfo: "Testing request.ip fallback",
+      },
+      headers: {}, // No x-forwarded-for header
+      ip: "192.168.1.203", // But has request.ip
+    };
+
+    const wrappedPin = testEnv.wrap(pin) as any;
+
+    const result = await wrappedPin(request);
+    expect(result.message).toMatch(/successfully/);
   });
 });
