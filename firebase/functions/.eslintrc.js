@@ -30,5 +30,6 @@ module.exports = {
     "max-len": "off",
     "indent": "off",
     "object-curly-spacing": "off", // Disable the object-curly-spacing rule
+    "operator-linebreak": "off", // Disable operator linebreak rules
   },
 };

@@ -1,6 +1,28 @@
 import * as crypto from "crypto";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
 dotenv.config();
+
+/**
+ * Retrieves the client IP address from the request headers or the request object.
+ *
+ * - Extracts the first IP address from the `x-forwarded-for` header if available.
+ * - Falls back to the `req.ip` property if the header is not present.
+ * - Returns "unknown" if no IP address can be determined.
+ *
+ * @function clientIp
+ * @param {any} req - The request object containing headers and IP information.
+ * @return {string} The client IP address or "unknown" if it cannot be determined.
+ */
+export function clientIp(req: any): string {
+  // For Firebase callable functions, the request structure is different
+  // Try Firebase callable structure first, then fall back to regular HTTP request structure
+  const headers = req.rawRequest?.headers || req.headers || {};
+  const ip = req.rawRequest?.ip || req.ip;
+
+  const xff = (headers["x-forwarded-for"] as string | undefined) || "";
+  const first = xff.split(",")[0].trim();
+  return first || (ip ?? "unknown");
+}
 
 /**
  * Helper function to determine if a location should be archived (older than 7 days)
@@ -67,23 +89,6 @@ export function isDateTodayUTC(addedAt: string): boolean {
 }
 
 /**
- * Retrieves the client IP address from the request headers or the request object.
- *
- * - Extracts the first IP address from the `x-forwarded-for` header if available.
- * - Falls back to the `req.ip` property if the header is not present.
- * - Returns "unknown" if no IP address can be determined.
- *
- * @function clientIp
- * @param {any} req - The request object containing headers and IP information.
- * @returns {string} The client IP address or "unknown" if it cannot be determined.
- */
-export function clientIp(req: any): string {
-  const xff = (req.headers["x-forwarded-for"] as string | undefined) || "";
-  const first = xff.split(",")[0].trim();
-  return first || (req.ip ?? "unknown");
-}
-
-/**
  * Generates a unique key for an IP address using a salted SHA-256 hash.
  *
  * - Combines the IP address with a salt value from the environment variable `RATE_SALT`.
@@ -92,7 +97,7 @@ export function clientIp(req: any): string {
  *
  * @function ipKey
  * @param {string} ip - The IP address to generate a key for.
- * @returns {string} A unique hashed key for the IP address.
+ * @return {string} A unique hashed key for the IP address.
  */
 export function ipKey(ip: string) {
   const SALT = process.env.RATE_SALT || "";
@@ -110,7 +115,7 @@ export function ipKey(ip: string) {
  * - Returns the formatted date string.
  *
  * @function todayUTC
- * @returns {string} The current date in UTC formatted as `YYYY-MM-DD`.
+ * @return {string} The current date in UTC formatted as `YYYY-MM-DD`.
  */
 export function todayUTC(): string {
   const d = new Date();

@@ -10,10 +10,12 @@ import {
   isValidISO8601,
   isDateTodayUTC,
   isOlderThan7Days,
+  clientIp,
+  ipKey,
+  todayUTC,
 } from "./utils/utils";
-import { PinLocation } from "./types/index";
+import { PinLocation, FirebaseCallableRequest } from "./types/index";
 import * as dotenv from "dotenv";
-import { clientIp, ipKey, todayUTC } from "./utils/utils";
 dotenv.config();
 
 // Initialize Firebase Admin
@@ -38,14 +40,14 @@ const firestoreDb = admin.firestore();
  * - Checks if the IP address has exceeded the daily limit for the specified bucket.
  * - Updates the Firestore document to track the count and reset it for a new day.
  *
- * @param {any} req - The request object containing client information.
+ * @param {FirebaseCallableRequest} req - The request object containing client information.
  * @param {string} bucket - The logical bucket name for rate limiting.
  * @param {number} [limit=3] - The maximum number of allowed calls per day (default is 3).
  * @throws {HttpsError} If the client IP address is unknown or cannot be determined.
- * @returns {Promise<boolean>} Resolves to `true` if the limit is exceeded, otherwise `false`.
+ * @return {Promise<boolean>} Resolves to `true` if the limit is exceeded, otherwise `false`.
  */
 export async function enforceDailyQuotaByIp(
-  req: any,
+  req: FirebaseCallableRequest,
   bucket: string,
   limit = 3
 ): Promise<boolean> {
@@ -65,7 +67,7 @@ export async function enforceDailyQuotaByIp(
 
   const result = await firestoreDb.runTransaction(async (tx) => {
     const snap = await tx.get(doc);
-    const data = snap.exists ? (snap.data() as any) : {};
+    const data = snap.exists ? snap.data() : {};
     const date = data?.date ?? today;
     let count = typeof data?.count === "number" ? data.count : 0;
 

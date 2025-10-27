@@ -13,7 +13,8 @@ describe("IP Handling Functions", () => {
           "x-forwarded-for": "192.168.1.1, 10.0.0.1, 172.16.0.1",
         },
         ip: "127.0.0.1",
-      };
+      } as 
+    any;
 
       expect(clientIp(req)).toBe("192.168.1.1");
     });
@@ -26,7 +27,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("192.168.1.1");
+      expect(clientIp(req as any)).toBe("192.168.1.1");
     });
 
     it("should fallback to req.ip when x-forwarded-for is empty", () => {
@@ -37,7 +38,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("127.0.0.1");
+      expect(clientIp(req as any)).toBe("127.0.0.1");
     });
 
     it("should fallback to req.ip when x-forwarded-for is missing", () => {
@@ -46,7 +47,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("127.0.0.1");
+      expect(clientIp(req as any)).toBe("127.0.0.1");
     });
 
     it("should return 'unknown' when both x-forwarded-for and req.ip are missing", () => {
@@ -54,7 +55,7 @@ describe("IP Handling Functions", () => {
         headers: {},
       };
 
-      expect(clientIp(req)).toBe("unknown");
+      expect(clientIp(req as any)).toBe("unknown");
     });
 
     it("should return 'unknown' when req.ip is null", () => {
@@ -63,7 +64,7 @@ describe("IP Handling Functions", () => {
         ip: null,
       };
 
-      expect(clientIp(req)).toBe("unknown");
+      expect(clientIp(req as any)).toBe("unknown");
     });
 
     it("should return 'unknown' when req.ip is undefined", () => {
@@ -72,7 +73,7 @@ describe("IP Handling Functions", () => {
         ip: undefined,
       };
 
-      expect(clientIp(req)).toBe("unknown");
+      expect(clientIp(req as any)).toBe("unknown");
     });
 
     it("should trim whitespace from x-forwarded-for IP", () => {
@@ -83,7 +84,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("192.168.1.1");
+      expect(clientIp(req as any)).toBe("192.168.1.1");
     });
 
     it("should handle empty string in x-forwarded-for", () => {
@@ -94,7 +95,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("127.0.0.1");
+      expect(clientIp(req as any)).toBe("127.0.0.1");
     });
 
     it("should handle IPv6 addresses", () => {
@@ -105,7 +106,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
+      expect(clientIp(req as any)).toBe("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
     });
 
     it("should handle malformed headers gracefully", () => {
@@ -116,7 +117,7 @@ describe("IP Handling Functions", () => {
         ip: "127.0.0.1",
       };
 
-      expect(clientIp(req)).toBe("127.0.0.1");
+      expect(clientIp(req as any)).toBe("127.0.0.1");
     });
   });
 

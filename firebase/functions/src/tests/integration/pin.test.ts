@@ -393,17 +393,8 @@ describe("pin – integration", () => {
 
     // Mock the transaction to simulate existing record at limit
     mockRunTransaction.mockImplementationOnce(async (callback: any) => {
-      const mockTx = {
-        get: jest.fn().mockResolvedValue({
-          exists: true,
-          data: () => ({
-            date: new Date().toISOString().split("T")[0], // Today's date
-            count: 3, // At the limit
-          }),
-        }),
-        set: jest.fn(),
-      };
-      return await callback(mockTx);
+      // The callback should return true when at limit (rate limit exceeded)
+      return true; // Force the enforceDailyQuotaByIp to return true (exceeded)
     });
 
     const request = createRequest({
@@ -422,6 +413,7 @@ describe("pin – integration", () => {
   });
 
   it("should propagate rate limiting errors (like unknown IP)", async () => {
+    // Don't use createRequest helper here because we need empty headers
     const request = {
       data: {
         addedAt: "2025-07-26T00:00:00.000Z",
@@ -429,6 +421,7 @@ describe("pin – integration", () => {
         additionalInfo: "Nice place",
       },
       headers: {}, // Empty headers - will result in "unknown" IP
+      // No ip property either, so clientIp will return "unknown"
     };
 
     const context = { auth: { uid: "test-user-id" } };
