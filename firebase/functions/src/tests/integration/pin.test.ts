@@ -67,12 +67,51 @@ jest.mock("firebase-admin", () => {
     };
   });
   const mockAdd = jest.fn().mockResolvedValue({ id: "mock-doc-id" });
-  const mockCollection = jest.fn(() => ({ add: mockAdd }));
+  const mockCollectionTracker = jest.fn(); // Track collection calls
+
+  // Mock Firestore for rate limiting
+  const mockGet = jest.fn().mockResolvedValue({
+    exists: false,
+    data: () => ({}),
+  });
+  const mockTxSet = jest.fn();
+  const mockDoc = jest.fn(() => ({ get: mockGet, set: mockTxSet }));
+  const mockFirestoreCollection = jest.fn(() => ({
+    add: mockAdd,
+    doc: mockDoc,
+  }));
+  const mockRunTransaction = jest.fn(async (callback) => {
+    const mockTx = {
+      get: mockGet,
+      set: mockTxSet,
+    };
+    return await callback(mockTx);
+  });
 
   return {
     initializeApp: jest.fn(),
     database: jest.fn(() => ({ ref: mockRef })),
-    firestore: jest.fn(() => ({ collection: mockCollection })),
+    firestore: Object.assign(
+      jest.fn(() => ({
+        collection: (name: string) => {
+          if (name === "rate_daily_ip") {
+            return mockFirestoreCollection();
+          }
+          // Track negative collection calls
+          if (name === "negative") {
+            mockCollectionTracker(name);
+          }
+          return { add: mockAdd };
+        },
+        runTransaction: mockRunTransaction,
+      })),
+      {
+        FieldValue: {
+          serverTimestamp: jest.fn(() => ({ serverTimestamp: true })),
+        },
+        __mockCollectionTracker: mockCollectionTracker, // Expose for testing
+      }
+    ),
   };
 });
 
@@ -84,6 +123,13 @@ const wrappedPin = testEnv.wrap(pin) as (
 
 describe("pin – integration", () => {
   const FIXED_DATE = new Date("2025-07-26T00:00:00.000Z").getTime();
+
+  // Helper function to create properly formatted request objects
+  const createRequest = (data: any) => ({
+    ...data,
+    headers: { "x-forwarded-for": "192.168.1.1" },
+    ip: "127.0.0.1",
+  });
 
   beforeEach(() => {
     // Mock Date to ensure consistent test results
@@ -99,13 +145,13 @@ describe("pin – integration", () => {
 
   it("writes to RTDB & returns formatted address", async () => {
     // Wrap the data in the expected structure
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "123 Main St",
         additionalInfo: "Nice",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -125,13 +171,13 @@ describe("pin – integration", () => {
     // Configure the AI Filter to return true (negative content detected)
     __mockIsNegative.mockResolvedValueOnce(true);
 
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "123 Main St",
         additionalInfo: "This is offensive content",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -142,9 +188,10 @@ describe("pin – integration", () => {
 
     // Verify that the negative content was attempted to be logged to Firestore
     // We can access the mocked Firestore functions to verify they were called
-    const mockFirestore = require("firebase-admin").firestore();
-    const mockCollection = mockFirestore.collection;
-    expect(mockCollection).toHaveBeenCalledWith("negative");
+    const mockFirestore = require("firebase-admin").firestore;
+    expect(mockFirestore.__mockCollectionTracker).toHaveBeenCalledWith(
+      "negative"
+    );
 
     // Reset the mock back to default for other tests
     __mockIsNegative.mockResolvedValue(false);
@@ -157,13 +204,13 @@ describe("pin – integration", () => {
     // Configure the geocoding service to return null (address not found)
     __mockGeocodeAddress.mockResolvedValueOnce(null);
 
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "Invalid Address That Cannot Be Found",
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -181,13 +228,13 @@ describe("pin – integration", () => {
   });
 
   it("should reject requests with missing required fields", async () => {
-    const request = {
+    const request = createRequest({
       data: {
         // Missing addedAt field
         address: "123 Main St",
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -246,13 +293,13 @@ describe("pin – integration", () => {
       };
     });
 
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "2025-07-26T00:00:00.000Z", // Use mocked date to test today_pins increment
         address: "123 Main St",
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -283,13 +330,13 @@ describe("pin – integration", () => {
   });
 
   it("should handle invalid data format for addedAt", async () => {
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "ERROR FORMAT", // Invalid date format
         address: "123 Main St",
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -302,13 +349,13 @@ describe("pin – integration", () => {
     // Use a date that's not today (relative to our mocked date of 2025-07-26)
     const notTodayDate = "2025-07-27T00:00:00.000Z"; // Tomorrow from mocked perspective
 
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: notTodayDate,
         address: "123 Main St",
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
 
@@ -324,17 +371,70 @@ describe("pin – integration", () => {
     // Configure the geocoding service to return null (address not found)
     __mockGeocodeAddress.mockResolvedValueOnce(null);
 
-    const request = {
+    const request = createRequest({
       data: {
         addedAt: "2025-07-26T00:00:00.000Z", // Must match mocked date
         address: "New York", // Too generic
         additionalInfo: "Nice place",
       },
-    };
+    });
 
     const context = { auth: { uid: "test-user-id" } };
     await expect(wrappedPin(request, context)).rejects.toThrow(
       "Please provide a valid address that can be found on the map"
+    );
+  });
+
+  it("should throw an error when daily rate limit is exceeded", async () => {
+    // Get the Firebase Admin SDK mock and configure it to simulate rate limit exceeded
+    const admin = require("firebase-admin");
+    const mockFirestore = admin.firestore();
+    const mockRunTransaction = mockFirestore.runTransaction;
+
+    // Mock the transaction to simulate existing record at limit
+    mockRunTransaction.mockImplementationOnce(async (callback: any) => {
+      const mockTx = {
+        get: jest.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({
+            date: new Date().toISOString().split("T")[0], // Today's date
+            count: 3, // At the limit
+          }),
+        }),
+        set: jest.fn(),
+      };
+      return await callback(mockTx);
+    });
+
+    const request = createRequest({
+      data: {
+        addedAt: "2025-07-26T00:00:00.000Z",
+        address: "123 Main St",
+        additionalInfo: "Nice place",
+      },
+    });
+
+    const context = { auth: { uid: "test-user-id" } };
+
+    await expect(wrappedPin(request, context)).rejects.toThrow(
+      "Daily limit reached. Try again tomorrow."
+    );
+  });
+
+  it("should propagate rate limiting errors (like unknown IP)", async () => {
+    const request = {
+      data: {
+        addedAt: "2025-07-26T00:00:00.000Z",
+        address: "123 Main St",
+        additionalInfo: "Nice place",
+      },
+      headers: {}, // Empty headers - will result in "unknown" IP
+    };
+
+    const context = { auth: { uid: "test-user-id" } };
+
+    await expect(wrappedPin(request, context)).rejects.toThrow(
+      "Unable to determine client IP address. Request blocked for security."
     );
   });
 });

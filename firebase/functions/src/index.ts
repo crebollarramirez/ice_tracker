@@ -13,6 +13,7 @@ import {
 } from "./utils/utils";
 import { PinLocation } from "./types/index";
 import * as dotenv from "dotenv";
+import { clientIp, ipKey, todayUTC } from "./utils/utils";
 dotenv.config();
 
 // Initialize Firebase Admin
@@ -26,6 +27,71 @@ const geocodingService = new GoogleGeocodingService();
 
 const realtimeDb = admin.database();
 const firestoreDb = admin.firestore();
+
+/**
+ * @async
+ * @function enforceDailyQuotaByIp
+ * @description
+ * Enforces a daily quota for the number of calls allowed per IP address for a specific logical bucket.
+ *
+ * - Retrieves the client IP address from the request.
+ * - Checks if the IP address has exceeded the daily limit for the specified bucket.
+ * - Updates the Firestore document to track the count and reset it for a new day.
+ *
+ * @param {any} req - The request object containing client information.
+ * @param {string} bucket - The logical bucket name for rate limiting.
+ * @param {number} [limit=3] - The maximum number of allowed calls per day (default is 3).
+ * @throws {HttpsError} If the client IP address is unknown or cannot be determined.
+ * @returns {Promise<boolean>} Resolves to `true` if the limit is exceeded, otherwise `false`.
+ */
+export async function enforceDailyQuotaByIp(
+  req: any,
+  bucket: string,
+  limit = 3
+): Promise<boolean> {
+  const ip = clientIp(req);
+
+  // Reject requests with unknown IP to prevent abuse
+  if (ip === "unknown") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Unable to determine client IP address. Request blocked for security."
+    );
+  }
+
+  const key = ipKey(ip);
+  const doc = firestoreDb.collection("rate_daily_ip").doc(`${bucket}_${key}`);
+  const today = todayUTC();
+
+  const result = await firestoreDb.runTransaction(async (tx) => {
+    const snap = await tx.get(doc);
+    const data = snap.exists ? (snap.data() as any) : {};
+    const date = data?.date ?? today;
+    let count = typeof data?.count === "number" ? data.count : 0;
+
+    if (date !== today) count = 0; // new day → reset
+
+    if (count >= limit) {
+      return true; // Above limit
+    }
+
+    tx.set(
+      doc,
+      {
+        date: today,
+        count: count + 1,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        // TTL: automatically delete after 25 hours (1 day + 1 hour buffer)
+        deleteAt: new Date(Date.now() + 25 * 60 * 60 * 1000),
+      },
+      { merge: true }
+    );
+
+    return false; // Below limit, request allowed
+  });
+
+  return result;
+}
 
 /**
  * Updates pin statistics in the realtime database.
@@ -99,6 +165,16 @@ async function updatePinStats(addedAt: string): Promise<void> {
  */
 export const pin = onCall({ enforceAppCheck: true }, async (request) => {
   logger.info("pin called", { data: request.data });
+
+  // Enforce rate limiting: max 3 calls per IP per day
+  const isAboveLimit = await enforceDailyQuotaByIp(request, "pin", 3);
+
+  if (isAboveLimit) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Daily limit reached. Try again tomorrow."
+    );
+  }
 
   const { data } = request;
 
