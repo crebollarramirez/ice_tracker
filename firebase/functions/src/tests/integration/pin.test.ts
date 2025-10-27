@@ -109,6 +109,12 @@ jest.mock("firebase-admin", () => {
         FieldValue: {
           serverTimestamp: jest.fn(() => ({ serverTimestamp: true })),
         },
+        Timestamp: {
+          fromMillis: jest.fn((millis: number) => ({
+            _seconds: Math.floor(millis / 1000),
+            _nanoseconds: (millis % 1000) * 1000000,
+          })),
+        },
         __mockCollectionTracker: mockCollectionTracker, // Expose for testing
       }
     ),

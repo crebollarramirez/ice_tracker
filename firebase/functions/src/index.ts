@@ -83,8 +83,11 @@ export async function enforceDailyQuotaByIp(
         date: today,
         count: count + 1,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        // TTL: automatically delete after 25 hours (1 day + 1 hour buffer)
-        deleteAt: new Date(Date.now() + 25 * 60 * 60 * 1000),
+
+        // Proper Firestore Timestamp for TTL (25 hours ahead)
+        deleteAt: admin.firestore.Timestamp.fromMillis(
+          Date.now() + 25 * 60 * 60 * 1000
+        ),
       },
       { merge: true }
     );

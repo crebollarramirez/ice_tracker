@@ -24,6 +24,12 @@ jest.mock("firebase-admin", () => ({
       FieldValue: {
         serverTimestamp: jest.fn(() => "mock_timestamp"),
       },
+      Timestamp: {
+        fromMillis: jest.fn((millis: number) => ({
+          _seconds: Math.floor(millis / 1000),
+          _nanoseconds: (millis % 1000) * 1000000,
+        })),
+      },
     }
   ),
   credential: {
@@ -62,11 +68,13 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         // No ip property
       };
 
-      await expect(enforceDailyQuotaByIp(req as any, "test", 3)).rejects.toThrow(
-        HttpsError
-      );
+      await expect(
+        enforceDailyQuotaByIp(req as any, "test", 3)
+      ).rejects.toThrow(HttpsError);
 
-      await expect(enforceDailyQuotaByIp(req as any, "test", 3)).rejects.toThrow(
+      await expect(
+        enforceDailyQuotaByIp(req as any, "test", 3)
+      ).rejects.toThrow(
         "Unable to determine client IP address. Request blocked for security."
       );
 
@@ -81,7 +89,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         ip: null,
       };
 
-      const error = await enforceDailyQuotaByIp(req as any, "test", 3).catch((e) => e);
+      const error = await enforceDailyQuotaByIp(req as any, "test", 3).catch(
+        (e) => e
+      );
       expect(error).toBeInstanceOf(HttpsError);
       expect(error.code).toBe("failed-precondition");
       expect(error.message).toBe(
@@ -98,13 +108,13 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         ip: undefined,
       };
 
-      await expect(enforceDailyQuotaByIp(req as any, "test", 3)).rejects.toMatchObject(
-        {
-          code: "failed-precondition",
-          message:
-            "Unable to determine client IP address. Request blocked for security.",
-        }
-      );
+      await expect(
+        enforceDailyQuotaByIp(req as any, "test", 3)
+      ).rejects.toMatchObject({
+        code: "failed-precondition",
+        message:
+          "Unable to determine client IP address. Request blocked for security.",
+      });
 
       expect(mockRunTransaction).not.toHaveBeenCalled();
     });
@@ -129,7 +139,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Verify database operations were called correctly
       expect(mockCollection).toHaveBeenCalledWith("rate_daily_ip");
@@ -159,7 +171,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Verify the set was called to increment count
       expect(mockTxSet).toHaveBeenCalledWith(
@@ -258,7 +272,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Verify count was reset to 1 for new day
       expect(mockTxSet).toHaveBeenCalledWith(
@@ -299,7 +315,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Should treat as today and increment normally
       expect(mockTxSet).toHaveBeenCalledWith(
@@ -459,7 +477,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
       expect(mockRunTransaction).toHaveBeenCalledTimes(1);
     });
 
@@ -479,7 +499,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
       expect(mockRunTransaction).toHaveBeenCalledTimes(1);
     });
 
@@ -497,7 +519,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Should use the first IP (203.0.113.1) and create a consistent hash
       expect(mockDoc).toHaveBeenCalledWith(
@@ -565,7 +589,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Should treat as first request and set count to 1
       expect(mockTxSet).toHaveBeenCalledWith(
@@ -600,7 +626,9 @@ describe("enforceDailyQuotaByIp Integration Tests", () => {
         await callback(mockTx);
       });
 
-      await expect(enforceDailyQuotaByIp(req as any, "pin", 3)).resolves.not.toThrow();
+      await expect(
+        enforceDailyQuotaByIp(req as any, "pin", 3)
+      ).resolves.not.toThrow();
 
       // Should treat invalid count as 0 and set to 1
       expect(mockTxSet).toHaveBeenCalledWith(
