@@ -23,6 +23,10 @@ export default function AddressForm() {
   const SUCCESS_COOLDOWN = SUCCESS_COOLDOWN_MINUTES * 60 * 1000;
   const NEGATIVE_COOLDOWN = NEGATIVE_COOLDOWN_MINUTES * 60 * 1000;
 
+  // Check if additional info field should be enabled
+  const isAdditionalInfoEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_ADDITIONAL_INFO_FIELD === "true";
+
   // Helper function to check block status (only called when needed)
   const isBlocked = () => {
     if (typeof window === "undefined") return false;
@@ -212,54 +216,56 @@ export default function AddressForm() {
           />
         </div>
 
-        {/* Expandable Additional Information */}
-        <div className="flex-shrink-0">
-          {!showAdditionalInfo ? (
-            <button
-              type="button"
-              onClick={() => setShowAdditionalInfo(true)}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
-            >
-              + {t("form.fields.addDetails")}
-            </button>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label
-                  htmlFor="additionalInfo"
-                  className="text-xs font-medium text-gray-700"
-                >
-                  {t("form.fields.detailsLabel")}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAdditionalInfo(false);
-                    setAdditionalInfo("");
-                  }}
-                  className="text-xs text-gray-500 hover:text-gray-700"
-                >
-                  {t("form.buttons.hide")}
-                </button>
+        {/* Expandable Additional Information - Only show if enabled */}
+        {isAdditionalInfoEnabled && (
+          <div className="flex-shrink-0">
+            {!showAdditionalInfo ? (
+              <button
+                type="button"
+                onClick={() => setShowAdditionalInfo(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+              >
+                + {t("form.fields.addDetails")}
+              </button>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label
+                    htmlFor="additionalInfo"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    {t("form.fields.detailsLabel")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAdditionalInfo(false);
+                      setAdditionalInfo("");
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    {t("form.buttons.hide")}
+                  </button>
+                </div>
+                <textarea
+                  id="additionalInfo"
+                  value={additionalInfo}
+                  onChange={(e) => setAdditionalInfo(e.target.value)}
+                  placeholder={t("form.fields.detailsPlaceholder")}
+                  className="px-3 py-2 border border-gray-300 rounded w-full text-sm resize-none"
+                  rows="2"
+                  disabled={isLoading}
+                  maxLength="200"
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  {t("form.fields.charactersCount", {
+                    count: additionalInfo.length,
+                  })}
+                </div>
               </div>
-              <textarea
-                id="additionalInfo"
-                value={additionalInfo}
-                onChange={(e) => setAdditionalInfo(e.target.value)}
-                placeholder={t("form.fields.detailsPlaceholder")}
-                className="px-3 py-2 border border-gray-300 rounded w-full text-sm resize-none"
-                rows="2"
-                disabled={isLoading}
-                maxLength="200"
-              />
-              <div className="text-xs text-gray-400 mt-1">
-                {t("form.fields.charactersCount", {
-                  count: additionalInfo.length,
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Submit Button - Always at Bottom */}
         <div className="mt-auto pt-1 flex-shrink-0">
