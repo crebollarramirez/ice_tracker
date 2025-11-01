@@ -6,6 +6,11 @@ import {
   httpsCallable,
 } from "firebase/functions";
 
+import {
+  getAuth,
+  connectAuthEmulator,
+} from "firebase/auth";
+
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // Firebase configuration using environment variables
@@ -40,10 +45,14 @@ const database = getDatabase(app);
 // Initialize Firebase Functions
 const functions = getFunctions(app);
 
+// initialize Firebase Auth instance
+const auth = getAuth(app);
+
 // Connect to the emulator if running locally
 if (process.env.NODE_ENV === "development") {
   try {
     connectDatabaseEmulator(database, "127.0.0.1", 9000);
+    connectAuthEmulator(auth, "http://127.0.0.1:5050"); // ← Add http:// protocol
     console.log("Connected to Firebase Realtime Database Emulator");
   } catch (error) {
     if (error.message.includes("already")) {
@@ -77,4 +86,4 @@ if (process.env.NODE_ENV === "development") {
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
 
-export { database, pinFunction };
+export { database, pinFunction, auth };

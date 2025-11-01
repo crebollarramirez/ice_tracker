@@ -26,6 +26,9 @@
     "firestore": {
       "port": 8080
     },
+    "auth": {
+      "port": 5050
+    },
     "ui": {
       "enabled": true
     }

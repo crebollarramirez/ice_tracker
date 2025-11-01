@@ -32,6 +32,16 @@ export default function Navbar() {
           >
             Resources
           </Link>
+          <Link 
+            href={`/${locale}/verifiersLogin`} 
+            className={`transition-colors duration-200 ${
+              pathname === `/${locale}/verifiers`
+                ? "text-red-600 font-bold underline"
+                : "text-gray-400 hover:text-red-500"
+            }`}
+          >
+            Verifier?
+          </Link>
         </div>
 
         <LanguageSwitcher />

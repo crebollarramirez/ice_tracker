@@ -12,7 +12,7 @@
     "test:integration": "jest --testMatch '**/integration/**/*.test.ts' --testMatch '**/integration/**/*.spec.ts'",
     "test:e2e": "jest --runInBand --testMatch '**/e2e/**/*.e2e.ts'",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
-    "test:emulators": "firebase emulators:start --only database,firestore,functions --project iceinmyarea"
+    "test:emulators": "firebase emulators:start --only database,firestore,functions,auth --project iceinmyarea"
   },
   "engines": {
     "node": "22"
