@@ -10,6 +10,9 @@ import Navbar from "@/components/Navbar";
 import Disclaimer from "@/components/Disclaimer";
 import Maintenance from "@/components/Maintenance";
 import { LocationsProvider } from "@/contexts/LocationsContext";
+import { DonateProvider } from "@/contexts/DonateContext";
+import { DonatePopUp } from "@/components/Donate/DonatePopUp";
+import { Notice } from "@/components/Donate/Notice";
 
 const MapComponent = dynamic(() => import("../../components/MapComponent"), {
   ssr: false,
@@ -23,78 +26,79 @@ export default function Home() {
     process.env.NEXT_PUBLIC_MAP_FORM_MAINTENANCE === "true";
 
   return (
-    <LocationsProvider>
-      <main className="container flex items-center justify-center">
-        <Analytics />
-        <SpeedInsights />
-        <div className="w-full lg:w-2/3 flex flex-col items-center gap-4 md:gap-6">
-          <Navbar />
+    <DonateProvider>
+      <LocationsProvider>
+        <main className="container flex items-center justify-center">
+          <Analytics />
+          <SpeedInsights />
+          <div className="w-full lg:w-2/3 flex flex-col items-center gap-4 md:gap-6">
+            <Navbar />
 
-          {/* Header Section */}
-          <div className="text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-red-600 mb-2">
-              {t("header.title")}
-            </h1>
-            <p className="text-lg md:text-xl font-semibold text-gray-400/70 mb-4">
-              {t("header.subtitle")}
-            </p>
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 p-3 md:p-4 mb-4 md:mb-6 text-left self-star">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-5 w-5 text-yellow-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm md:text-base font-semibold text-yellow-800">
-                    {t("safetyAlert.title")}
-                  </h3>
-                  <div className="mt-2 text-sm md:text-base font-semibold text-yellow-700">
-                    <p>{t("safetyAlert.description")}</p>
+            {/* Header Section */}
+            <div className="text-center">
+              <h1 className="text-2xl md:text-4xl font-bold text-red-600 mb-2">
+                {t("header.title")}
+              </h1>
+              <p className="text-lg md:text-xl font-semibold text-gray-400/70 mb-4">
+                {t("header.subtitle")}
+              </p>
+              <div className="bg-yellow-100 border-l-4 border-yellow-500 p-3 md:p-4 mb-4 md:mb-6 text-left self-star">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-yellow-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm md:text-base font-semibold text-yellow-800">
+                      {t("safetyAlert.title")}
+                    </h3>
+                    <div className="mt-2 text-sm md:text-base font-semibold text-yellow-700">
+                      <p>{t("safetyAlert.description")}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* How to Use Section */}
-          <div className="flex flex-col md:flex-row gap-4 md:gap-6 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg p-4 md:p-6 w-full text-sm md:text-base">
-            <div className="flex-1 ">
-              <h3 className="font-semibold text-base md:text-lg mb-2 text-red-700">
-                {t("howToUse.reporting.title")}
-              </h3>
-              <ul className="ml-4 list-disc space-y-1">
-                {t.raw("howToUse.reporting.items").map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex-2">
-              <h3 className="font-semibold text-base md:text-lg text-red-700">
-                {t("rights.emergencyContacts.title")}
-              </h3>
-
-              <div className="space-y-1 text-blue-700">
-                <p>{t("rights.emergencyContacts.top")}</p>
-                <ul className="ml-4 md:ml-6 list-disc space-y-1">
-                  {t
-                    .raw("rights.emergencyContacts.items")
-                    .map((item, index) => (
-                      <li key={index}>{item}</li>
-                    ))}
+            {/* How to Use Section */}
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg p-4 md:p-6 w-full text-sm md:text-base">
+              <div className="flex-1 ">
+                <h3 className="font-semibold text-base md:text-lg mb-2 text-red-700">
+                  {t("howToUse.reporting.title")}
+                </h3>
+                <ul className="ml-4 list-disc space-y-1">
+                  {t.raw("howToUse.reporting.items").map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
                 </ul>
-                <p>{t("rights.emergencyContacts.bottom")}</p>
+              </div>
+              <div className="flex-2">
+                <h3 className="font-semibold text-base md:text-lg text-red-700">
+                  {t("rights.emergencyContacts.title")}
+                </h3>
+
+                <div className="space-y-1 text-blue-700">
+                  <p>{t("rights.emergencyContacts.top")}</p>
+                  <ul className="ml-4 md:ml-6 list-disc space-y-1">
+                    {t
+                      .raw("rights.emergencyContacts.items")
+                      .map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                  </ul>
+                  <p>{t("rights.emergencyContacts.bottom")}</p>
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Map and Form Section */}
           <div className="flex flex-col items-center justify-center gap-4 w-full">
@@ -116,23 +120,24 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Legal Rights Section */}
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-6 w-full">
-            <h2 className="text-base md:text-lg font-semibold text-red-800 mb-3 md:mb-4">
-              {t("rights.title")}
-            </h2>
-            <div className="text-red-700 text-sm md:text-base">
-              <h3 className="font-semibold mb-2 text-sm md:text-base">
-                {t("rights.iceApproaches.title")}
-              </h3>
-              <ul className="ml-4 md:ml-6 list-disc space-y-2">
-                {t.raw("rights.iceApproaches.items").map((item, index) => (
-                  <li key={index}>
-                    <strong className="text-black">{item[0]}</strong> {item[1]}
-                  </li>
-                ))}
-              </ul>
-              {/* <div>
+            {/* Legal Rights Section */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 md:p-6 w-full">
+              <h2 className="text-base md:text-lg font-semibold text-red-800 mb-3 md:mb-4">
+                {t("rights.title")}
+              </h2>
+              <div className="text-red-700 text-sm md:text-base">
+                <h3 className="font-semibold mb-2 text-sm md:text-base">
+                  {t("rights.iceApproaches.title")}
+                </h3>
+                <ul className="ml-4 md:ml-6 list-disc space-y-2">
+                  {t.raw("rights.iceApproaches.items").map((item, index) => (
+                    <li key={index}>
+                      <strong className="text-black">{item[0]}</strong>{" "}
+                      {item[1]}
+                    </li>
+                  ))}
+                </ul>
+                {/* <div>
               <h3 className="font-semibold mb-2">
                 {t("howToUse.stayingSafe.title")}
               </h3>
@@ -142,11 +147,14 @@ export default function Home() {
                 ))}
               </ul>
             </div> */}
+              </div>
             </div>
+            <Disclaimer />
           </div>
-          <Disclaimer />
-        </div>
-      </main>
-    </LocationsProvider>
+        </main>
+        <Notice />
+        <DonatePopUp />
+      </LocationsProvider>
+    </DonateProvider>
   );
 }

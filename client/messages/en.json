@@ -190,5 +190,21 @@
     "maintenance": {
         "title": "Section Under Maintenance",
         "message": "Maintenance is currently ongoing, reporting will be available as soon as possible."
+    },
+    "donate-button": {
+        "title": "Donate"
+    },
+    "notice": {
+        "message": "Interested in Donating?"
+    },
+    "donate-popup": {
+        "title": "Support Our Mission",
+        "description": "Help us keep this vital safety resource free and accessible",
+        "reason": "Every donation helps us cover the costs of verifying location accuracy, maintaining our servers, and using essential online tools that power the site. Your contribution keeps the platform online, reliable, and accessible—so communities can stay informed and safe.",
+        "num1": "Free Access",
+        "num2": "Monitoring",
+        "button1": "Donate Now",
+        "button2": "Maybe Later",
+        "footer": "We're a community-driven initiative. Thank you for your consideration."
     }
 }

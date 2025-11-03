@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { pinFunction } from "../firebase";
 import Notification from "./Notification";
+import { useDonate } from "@/contexts/DonateContext";
 
 export default function AddressForm() {
   const t = useTranslations();
+  const { showDonatePopup } = useDonate();
   const [address, setAddress] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -109,6 +111,9 @@ export default function AddressForm() {
       // Set cooldown after successful post using environment variable
       const cooldownUntil = Date.now() + SUCCESS_COOLDOWN;
       localStorage.setItem("blockedUntil", cooldownUntil.toString());
+
+      // Show donate popup after successful submission
+      showDonatePopup();
     } catch (error) {
       // Handle Firebase callable function errors
       console.error("Error calling pin function:", error);
