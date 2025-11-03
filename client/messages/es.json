@@ -186,5 +186,21 @@
                 "link": "https://www.wehaverights.us/"
             }
         }
+    },
+    "donate-button": {
+        "title": "Donar"
+    },
+    "notice": {
+        "message": "¿Te interesa donar?"
+    },
+    "donate-popup": {
+        "title": "Apoya Nuestra Misión",
+        "description": "Ayúdanos a mantener este recurso vital de seguridad gratuito y accesible",
+        "reason": "Cada donación nos ayuda a cubrir los costos de verificar la precisión de las ubicaciones, mantener nuestros servidores y utilizar las herramientas esenciales que hacen funcionar el sitio. Tu contribución mantiene la plataforma en línea, confiable y accesible, para que las comunidades puedan mantenerse informadas y seguras.",
+        "num1": "Acceso Gratuito",
+        "num2": "Monitoreo",
+        "button1": "Donar Ahora",
+        "button2": "Tal Vez Después",
+        "footer": "Somos una iniciativa impulsada por la comunidad. Gracias por tu apoyo."
     }
 }

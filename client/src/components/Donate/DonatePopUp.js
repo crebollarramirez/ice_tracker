@@ -1,8 +1,10 @@
 import { X, Heart } from "lucide-react";
 import { useDonate } from "@/contexts/DonateContext";
 import { DONATE_LINK } from "@/constants";
+import { useTranslations } from "next-intl";
 
 export const DonatePopUp = () => {
+  const t = useTranslations("donate-popup");
   const { isVisible, hideDonatePopup, hideNotice } = useDonate();
 
   if (!isVisible) return null;
@@ -45,22 +47,18 @@ export const DonatePopUp = () => {
 
           {/* Title */}
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
-            Support Our Mission
+            {t("title")}
           </h2>
 
           {/* Subtitle */}
           <p className="text-base md:text-lg text-gray-600 text-center mb-2">
-            Help us keep this vital safety resource free and accessible
+            {t("description")}
           </p>
 
           {/* Description */}
           <div className="bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4 mb-2">
             <p className="text-xs md:text-base text-gray-700 leading-relaxed">
-              Every donation helps us cover the costs of verifying location
-              accuracy, maintaining our servers, and using essential online
-              tools that power the site. Your contribution keeps the platform
-              online, reliable, and accessible—so communities can stay informed
-              and safe.
+              {t("reason")}
             </p>
           </div>
 
@@ -68,11 +66,11 @@ export const DonatePopUp = () => {
           <div className="grid grid-cols-2 gap-4 pb-6 border-b border-gray-200">
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">100%</div>
-              <div className="text-xs text-gray-600">Free Access</div>
+              <div className="text-xs text-gray-600">{t('num1')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">24/7</div>
-              <div className="text-xs text-gray-600">Monitoring</div>
+              <div className="text-xs text-gray-600">{t("num2")}</div>
             </div>
           </div>
 
@@ -92,7 +90,7 @@ export const DonatePopUp = () => {
                 className="relative w-full inline-flex items-center justify-center px-2 py-3 md:px-4 md:py-4 bg-red-600 text-white rounded-xl font-semibold border-2 border-red-700 hover:bg-red-700 hover:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-400 gap-2 transition-all duration-200 hover:translate-x-0.5 hover:translate-y-0.5 shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <Heart className="w-5 h-5" />
-                Donate Now
+                {t("button1")}
               </a>
             </div>
 
@@ -105,15 +103,14 @@ export const DonatePopUp = () => {
                 onClick={handleClose}
                 className="relative w-full inline-flex items-center justify-center px-2 py-3 md:px-4 md:py-4 bg-white text-gray-700 rounded-xl font-semibold border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 hover:translate-x-0.5 hover:translate-y-0.5 cursor-pointer"
               >
-                Maybe Later
+                {t("button2")}
               </button>
             </div>
           </div>
 
           {/* Small note */}
           <p className="text-xs text-center text-gray-500 mt-4">
-            We&apos;re a community-driven initiative. Thank you for your
-            consideration.
+            {t("footer")}
           </p>
         </div>
       </div>
