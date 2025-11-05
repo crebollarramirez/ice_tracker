@@ -2,6 +2,8 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function LanguageSwitcher() {
   const router = useRouter();
@@ -15,30 +17,44 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center space-x-2 text-sm font-medium">
-      <button
+    <div className="relative inline-flex items-center bg-muted rounded-full p-0.5 border border-border/50">
+      {/* Animated background slider */}
+      <div
+        className={cn(
+          "absolute top-0.5 bottom-0.5 rounded-full shadow-sm transition-all duration-300 ease-in-out bg-primary",
+          locale === "en" ? "left-0.5 right-[50%]" : "left-[50%] right-0.5"
+        )}
+      />
+
+      {/* Buttons */}
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => handleLanguageChange("en")}
-        className={`transition-colors duration-200 cursor-pointer ${
+        className={cn(
+          "relative z-10 h-9 px-4 font-medium rounded-full transition-colors duration-300",
           locale === "en"
-            ? "text-red-600 font-bold underline"
-            : "text-gray-400 hover:text-red-500"
-        }`}
+            ? "text-primary-foreground hover:text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
         aria-label="Switch to English"
       >
         English
-      </button>
-      <span className="text-gray-400">|</span>
-      <button
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => handleLanguageChange("es")}
-        className={`transition-colors duration-200 cursor-pointer ${
+        className={cn(
+          "relative z-10 h-9 px-4 font-medium rounded-full transition-colors duration-300",
           locale === "es"
-            ? "text-red-600 font-bold underline"
-            : "text-gray-400 hover:text-red-500"
-        }`}
+            ? "text-primary-foreground hover:text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
         aria-label="Cambiar a Español"
       >
         Español
-      </button>
+      </Button>
     </div>
   );
 }

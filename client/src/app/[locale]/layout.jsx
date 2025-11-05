@@ -1,7 +1,7 @@
-import {NextIntlClientProvider} from 'next-intl';
-import {notFound} from 'next/navigation';
-import {routing} from '@/i18n/routing';
-import {getMessages} from 'next-intl/server';
+import { NextIntlClientProvider } from "next-intl";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
+import { getMessages } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 
@@ -27,17 +27,17 @@ export const metadata = {
   robots: "index, follow",
   icons: {
     icon: [
-      { url: '/app-icon.png', sizes: '32x32', type: 'image/png' },
-      { url: '/app-icon.png', sizes: '16x16', type: 'image/png' },
+      { url: "/app-icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/app-icon.png", sizes: "16x16", type: "image/png" },
     ],
-    shortcut: '/app-icon.png',
-    apple: '/app-icon.png',
+    shortcut: "/app-icon.png",
+    apple: "/app-icon.png",
     other: {
-      rel: 'apple-touch-icon-precomposed',
-      url: '/app-icon.png',
+      rel: "apple-touch-icon-precomposed",
+      url: "/app-icon.png",
     },
   },
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
   openGraph: {
     title: "ICE Activity Tracker - Community Safety Alert System",
     description:
@@ -45,28 +45,28 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     siteName: "ICE Activity Tracker",
-    images: ['/app-icon.png'],
+    images: ["/app-icon.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: "ICE Activity Tracker - Community Safety Alert System",
     description:
       "Anonymous community tool to report and track ICE activity. Help protect undocumented immigrants with real-time safety alerts.",
-    images: ['/app-icon.png'],
+    images: ["/app-icon.png"],
   },
 };
- 
-export default async function LocaleLayout({children, params}) {
+
+export default async function LocaleLayout({ children, params }) {
   // Ensure that the incoming `locale` is valid
-  const {locale} = await params;
+  const { locale } = await params;
   if (!routing.locales.includes(locale)) {
     notFound();
   }
- 
+
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
- 
+
   return (
     <html lang={locale}>
       <head>
@@ -78,7 +78,9 @@ export default async function LocaleLayout({children, params}) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ICE Tracker" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen`}
+      >
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

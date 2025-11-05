@@ -2,117 +2,127 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import DonateButton  from "./Donate/DonateButton";
 import LanguageSwitcher from "./LanguageSwitcher";
-import DonateButton from "./Donate/DonateButton";
-import HamburgerButton from "./HamburgerButton";
 
-export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const pathname = usePathname() || "/en"; // fallback to en when pathname isn't available
-  const locale = pathname.split("/")[1] || "en";
+export const Navbar = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  // Check if the current path matches the route
+  const isActive = (path) => {
+    if (path === "/") {
+      // For home, check if we're at the root or locale root
+      return pathname === "/" || pathname.match(/^\/[a-z]{2}\/?$/);
+    }
+    // For other routes, check if pathname includes the path
+    return pathname.includes(path);
   };
 
   return (
-    <div className="w-full mt-0 p-1 md:mt-2 md:p-0">
-      <nav className="w-full flex justify-between items-center">
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex gap-4">
-          <Link
-            href={`/${locale}/`}
-            className={`transition-colors duration-200 ${
-              pathname === `/${locale}` || pathname === `/${locale}/`
-                ? "text-red-600 font-bold underline"
-                : "text-gray-400 hover:text-red-500"
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            href={`/${locale}/resources`}
-            className={`transition-colors duration-200 ${
-              pathname === `/${locale}/resources`
-                ? "text-red-600 font-bold underline"
-                : "text-gray-400 hover:text-red-500"
-            }`}
-          >
-            Resources
-          </Link>
-        </div>
+    <div className="relative ">
+      {/* Desktop Navigation */}
+      <nav className="hidden md:block border-t border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14 gap-4">
+            {/* Left: Navigation Links */}
+            <div className="flex items-center gap-6">
+              <a
+                href="/"
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isActive("/")
+                    ? "text-primary font-semibold"
+                    : "text-foreground hover:text-primary"
+                )}
+              >
+                Home
+              </a>
+              <a
+                href="/resources"
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isActive("/resources")
+                    ? "text-primary font-semibold"
+                    : "text-foreground hover:text-primary"
+                )}
+              >
+                Resources
+              </a>
+            </div>
 
-        {/* Mobile Hamburger Button */}
-        <HamburgerButton
-          isOpen={isMobileMenuOpen}
-          onClick={toggleMobileMenu}
-          className="md:hidden"
-          ariaLabel="Toggle mobile menu"
-        />
-
-        {/* Desktop Right Side Items */}
-        <div className="hidden md:flex flex-row gap-4">
-          <LanguageSwitcher />
-          <DonateButton />
-        </div>
-
-        {/* Mobile Right Side Items (always visible) */}
-        <div className="md:hidden flex flex-row gap-4">
-          <LanguageSwitcher />
-          <DonateButton />
+            {/* Right: Language & Donate */}
+            <div className="flex items-center gap-3 ml-auto">
+              <LanguageSwitcher />
+              <DonateButton />
+            </div>
+          </div>
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      <div
-        className={`md:hidden fixed inset-0 z-50 backdrop-blur-sm bg-black/25 transition-opacity duration-300 ${
-          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={toggleMobileMenu}
+      {/* Mobile Menu Toggle Button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+        aria-label="Toggle menu"
       >
-        <div
-          className={`absolute top-0 left-0 w-64 h-full bg-black/50 shadow-lg transform transition-transform duration-300 ease-in-out ${
-            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Mobile Menu Header with Close Button */}
-          <div className="flex justify-between items-center p-4 border-b border-gray-600">
-            <HamburgerButton
-              isOpen={true}
-              onClick={toggleMobileMenu}
-              ariaLabel="Close mobile menu"
-            />
-          </div>
+        {mobileMenuOpen ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Menu className="w-5 h-5" />
+        )}
+      </button>
 
-          {/* Mobile Menu Content */}
-          <div className="p-4">
-            <Link
-              href={`/${locale}/`}
-              className={`block py-3 px-4 text-lg transition-colors duration-200 ${
-                pathname === `/${locale}` || pathname === `/${locale}/`
-                  ? "text-red-600 font-bold"
-                  : "text-gray-400 hover:text-red-500"
-              }`}
-              onClick={toggleMobileMenu}
+      {/* Mobile Menu Dropdown */}
+      <div
+        className={cn(
+          "md:hidden fixed left-0 right-0 top-[var(--header-height)] z-50 border-t border-border/40 bg-background shadow-lg overflow-hidden transition-all duration-500 ease-out",
+          mobileMenuOpen
+            ? "max-h-[calc(100vh-var(--header-height,72px))] opacity-100"
+            : "max-h-0 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="container mx-auto px-4 py-4 overflow-y-auto max-h-[calc(100vh-var(--header-height,72px))]">
+          {/* Navigation Links */}
+          <div className="flex flex-col gap-2">
+            <a
+              href="/"
+              className={cn(
+                "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
+                isActive("/")
+                  ? "text-primary font-semibold bg-secondary"
+                  : "text-foreground hover:text-primary hover:bg-secondary"
+              )}
+              onClick={() => setMobileMenuOpen(false)}
             >
               Home
-            </Link>
-            <Link
-              href={`/${locale}/resources`}
-              className={`block py-3 px-4 text-lg transition-colors duration-200 ${
-                pathname === `/${locale}/resources`
-                  ? "text-red-600 font-bold"
-                  : "text-gray-400 hover:text-red-500"
-              }`}
-              onClick={toggleMobileMenu}
+            </a>
+            <a
+              href="/resources"
+              className={cn(
+                "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
+                isActive("/resources")
+                  ? "text-primary font-semibold bg-secondary"
+                  : "text-foreground hover:text-primary hover:bg-secondary"
+              )}
+              onClick={() => setMobileMenuOpen(false)}
             >
               Resources
-            </Link>
+            </a>
+          </div>
+
+          <div className="flex flex-col justify-center items-center gap-2">
+            <div className="pt-2 border-t border-border w-full flex justify-center">
+              <LanguageSwitcher />
+            </div>
+
+            {/* Donate Button */}
+            <DonateButton />
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
