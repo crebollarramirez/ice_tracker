@@ -17,6 +17,16 @@ export default function ResourcePage() {
     // Make the page at least viewport height and stack vertically
     <main className="w-full min-h-screen bg-background">
       <Header />
+      <div>
+        <div>
+          
+        </div>
+        <div>
+
+        </div>
+
+
+      </div>
     </main>
   );
 }

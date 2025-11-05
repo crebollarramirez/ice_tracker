@@ -7,26 +7,28 @@
         "title": "Información Importante",
         "description": "Esta herramienta permite al público reportar y rastrear avistamientos de ICE en tiempo real: revisa el mapa antes de viajar, comparte alertas, evita áreas con actividad reciente y conoce tus derechos si te abordan."
     },
-    "howToUse": {
-        "title": "Cómo Usar Esta Herramienta",
-        "reporting": {
-            "title": "📍 Reportar Actividad de ICE:",
-            "items": [
-                "Qué reportar: vehículos de ICE, retenes o detenciones.",
-                "Dónde: usa la barra de ubicación para compartir detalles exactos (intersecciones, direcciones o puntos de referencia).",
-                "Cuándo: envía reportes tan pronto como sea seguro hacerlo.",
-                "Privacidad: todos los reportes son completamente anónimos."
-            ]
-        },
-        "stayingSafe": {
-            "title": "🛡️ Cómo Mantenerte Seguro:",
-            "items": [
-                "Consulta el mapa antes de salir",
-                "Comparte alertas con familiares y amistades",
-                "Evita zonas con actividad reciente de ICE",
-                "Conoce tus derechos si ICE se te acerca"
-            ]
-        }
+    "reporting": {
+        "title": "Reportar Actividad de ICE",
+        "notice": "Ayuda a mantener informada y segura a tu comunidad",
+        "subTitle1": "Qué Reportar",
+        "info1": "Vehículos de ICE, retenes o detenciones.",
+        "subTitle2": "Dónde",
+        "info2": "Usa la barra de ubicación para compartir detalles exactos (cruces, direcciones o puntos de referencia).",
+        "subTitle3": "Cuándo",
+        "info3": "Envía los reportes tan pronto como sea seguro hacerlo.",
+        "subTitle4": "Privacidad",
+        "info4": "Todos los reportes son completamente anónimos."
+    },
+    "emergencyContacts": {
+        "title": "Contactos de Emergencia",
+        "subTitle1": "Líneas de Ayuda Legal",
+        "info1": "Ten a la mano los números de organizaciones confiables que ofrecen ayuda legal en temas de inmigración. Ellas pueden explicarte tus derechos, conectarte con abogados y orientarte durante encuentros con ICE.",
+        "subTitle2": "Redes de Respuesta Rápida",
+        "info2": "Identifica grupos locales de apoyo a inmigrantes o de respuesta rápida que puedan ayudar si alguien es detenido. Pueden brindar apoyo en el terreno, abogacía y conexión con recursos legales o de fianza.",
+        "subTitle3": "Contactos de Confianza",
+        "info3": "Asegúrate de que al menos un amigo, familiar o persona de confianza sepa dónde estás y pueda comunicarse contigo si es necesario.",
+        "top": "Tener contactos importantes accesibles puede ayudarte a ti y a tus seres queridos a mantenerse seguros en situaciones inesperadas.",
+        "bottom": "Guarda estos números en tu teléfono, en tu cartera o en una tarjeta de “Conoce Tus Derechos”. Considera mantener una pequeña lista en papel como respaldo en caso de que tu teléfono se pierda o sea confiscado."
     },
     "form": {
         "title": "Reportar Actividad de ICE",
@@ -127,16 +129,6 @@
                     "a un abogado o a un contacto de confianza."
                 ]
             ]
-        },
-        "emergencyContacts": {
-            "title": "Contactos de Emergencia:",
-            "items": [
-                "Líneas directas de ayuda legal: Ten a la mano los números de teléfono de organizaciones confiables de asistencia legal en inmigración. Ellos pueden explicarte tus derechos, conectarte con abogados y guiarte durante encuentros con ICE.",
-                "Redes de Respuesta Rápida: Identifica grupos locales de inmigrantes o de respuesta rápida que puedan ayudar si alguien es detenido. Pueden brindar apoyo en el terreno, defensa y conexiones con recursos de fianza o legales.",
-                "Contactos de Confianza: Asegúrate de que al menos un amigo, familiar o persona de confianza conozca tu ubicación y pueda comunicarse contigo si es necesario."
-            ],
-            "top": "Mantener contactos importantes accesibles puede ayudarte a ti y a tus seres queridos a mantenerse seguros en situaciones inesperadas.",
-            "bottom": "Guarda estos números en tu teléfono, en tu cartera o en una tarjeta de “Conozca Sus Derechos”. Considera llevar una pequeña lista en papel como respaldo en caso de que tu teléfono se pierda o sea confiscado."
         }
     },
     "footer": {

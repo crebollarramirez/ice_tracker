@@ -7,26 +7,28 @@
         "title": "Important Information",
         "description": "This tool lets the public report and track ICE sightings in real time—check the map before traveling, share alerts, avoid recent activity areas, and know your rights if approached."
     },
-    "howToUse": {
-        "title": "How to Use This Tool",
-        "reporting": {
-            "title": "📍 Reporting ICE Activity:",
-            "items": [
-                "What to Report: ICE vehicles, checkpoints, or detainments.",
-                "Where: Use the Location bar to share exact details (intersections, addresses, or landmarks).",
-                "When: Submit reports as soon as it’s safe for you to do so.",
-                "Privacy: All reports are completely anonymous."
-            ]
-        },
-        "stayingSafe": {
-            "title": "🛡️ Staying Safe:",
-            "items": [
-                "Check the map before traveling",
-                "Share alerts with family and friends",
-                "Avoid areas with recent ICE activity",
-                "Know your rights if approached by ICE"
-            ]
-        }
+    "reporting": {
+        "title": "Reporting ICE Activity",
+        "notice": "Help keep your community informed and safe",
+        "subTitle1": "What to Report",
+        "info1": "ICE vehicles, checkpoints, or detainments.",
+        "subTitle2": "Where",
+        "info2": "Use the Location bar to share exact details (intersections, addresses, or landmarks).",
+        "subTitle3": "When",
+        "info3": "Submit reports as soon as it’s safe for you to do so.",
+        "subTitle4": "Privacy",
+        "info4": "All reports are completely anonymous."
+    },
+    "emergencyContacts": {
+        "title": "Emergency Contacts",
+        "subTitle1": "Legal aid Hotlines",
+        "info1": "Keep the phone numbers for reliable immigration legal aid organizations handy. They can explain your rights, connect you with attorneys, and guide you through ICE encounters.",
+        "subTitle2": "Rapid Response Networks",
+        "info2": "Identify local immigrant or rapid-response groups that can assist if someone is detained. They may provide on-the-ground support, advocacy, and connections to bail or legal resources.",
+        "subTitle3": "Trusted Contacts",
+        "info3": "Make sure at least one friend, family member, or trusted person knows your location and can check in if needed.",
+        "top": "Keeping important contacts accessible can help you and your loved ones stay safe in unexpected situations.",
+        "bottom": "Store these numbers in your phone, in a wallet, or on a “Know Your Rights” card. Consider keeping a small paper list as backup in case your phone is lost or confiscated."
     },
     "form": {
         "title": "Report ICE Activity",
@@ -127,16 +129,6 @@
                     "to a lawyer or trusted contact."
                 ]
             ]
-        },
-        "emergencyContacts": {
-            "title": "Emergency Contacts:",
-            "items": [
-                "Legal aid Hotlines: Keep the phone numbers for reliable immigration legal aid organizations handy. They can explain your rights, connect you with attorneys, and guide you through ICE encounters.",
-                "Rapid Response Networks: Identify local immigrant or rapid-response groups that can assist if someone is detained. They may provide on-the-ground support, advocacy, and connections to bail or legal resources.",
-                "Trusted Contacts: Make sure at least one friend, family member, or trusted person knows your location and can check in if needed. "
-            ],
-            "top": "Keeping important contacts accessible can help you and your loved ones stay safe in unexpected situations.",
-            "bottom": "Store these numbers in your phone, in a wallet, or on a “Know Your Rights” card. Consider keeping a small paper list as backup in case your phone is lost or confiscated."
         }
     },
     "footer": {
