@@ -5,8 +5,11 @@ import { Header } from "@/components/Header";
 import AddressForm from "@/components/AddressForm";
 import { ReportsList } from "@/components/ReportsList";
 import { LocationsProvider } from "@/contexts/LocationsContext";
+import { DonateProvider } from "@/contexts/DonateContext";
+import { DonatePopUp } from "@/components/Donate/DonatePopUp";
 import { WhatToReport } from "@/components/WhatToReport";
 import { EmergencyInfo } from "@/components/EmergencyInfo";
+import { KnowYourRights } from "@/components/KnowYourRights";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
@@ -21,30 +24,38 @@ export default function Home() {
 
   return (
     <main className="w-full min-h-screen bg-background">
-      <LocationsProvider>
-        <Header />
+      <DonateProvider>
+        <LocationsProvider>
+          <Header />
 
-        <div className="container mx-auto px-4 py-8">
-          {/* Main Grid Layout */}
-          <div className="grid grid-cols-1 gap-8">
-            {/* Information Grid - Two columns on large screens */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <WhatToReport />
-              <EmergencyInfo />
+          <div className="container mx-auto px-4 py-8">
+            {/* Main Grid Layout */}
+            <div className="grid grid-cols-1 gap-8">
+              {/* Information Grid - Two columns on large screens */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <WhatToReport />
+                <EmergencyInfo />
+              </div>
+
+              {/* Map Component */}
+              <MapComponent />
+
+              {/* Reports List */}
+              <ReportsList />
+
+              {/* Address Form */}
+              <AddressForm />
+
+              {/* Know Your Rights */}
+              <KnowYourRights />
             </div>
-
-            {/* Map Component */}
-            <MapComponent />
-
-            {/* Reports List */}
-            <ReportsList />
-
-            {/* Address Form */}
-            <AddressForm />
           </div>
-        </div>
-        <Footer />
-      </LocationsProvider>
+          <Footer />
+          
+          {/* Donate Popup - renders when triggered */}
+          <DonatePopUp />
+        </LocationsProvider>
+      </DonateProvider>
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "@/i18n/navigation";
 import DonateButton from "./Donate/DonateButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -29,7 +30,7 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-14 gap-4">
             {/* Left: Navigation Links */}
             <div className="flex items-center gap-6">
-              <a
+              <Link
                 href="/"
                 className={cn(
                   "text-sm font-medium transition-colors",
@@ -39,8 +40,8 @@ export const Navbar = () => {
                 )}
               >
                 Home
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/about"
                 className={cn(
                   "text-sm font-medium transition-colors",
@@ -50,8 +51,8 @@ export const Navbar = () => {
                 )}
               >
                 About
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/resources"
                 className={cn(
                   "text-sm font-medium transition-colors",
@@ -61,7 +62,7 @@ export const Navbar = () => {
                 )}
               >
                 Resources
-              </a>
+              </Link>
             </div>
 
             {/* Right: Language & Donate */}
@@ -98,7 +99,7 @@ export const Navbar = () => {
         <div className="container mx-auto px-4 py-4 overflow-y-auto max-h-[calc(100vh-var(--header-height,72px))]">
           {/* Navigation Links */}
           <div className="flex flex-col gap-2">
-            <a
+            <Link
               href="/"
               className={cn(
                 "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
@@ -109,8 +110,8 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
-            </a>
-            <a
+            </Link>
+            <Link
               href="/about"
               className={cn(
                 "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
@@ -121,8 +122,8 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               About
-            </a>
-            <a
+            </Link>
+            <Link
               href="/resources"
               className={cn(
                 "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
@@ -133,7 +134,7 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Resources
-            </a>
+            </Link>
           </div>
 
           <div className="flex flex-col justify-center items-center gap-2">

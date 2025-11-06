@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   MapPin,
   Clock,
@@ -59,10 +60,11 @@ export const ReportCard = ({ report, onClick }) => {
       {/* Image */}
       <div className="aspect-video bg-muted relative overflow-hidden">
         {report.imgUrl && !imageError ? (
-          <img
+          <Image
             src={report.imgUrl}
             alt={`Report from ${report.address}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setImageError(true)}
             loading="lazy"
           />

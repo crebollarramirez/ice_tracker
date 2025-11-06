@@ -24,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useDonate } from "@/contexts/DonateContext";
 import { pinFunction } from "../firebase";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ const reportFormSchema = z.object({
 export default function AddressForm({ className }) {
   const [imagePreview, setImagePreview] = useState("");
   const { toast } = useToast();
+  const { showDonatePopup } = useDonate();
 
   const form = useForm({
     resolver: zodResolver(reportFormSchema),
@@ -149,6 +151,10 @@ export default function AddressForm({ className }) {
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
+      reader.onerror = () => {
+        console.error("Error reading file");
+        setImagePreview("");
+      };
       reader.readAsDataURL(file);
     } else {
       setImagePreview("");
@@ -230,6 +236,7 @@ export default function AddressForm({ className }) {
 
                       {imagePreview && (
                         <div className="relative w-full max-w-md">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imagePreview}
                             alt="Preview"
