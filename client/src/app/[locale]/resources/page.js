@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import Navbar from "@/components/Navbar";
 import Resource from "@/components/Resource";
-import Disclaimer from "@/components/Disclaimer";
+import Disclaimer from "@/components/Footer";
 import { Header } from "@/components/Header";
 
 export default function ResourcePage() {
@@ -18,14 +18,8 @@ export default function ResourcePage() {
     <main className="w-full min-h-screen bg-background">
       <Header />
       <div>
-        <div>
-          
-        </div>
-        <div>
-
-        </div>
-
-
+        <div></div>
+        <div></div>
       </div>
     </main>
   );

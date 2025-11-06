@@ -1,26 +1,50 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
-const MapComponent = dynamic(() => import("../../components/MapComponent"), {
-  ssr: false,
-});
-import { Header } from "../../components/Header";
-import { InformationSection } from "../../components/InformationSection";
+import { Header } from "@/components/Header";
+import AddressForm from "@/components/AddressForm";
+import { ReportsList } from "@/components/ReportsList";
+import { LocationsProvider } from "@/contexts/LocationsContext";
+import { WhatToReport } from "@/components/WhatToReport";
+import { EmergencyInfo } from "@/components/EmergencyInfo";
+import { Footer } from "@/components/Footer";
 
 export default function Home() {
-  const t = useTranslations();
-
   // Set this to true to show maintenance message for Map and Form section only
+
+  const MapComponent = dynamic(() => import("../../components/MapComponent"), {
+    ssr: false,
+  });
+
   const isMapFormMaintenanceMode =
     process.env.NEXT_PUBLIC_MAP_FORM_MAINTENANCE === "true";
 
   return (
     <main className="w-full min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto px-4 py-8">
-        <InformationSection />
-      </div>
+      <LocationsProvider>
+        <Header />
+
+        <div className="container mx-auto px-4 py-8">
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 gap-8">
+            {/* Information Grid - Two columns on large screens */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <WhatToReport />
+              <EmergencyInfo />
+            </div>
+
+            {/* Map Component */}
+            <MapComponent />
+
+            {/* Reports List */}
+            <ReportsList />
+
+            {/* Address Form */}
+            <AddressForm />
+          </div>
+        </div>
+        <Footer />
+      </LocationsProvider>
     </main>
   );
 }

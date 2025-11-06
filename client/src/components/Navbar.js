@@ -24,7 +24,7 @@ export const Navbar = () => {
   return (
     <div className="relative ">
       {/* Desktop Navigation */}
-      <nav className="hidden md:block border-t border-border/40">
+      <nav className="hidden md:block ">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14 gap-4">
             {/* Left: Navigation Links */}
