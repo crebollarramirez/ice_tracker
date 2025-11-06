@@ -26,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDonate } from "@/contexts/DonateContext";
 import { pinFunction } from "../firebase";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [

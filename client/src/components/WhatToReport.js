@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Shield, MapPin, Clock, Lock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { useTranslations } from "next-intl";
 
 export const WhatToReport = ({ className }) => {

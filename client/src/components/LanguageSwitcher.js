@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export default function LanguageSwitcher() {
   const router = useRouter();

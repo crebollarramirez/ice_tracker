@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 import { Phone } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export const EmergencyInfo = ({ className }) => {
   const t = useTranslations("emergencyContacts");

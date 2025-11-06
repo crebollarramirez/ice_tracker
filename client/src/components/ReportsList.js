@@ -1,7 +1,7 @@
 "use client";
 
 import { ReportCard } from "./ReportCard";
-import { mockReports } from "@/lib/mockData";
+import { mockReports } from "@/utils/mockData";
 import {
   Card,
   CardHeader,
@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export const ReportsList = ({ className }) => {
   const handleReportClick = (report) => {

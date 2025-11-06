@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { Link } from "@/i18n/navigation";
 import DonateButton from "./Donate/DonateButton";
 import LanguageSwitcher from "./LanguageSwitcher";

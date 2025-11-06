@@ -13,8 +13,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getRelativeTime, isNew } from "@/lib/dateUtils";
-import { copyToClipboard, shareReport } from "@/lib/shareUtils";
+import { getRelativeTime, isNew } from "@/utils/dateUtils";
+import { copyToClipboard, shareReport } from "@/utils/shareUtils";
 import { useToast } from "@/hooks/use-toast";
 
 export const ReportCard = ({ report, onClick }) => {
