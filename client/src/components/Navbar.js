@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import DonateButton  from "./Donate/DonateButton";
+import DonateButton from "./Donate/DonateButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export const Navbar = () => {
@@ -39,6 +39,17 @@ export const Navbar = () => {
                 )}
               >
                 Home
+              </a>
+              <a
+                href="/about"
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isActive("/about")
+                    ? "text-primary font-semibold"
+                    : "text-foreground hover:text-primary"
+                )}
+              >
+                About
               </a>
               <a
                 href="/resources"
@@ -98,6 +109,18 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
+            </a>
+            <a
+              href="/about"
+              className={cn(
+                "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
+                isActive("/about")
+                  ? "text-primary font-semibold bg-secondary"
+                  : "text-foreground hover:text-primary hover:bg-secondary"
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              About
             </a>
             <a
               href="/resources"
