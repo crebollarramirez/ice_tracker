@@ -11,6 +11,7 @@ import { WhatToReport } from "@/components/WhatToReport";
 import { EmergencyInfo } from "@/components/EmergencyInfo";
 import { KnowYourRights } from "@/components/KnowYourRights";
 import { Footer } from "@/components/Footer";
+import { PageHeader, PageTitle, PageDescription } from "@/components/ui/page";
 
 export default function Home() {
   // Set this to true to show maintenance message for Map and Form section only
@@ -29,6 +30,12 @@ export default function Home() {
           <Header />
 
           <div className="container mx-auto px-4 py-8">
+            <PageHeader>
+              <PageTitle>ICE Activity Tracker</PageTitle>
+              <PageDescription>
+                The most reliable way to track ICE activity near you.
+              </PageDescription>
+            </PageHeader>
             {/* Main Grid Layout */}
             <div className="grid grid-cols-1 gap-8">
               {/* Information Grid - Two columns on large screens */}
@@ -51,7 +58,7 @@ export default function Home() {
             </div>
           </div>
           <Footer />
-          
+
           {/* Donate Popup - renders when triggered */}
           <DonatePopUp />
         </LocationsProvider>

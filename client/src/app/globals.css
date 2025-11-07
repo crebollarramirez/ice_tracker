@@ -50,4 +50,9 @@ All colors MUST be HSL.
   * {
     border-color: hsl(var(--color-border));
   }
+
+  /* Prevent layout shift when scrollbar appears */
+  html {
+    scrollbar-gutter: stable;
+  }
 }

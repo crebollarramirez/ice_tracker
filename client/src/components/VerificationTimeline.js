@@ -200,8 +200,8 @@ export const VerificationTimeline = () => {
                     >
                       {step.id === 1 && (
                         <p className="text-sm text-muted-foreground">
-                          Reports include location, time, type of activity, and
-                          optional photo evidence.
+                          Reports include location, time, optional additional
+                          information, and photo evidence.
                         </p>
                       )}
                       {step.id === 2 && (

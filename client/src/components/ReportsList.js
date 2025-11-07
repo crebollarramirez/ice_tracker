@@ -19,7 +19,7 @@ export const ReportsList = ({ className }) => {
   };
 
   return (
-    <Card className={cn("border-primary/20", className)}>
+    <Card className={cn(className)}>
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-6 h-6 text-primary" />

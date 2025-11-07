@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Resource } from "@/components/Resource";
 import { Scale, FileText, Phone, Users, Shield } from "lucide-react";
+import { PageTitle, PageDescription, PageHeader } from "@/components/ui/page";
 
 export default function ResourcePage() {
   const t = useTranslations();
@@ -19,17 +20,15 @@ export default function ResourcePage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Resources
-          </h1>
-          <p className="text-lg text-muted-foreground">
+        <PageHeader>
+          <PageTitle>Resources</PageTitle>
+          <PageDescription>
             Here are some helpful resources to know your rights and find legal
             assistance.
-          </p>
-        </div>
+          </PageDescription>
+        </PageHeader>
 
         {/* Steps to Take if a Loved One is Detained */}
         <div className="mb-6">

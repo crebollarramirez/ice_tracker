@@ -9,9 +9,8 @@ export const Footer = () => {
           <div className="flex items-start md:items-center gap-2 ">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5 md:mt-0" />
             <p>
-              This platform displays community-submitted reports. Information
-              has not been independently verified. Stay cautious and prioritize
-              your safety.
+              For immediate emergencies, contact local emergency services. For
+              immigration legal help, contact qualified legal aid organizations.
             </p>
           </div>
           <a

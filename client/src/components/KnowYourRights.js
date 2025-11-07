@@ -15,7 +15,7 @@ export const KnowYourRights = () => {
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
           <Scale className="w-6 h-6 text-primary" />
-          <CardTitle className="text-2xl">Know Your Rights</CardTitle>
+          <CardTitle className="text-xl">Know Your Rights</CardTitle>
         </div>
         <CardDescription className="text-base">
           If ICE Approaches You

@@ -1,8 +1,9 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Users, Shield } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Heart, Users, Shield, Mail } from "lucide-react";
 import { VerificationTimeline } from "@/components/VerificationTimeline";
+import { PageTitle, PageDescription, PageHeader } from "@/components/ui/page";
 
 export default function AboutPage() {
   return (
@@ -11,14 +12,12 @@ export default function AboutPage() {
 
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         {/* Hero Section */}
-        <div className="text-center mb-12 md:mb-16">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 text-foreground">
-            About Us
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+        <PageHeader>
+          <PageTitle>About Us</PageTitle>
+          <PageDescription>
             Community-driven protection for the neighborhoods we call home
-          </p>
-        </div>
+          </PageDescription>
+        </PageHeader>
 
         {/* Mission Statement Card */}
         <Card className="max-w-4xl mx-auto mb-12">
@@ -143,6 +142,28 @@ export default function AboutPage() {
             <VerificationTimeline />
           </div>
         </div>
+
+        {/* Contact Us Section */}
+        <Card className="max-w-4xl mx-auto mb-12">
+          <CardHeader>
+            <CardTitle className="text-2xl md:text-3xl text-center flex items-center justify-center gap-3">
+              <Mail className="w-7 h-7 text-primary" />
+              Contact Us
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center px-6 md:px-12">
+            <p className="text-base md:text-lg text-muted-foreground mb-4">
+              Have questions or need assistance? We're here to help.
+            </p>
+            <a
+              href="mailto:support@iceinmyarea.org"
+              className="text-lg md:text-xl font-medium text-primary hover:underline"
+            >
+              support@iceinmyarea.org
+            </a>
+          </CardContent>
+          <CardFooter className="text-base md:text-lg text-muted-foreground/80">For emergencies or immediate legal assistance, please contact an immigration lawyer or legal aid organization directly.</CardFooter>
+        </Card>
       </main>
 
       <Footer />
