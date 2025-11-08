@@ -1,58 +1,129 @@
 "use client";
 
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ShieldCheck } from "lucide-react";
+import { signInWithEmailPasswordAndMfa } from "@/auth/authHelper";
+import { useToast } from "@/hooks/use-toast";
 
-export function VerifiersLogin({ onLoginSuccess }) {
+export function VerifiersLogin() {
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    // Simulate login - replace with actual authentication logic
-    setTimeout(() => {
-      if (email && password) {
-        console.log("Login attempt:", email);
-        onLoginSuccess();
-      } else {
-        setError("Please enter both email and password");
-        setIsLoading(false);
-      }
-    }, 1000);
+  // Function to get MFA code from user
+  const getMfaCode = () => {
+    return new Promise((resolve) => {
+      setNeedsMfa(true);
+      // Store the resolve function to be called when user submits MFA code
+      window.resolveMfaCode = resolve;
+    });
   };
 
+  const handleMfaSubmit = (e) => {
+    e.preventDefault();
+    if (window.resolveMfaCode) {
+      window.resolveMfaCode(mfaCode);
+      delete window.resolveMfaCode;
+      setNeedsMfa(false);
+      setMfaCode("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      // Add reCAPTCHA container for MFA
+      if (!document.getElementById("recaptcha-container")) {
+        const recaptchaDiv = document.createElement("div");
+        recaptchaDiv.id = "recaptcha-container";
+        document.body.appendChild(recaptchaDiv);
+      }
+
+      const user = await signInWithEmailPasswordAndMfa(
+        email,
+        password,
+        getMfaCode
+      );
+
+      toast({
+        title: "Login successful",
+        description: `Welcome back, ${user.email}`,
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(
+        err.message || "Failed to login. Please check your credentials."
+      );
+      toast({
+        title: "Login failed",
+        description:
+          err.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (needsMfa) {
+    return (
+      <main className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <ShieldCheck className="w-12 h-12 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">
+              Two-Factor Authentication
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleMfaSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="mfaCode">Verification Code</Label>
+                <Input
+                  id="mfaCode"
+                  type="text"
+                  placeholder="Enter code from SMS"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={!mfaCode}>
+                Verify
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12">
+    <main className="flex-1 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <ShieldCheck className="w-8 h-8 text-primary" />
-            </div>
+          <div className="flex justify-center mb-2">
+            <ShieldCheck className="w-12 h-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Verifier Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access the verification dashboard
-          </CardDescription>
+          <CardTitle className="text-2xl">Verifiers Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -68,6 +139,7 @@ export function VerifiersLogin({ onLoginSuccess }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -80,15 +152,16 @@ export function VerifiersLogin({ onLoginSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

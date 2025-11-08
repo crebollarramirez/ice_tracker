@@ -7,8 +7,10 @@ import { Card } from "@/components/ui/card";
 import { X, Check, LogOut } from "lucide-react";
 import { mockReports } from "@/utils/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { auth } from "@/firebase";
+import { signOut } from "firebase/auth";
 
-export function Verifier({ onLogout }) {
+export function Verifier({ user }) {
   const { toast } = useToast();
   const [queue, setQueue] = useState([...mockReports]);
   const [currentReport, setCurrentReport] = useState(null);
@@ -16,8 +18,8 @@ export function Verifier({ onLogout }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [announceMessage, setAnnounceMessage] = useState("");
 
-  // Mock verifier name for testing
-  const verifierName = "Jane Doe";
+  // Get verifier name from user object
+  const verifierName = user?.displayName || user?.email || "Verifier";
 
   useEffect(() => {
     if (queue.length > 0) {
@@ -77,8 +79,21 @@ export function Verifier({ onLogout }) {
     }, 300);
   };
 
-  const handleLogout = () => {
-    onLogout();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "An error occurred while logging out.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
