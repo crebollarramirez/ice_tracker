@@ -17,7 +17,7 @@ import { getRelativeTime, isNew } from "@/utils/dateUtils";
 import { copyToClipboard, shareReport } from "@/utils/shareUtils";
 import { useToast } from "@/hooks/use-toast";
 
-export const ReportCard = ({ report, onClick }) => {
+export const ReportCard = ({ report, onClick, actions, animationClass }) => {
   const [expanded, setExpanded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
@@ -56,7 +56,12 @@ export const ReportCard = ({ report, onClick }) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+    <Card
+      className={`overflow-hidden hover:shadow-lg transition-shadow group ${
+        onClick ? "cursor-pointer" : ""
+      } ${animationClass || ""}`}
+      onClick={onClick}
+    >
       {/* Image */}
       <div className="aspect-video bg-muted relative overflow-hidden">
         {report.imgUrl && !imageError ? (
@@ -125,27 +130,31 @@ export const ReportCard = ({ report, onClick }) => {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyAddress}
-            className="gap-2 flex-1"
-          >
-            <Copy className="w-3 h-3" />
-            Copy Address
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShare}
-            className="gap-2 flex-1"
-          >
-            <Share2 className="w-3 h-3" />
-            Share
-          </Button>
-        </div>
+        {/* Actions - Conditional rendering based on props */}
+        {actions ? (
+          <div className="flex gap-2 pt-2">{actions}</div>
+        ) : (
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyAddress}
+              className="gap-2 flex-1"
+            >
+              <Copy className="w-3 h-3" />
+              Copy Address
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="gap-2 flex-1"
+            >
+              <Share2 className="w-3 h-3" />
+              Share
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );

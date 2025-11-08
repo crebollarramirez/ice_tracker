@@ -63,6 +63,17 @@ export const Navbar = () => {
               >
                 Resources
               </Link>
+              <Link
+                href="/verifiers"
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isActive("/verifiers")
+                    ? "text-primary font-semibold"
+                    : "text-foreground hover:text-primary"
+                )}
+              >
+                Verifiers
+              </Link>
             </div>
 
             {/* Right: Language & Donate */}
@@ -134,6 +145,18 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Resources
+            </Link>
+            <Link
+              href="/verifiers"
+              className={cn(
+                "text-sm font-medium py-2 px-3 rounded-lg transition-colors",
+                isActive("/verifiers")
+                  ? "text-primary font-semibold bg-secondary"
+                  : "text-foreground hover:text-primary hover:bg-secondary"
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Verifiers
             </Link>
           </div>
 

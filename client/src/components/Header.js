@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import { Navbar } from "./Navbar";
 
 export const Header = () => {
@@ -9,7 +10,7 @@ export const Header = () => {
       <div className="container mx-auto">
         <div className="flex items-center justify-between py-3 md:py-6">
           {/* Logo - always visible */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <Link href="/" className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
             <div className="relative w-6 h-6 md:w-10 md:h-10">
               <Image
                 src="/app-icon.png"
@@ -27,7 +28,7 @@ export const Header = () => {
                 The most reliable way to track ICE activity near you.
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Mobile menu toggle - passed to Navbar */}
           <Navbar />
