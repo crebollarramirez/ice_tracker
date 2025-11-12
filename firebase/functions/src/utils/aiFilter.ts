@@ -77,10 +77,14 @@ export class OpenAIService implements IOpenAIService {
   /** Maximum input length to avoid exceeding token limits. */
   readonly MAX_INPUT_LENGTH = 100;
 
+  private useMock = false;
+
   /**
    * Initializes the OpenAI service with prompt.
    */
-  constructor() {
+  constructor(useMock: boolean = false) {
+    this.useMock = useMock;
+
     try {
       const promptPath = path.resolve(__dirname, "../../assets/prompt.txt");
       this.prompt = fs.readFileSync(promptPath, "utf8");
@@ -99,6 +103,10 @@ export class OpenAIService implements IOpenAIService {
    * @return {Promise<boolean>} True if negative content detected, false otherwise.
    */
   async isNegative(additionalInfo: string): Promise<boolean> {
+    if (this.useMock) {
+      return false;
+    }
+
     try {
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
@@ -125,7 +133,7 @@ export class OpenAIService implements IOpenAIService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
             model: this.MODEL,
@@ -162,5 +170,9 @@ export class OpenAIService implements IOpenAIService {
       logger.error("OpenAI API error:", error);
       return false;
     }
+  }
+
+  setMock(mock: boolean): void {
+    this.useMock = mock;
   }
 }

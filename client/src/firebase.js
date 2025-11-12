@@ -6,11 +6,12 @@ import {
   httpsCallable,
 } from "firebase/functions";
 
-import {
-  getAuth,
-  connectAuthEmulator,
-} from "firebase/auth";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
 
+import {
+  getStorage,
+  connectStorageEmulator,
+} from "firebase/storage";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // Firebase configuration using environment variables
@@ -19,6 +20,7 @@ const firebaseConfig = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DB_URL,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   appId: process.env.NEXT_PUBLIC_FIRE_BASE_APP_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
 };
 
 // Initialize Firebase
@@ -47,6 +49,8 @@ const functions = getFunctions(app);
 
 // initialize Firebase Auth instance
 const auth = getAuth(app);
+
+const storage = getStorage(app);
 
 // Connect to the emulator if running locally
 if (process.env.NODE_ENV === "development") {
@@ -79,6 +83,18 @@ if (process.env.NODE_ENV === "development") {
       );
     }
   }
+
+  // Connect to Storage emulator
+  try {
+    connectStorageEmulator(storage, "127.0.0.1", 9199);
+    console.log("Connected to Firebase Storage Emulator");
+  } catch (error) {
+    if (error.message.includes("already")) {
+      console.log("Storage emulator connection already established");
+    } else {
+      console.error("❌ Failed to connect to storage emulator:", error.message);
+    }
+  }
 } else {
   console.log("Using production Firebase database and functions");
 }
@@ -86,4 +102,4 @@ if (process.env.NODE_ENV === "development") {
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
 
-export { database, pinFunction, auth };
+export { database, pinFunction, auth, storage };

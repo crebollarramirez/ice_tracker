@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { MapPin, Upload, AlertCircle } from "lucide-react";
+import { MapPin, Upload, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,15 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useDonate } from "@/contexts/DonateContext";
-import { pinFunction } from "../firebase";
+import { pinFunction, storage, auth, database } from "../firebase";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { ref as dbRef, push } from "firebase/database";
+import { signInAnonymously } from "firebase/auth";
 import { cn } from "@/utils/utils";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -64,6 +72,8 @@ const reportFormSchema = z.object({
 
 export default function AddressForm({ className }) {
   const [imagePreview, setImagePreview] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState("");
   const { toast } = useToast();
   const { showDonatePopup } = useDonate();
 
@@ -76,19 +86,47 @@ export default function AddressForm({ className }) {
   });
 
   const onSubmit = async (data) => {
-    try {
-      console.log("Form submitted:", {
-        address: data.address,
-        additionalInfo: data.additionalInfo,
-        imageFile: data.image[0],
-      });
+    setIsSubmitting(true);
+    setSubmitStatus("Preparing...");
+    let uploadedStoragePath = null;
 
-      // Call Firebase function
+    try {
+      // Ensure user is authenticated (anonymous is fine)
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        console.log("No user found, signing in anonymously...");
+        const userCredential = await signInAnonymously(auth);
+        currentUser = userCredential.user;
+      }
+
+      const uid = currentUser.uid;
+      const imageFile = data.image[0];
+
+      // Generate unique report ID using Firebase RTDB push key
+      const reportId = push(dbRef(database, "reports/pending")).key;
+
+      // Determine file extension
+      const fileExtension = imageFile.type === "image/png" ? "png" : "jpg";
+      const storagePath = `reports/pending/${uid}/${reportId}.${fileExtension}`;
+      setSubmitStatus("Uploading image...");
+
+      // Upload image to Firebase Storage
+      const imageRef = storageRef(storage, storagePath);
+      await uploadBytes(imageRef, imageFile);
+      uploadedStoragePath = storagePath;
+      setSubmitStatus("Processing...");
+
+      // Get download URL
+      const imageUrl = await getDownloadURL(imageRef);
+      setSubmitStatus("Submitting...");
+
+      // Call Firebase function with image URL
       const result = await pinFunction({
         addedAt: new Date().toISOString(),
         address: data.address.trim(),
         additionalInfo: data.additionalInfo.trim(),
-        // TODO: Add image upload logic here
+        imageUrl: imageUrl,
+        imagePath: storagePath,
       });
 
       console.log("Pin function result:", result);
@@ -104,12 +142,42 @@ export default function AddressForm({ className }) {
       // Reset form
       form.reset();
       setImagePreview("");
+      uploadedStoragePath = null; // Mark as successful so we don't delete
     } catch (error) {
-      console.error("Error calling pin function:", error);
+      console.error("Error submitting report:", error);
+
+      // If we uploaded a file but pin failed, optionally delete it to avoid orphans
+      if (uploadedStoragePath) {
+        try {
+          const orphanRef = storageRef(storage, uploadedStoragePath);
+          await deleteObject(orphanRef);
+          console.log("Cleaned up orphaned image:", uploadedStoragePath);
+        } catch (deleteError) {
+          console.error("Failed to clean up orphaned image:", deleteError);
+        }
+      }
 
       let errorMessage = "Please try again later.";
 
-      if (error.code) {
+      // Handle upload errors
+      if (error.code?.startsWith("storage/")) {
+        switch (error.code) {
+          case "storage/unauthorized":
+            errorMessage =
+              "You don't have permission to upload images. Please refresh and try again.";
+            break;
+          case "storage/canceled":
+            errorMessage = "Upload was canceled.";
+            break;
+          case "storage/unknown":
+            errorMessage = "An unknown error occurred during upload.";
+            break;
+          default:
+            errorMessage = `Upload failed: ${error.message}`;
+        }
+      }
+      // Handle function errors
+      else if (error.code?.startsWith("functions/")) {
         switch (error.code) {
           case "functions/invalid-argument":
             errorMessage =
@@ -135,12 +203,19 @@ export default function AddressForm({ className }) {
               error.message || "An error occurred while submitting the form";
         }
       }
+      // Handle auth errors
+      else if (error.code?.startsWith("auth/")) {
+        errorMessage = "Authentication failed. Please refresh and try again.";
+      }
 
       toast({
         title: "Submission failed",
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
+      setSubmitStatus("");
     }
   };
 
@@ -270,8 +345,20 @@ export default function AddressForm({ className }) {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" size="lg" className="w-full font-medium">
-              Submit Report
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full font-medium"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {submitStatus}
+                </>
+              ) : (
+                "Submit Report"
+              )}
             </Button>
           </form>
         </Form>

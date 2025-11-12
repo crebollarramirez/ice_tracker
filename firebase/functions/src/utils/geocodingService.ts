@@ -41,6 +41,12 @@ export interface IGeocodingService {
  * Google Maps Geocoding Service implementation.
  */
 export class GoogleGeocodingService implements IGeocodingService {
+  private useMock: boolean;
+
+  constructor(useMock: boolean = false) {
+    this.useMock = useMock;
+  }
+
   /**
    * Geocodes a specific physical address using the Google Maps Geocoding API.
    *
@@ -69,6 +75,14 @@ export class GoogleGeocodingService implements IGeocodingService {
    * @throws {Error} Does not throw errors; logs API failures and returns null instead.
    */
   async geocodeAddress(address: string): Promise<GeocodeResult | null> {
+    if (this.useMock) {
+      return {
+        lat: 69,
+        lng: 68,
+        formattedAddress: "123 Mockingbird Lane, Testville, TS",
+      } as GeocodeResult;
+    }
+
     try {
       const apiKey = process.env.GOOGLE_MAPS_API_KEY;
       if (!apiKey) return null;
@@ -182,5 +196,9 @@ export class GoogleGeocodingService implements IGeocodingService {
       logger.error("Google Geocoding API error:", error);
       return null;
     }
+  }
+
+  setMcok(mock: boolean): void {
+    this.useMock = mock;
   }
 }

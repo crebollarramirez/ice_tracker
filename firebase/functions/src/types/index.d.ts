@@ -5,6 +5,8 @@ export interface PinLocation {
   lat: number;
   lng: number;
   reported: number;
+  imageUrl: string;
+  imagePath: string;
 }
 
 /**
@@ -58,5 +60,3 @@ export interface FirebaseCallableRequest<TData = unknown> {
     appId: string;
   } | null;
 }
-
-
