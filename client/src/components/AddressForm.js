@@ -25,16 +25,16 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useDonate } from "@/contexts/DonateContext";
-import { pinFunction, storage, auth, database } from "../firebase";
+import { pinFunction, storage, auth } from "../firebase";
 import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { ref as dbRef, push } from "firebase/database";
 import { signInAnonymously } from "firebase/auth";
 import { cn } from "@/utils/utils";
+import { onSubmitReport } from "@/utils/submission";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -42,6 +42,7 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/jpg",
   "image/png",
   "image/webp",
+  "image/heic",
 ];
 
 const reportFormSchema = z.object({
@@ -66,7 +67,7 @@ const reportFormSchema = z.object({
     )
     .refine(
       (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      "Only .jpg, .jpeg, .png and .webp formats are supported"
+      "Only .jpg, .jpeg, .png, .webp and .heic formats are supported"
     ),
 });
 
@@ -87,135 +88,27 @@ export default function AddressForm({ className }) {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    setSubmitStatus("Preparing...");
-    let uploadedStoragePath = null;
-
     try {
-      // Ensure user is authenticated (anonymous is fine)
-      let currentUser = auth.currentUser;
-      if (!currentUser) {
-        console.log("No user found, signing in anonymously...");
-        const userCredential = await signInAnonymously(auth);
-        currentUser = userCredential.user;
-      }
-
-      const uid = currentUser.uid;
-      const imageFile = data.image[0];
-
-      // Generate unique report ID using Firebase RTDB push key
-      const reportId = push(dbRef(database, "reports/pending")).key;
-
-      // Determine file extension
-      const fileExtension = imageFile.type === "image/png" ? "png" : "jpg";
-      const storagePath = `reports/pending/${uid}/${reportId}.${fileExtension}`;
-      setSubmitStatus("Uploading image...");
-
-      // Upload image to Firebase Storage
-      const imageRef = storageRef(storage, storagePath);
-      await uploadBytes(imageRef, imageFile);
-      uploadedStoragePath = storagePath;
-      setSubmitStatus("Processing...");
-
-      // Get download URL
-      const imageUrl = await getDownloadURL(imageRef);
-      setSubmitStatus("Submitting...");
-
-      // Call Firebase function with image URL
-      const result = await pinFunction({
-        addedAt: new Date().toISOString(),
-        address: data.address.trim(),
-        additionalInfo: data.additionalInfo.trim(),
-        imageUrl: imageUrl,
-        imagePath: storagePath,
+      await onSubmitReport({
+        data,
+        auth,
+        storage,
+        pinFunction,
+        toast,
+        signInAnonymously,
+        storageRef,
+        uploadBytes,
+        getDownloadURL,
+        deleteObject,
+        // now: () => new Date().toISOString(), // (optional override in tests)
       });
-
-      console.log("Pin function result:", result);
-
-      toast({
-        title: "Report submitted successfully",
-        description: "Thank you for helping keep the community informed.",
-      });
-
-      // Show donate popup after successful submission
-      showDonatePopup();
-
-      // Reset form
       form.reset();
       setImagePreview("");
-      uploadedStoragePath = null; // Mark as successful so we don't delete
+      showDonatePopup();
     } catch (error) {
-      console.error("Error submitting report:", error);
-
-      // If we uploaded a file but pin failed, optionally delete it to avoid orphans
-      if (uploadedStoragePath) {
-        try {
-          const orphanRef = storageRef(storage, uploadedStoragePath);
-          await deleteObject(orphanRef);
-          console.log("Cleaned up orphaned image:", uploadedStoragePath);
-        } catch (deleteError) {
-          console.error("Failed to clean up orphaned image:", deleteError);
-        }
-      }
-
-      let errorMessage = "Please try again later.";
-
-      // Handle upload errors
-      if (error.code?.startsWith("storage/")) {
-        switch (error.code) {
-          case "storage/unauthorized":
-            errorMessage =
-              "You don't have permission to upload images. Please refresh and try again.";
-            break;
-          case "storage/canceled":
-            errorMessage = "Upload was canceled.";
-            break;
-          case "storage/unknown":
-            errorMessage = "An unknown error occurred during upload.";
-            break;
-          default:
-            errorMessage = `Upload failed: ${error.message}`;
-        }
-      }
-      // Handle function errors
-      else if (error.code?.startsWith("functions/")) {
-        switch (error.code) {
-          case "functions/invalid-argument":
-            errorMessage =
-              error.message ||
-              "Please provide a valid address that can be found on the map";
-            break;
-          case "functions/failed-precondition":
-            errorMessage =
-              error.message ||
-              "Please avoid using negative or abusive language.";
-            break;
-          case "functions/not-found":
-            errorMessage =
-              error.message ||
-              "Please provide a valid address that can be found on the map";
-            break;
-          case "functions/internal":
-            errorMessage =
-              error.message || "An error occurred while submitting the form";
-            break;
-          default:
-            errorMessage =
-              error.message || "An error occurred while submitting the form";
-        }
-      }
-      // Handle auth errors
-      else if (error.code?.startsWith("auth/")) {
-        errorMessage = "Authentication failed. Please refresh and try again.";
-      }
-
-      toast({
-        title: "Submission failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error("Submission error:", error);
     } finally {
       setIsSubmitting(false);
-      setSubmitStatus("");
     }
   };
 
@@ -324,7 +217,7 @@ export default function AddressForm({ className }) {
                         <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                           <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                           <p className="text-sm text-muted-foreground">
-                            Upload a photo (JPG, PNG, or WebP - Max 5MB)
+                            Upload a photo (JPG, PNG, WebP, or HEIC - Max 5MB)
                           </p>
                         </div>
                       )}
