@@ -11,7 +11,6 @@ describe("onSubmitReport", () => {
   let signInAnonymously;
   let storageRef;
   let uploadBytes;
-  let getDownloadURL;
   let deleteObject;
   let pinFunction;
   let toast;
@@ -28,9 +27,6 @@ describe("onSubmitReport", () => {
 
     storageRef = jest.fn().mockImplementation((_storage, path) => ({ path }));
     uploadBytes = jest.fn().mockResolvedValue({});
-    getDownloadURL = jest
-      .fn()
-      .mockResolvedValue("https://example.com/image.jpg");
     deleteObject = jest.fn().mockResolvedValue();
 
     // Simulate a successful callable function
@@ -64,7 +60,6 @@ describe("onSubmitReport", () => {
     signInAnonymously,
     storageRef,
     uploadBytes,
-    getDownloadURL,
     deleteObject,
     now,
     ...overrides,
@@ -86,14 +81,11 @@ describe("onSubmitReport", () => {
       contentType: IMAGE_FILE.type,
     });
 
-    expect(getDownloadURL).toHaveBeenCalledWith(uploadedRef);
-
-    // Correct payload to pinFunction
+    // Correct payload to pinFunction (no imageUrl - backend handles it)
     expect(pinFunction).toHaveBeenCalledWith({
       addedAt: FIXED_NOW,
       address: "123 Main St", // trimmed
       additionalInfo: "some info", // trimmed
-      imageUrl: "https://example.com/image.jpg",
       imagePath: `reports/pending/${UID}/${FIXED_TIMESTAMP}.jpg`,
     });
 
@@ -103,11 +95,10 @@ describe("onSubmitReport", () => {
       description: "Thank you for helping keep the community informed.",
     });
 
-    // Return value
+    // Return value (no imageUrl - backend handles it)
     expect(result).toEqual({
       reportId: "report-123",
       imagePath: `reports/pending/${UID}/${FIXED_TIMESTAMP}.jpg`,
-      imageUrl: "https://example.com/image.jpg",
     });
   });
 

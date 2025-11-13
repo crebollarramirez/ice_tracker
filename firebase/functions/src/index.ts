@@ -1,31 +1,21 @@
 import { setGlobalOptions } from "firebase-functions";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { OpenAIService } from "./utils/aiFilter";
-import { GoogleGeocodingService } from "./utils/geocodingService";
-import { sanitizeInput, makeAddressKey } from "./utils/addressHandling";
-import {
-  isValidISO8601,
-  isDateTodayUTC,
-  isOlderThan7Days,
-  clientIp,
-  ipKey,
-  todayUTC,
-} from "./utils/utils";
+import { isOlderThan7Days, clientIp, ipKey, todayUTC } from "./utils/utils";
 import { PinLocation, FirebaseCallableRequest } from "./types/index";
+// import { isDateTodayUTC } from "./utils/utils";
 import * as dotenv from "dotenv";
 dotenv.config();
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
-setGlobalOptions({ maxInstances: 10 });
+// Import and re-export functions
+export { pin } from "./functions/pin";
 
-// Initialize services USING MOCKS FOR TESTING
-const aiFilterService = new OpenAIService(true);
-const geocodingService = new GoogleGeocodingService(true);
+setGlobalOptions({ maxInstances: 10 });
 
 const realtimeDb = admin.database();
 const firestoreDb = admin.firestore();
@@ -111,210 +101,43 @@ export async function enforceDailyQuotaByIp(
  * @return {Promise<void>} A promise that resolves when the stats are updated.
  * @throws {Error} If there is an issue during the transaction.
  */
-async function updatePinStats(addedAt: string): Promise<void> {
-  const statsRef = realtimeDb.ref("stats");
-  const isToday = isDateTodayUTC(addedAt);
+// async function updatePinStats(addedAt: string): Promise<void> {
+//   const statsRef = realtimeDb.ref("stats");
+//   const isToday = isDateTodayUTC(addedAt);
 
-  // Use transaction for atomic updates
-  await statsRef.transaction((currentStats) => {
-    // Initialize stats if they don't exist
-    if (!currentStats) {
-      currentStats = {
-        total_pins: 0,
-        today_pins: 0,
-        week_pins: 0,
-      };
-    }
+//   // Use transaction for atomic updates
+//   await statsRef.transaction((currentStats) => {
+//     // Initialize stats if they don't exist
+//     if (!currentStats) {
+//       currentStats = {
+//         total_pins: 0,
+//         today_pins: 0,
+//         week_pins: 0,
+//       };
+//     }
 
-    // Ensure all fields exist
-    if (typeof currentStats.total_pins !== "number") {
-      currentStats.total_pins = 0;
-    }
-    if (typeof currentStats.today_pins !== "number") {
-      currentStats.today_pins = 0;
-    }
-    if (typeof currentStats.week_pins !== "number") {
-      currentStats.week_pins = 0;
-    }
+//     // Ensure all fields exist
+//     if (typeof currentStats.total_pins !== "number") {
+//       currentStats.total_pins = 0;
+//     }
+//     if (typeof currentStats.today_pins !== "number") {
+//       currentStats.today_pins = 0;
+//     }
+//     if (typeof currentStats.week_pins !== "number") {
+//       currentStats.week_pins = 0;
+//     }
 
-    // Update the stats
-    currentStats.total_pins += 1;
-    currentStats.week_pins += 1; // Increment weekly count
+//     // Update the stats
+//     currentStats.total_pins += 1;
+//     currentStats.week_pins += 1; // Increment weekly count
 
-    if (isToday) {
-      currentStats.today_pins += 1;
-    }
+//     if (isToday) {
+//       currentStats.today_pins += 1;
+//     }
 
-    return currentStats;
-  });
-}
-
-/**
- * Firebase Cloud Function to pin a location with address validation and content filtering.
- *
- * This function accepts location data, validates and sanitizes the input, filters for negative content,
- * geocodes the address to get precise coordinates, stores the location in Firebase Realtime Database,
- * and updates pin statistics.
- *
- * @async
- * @function pin
- * @param {CallableRequest} request - The Firebase functions request object.
- * @param {object} request.data - The data payload containing location information.
- * @param {string} request.data.addedAt - ISO 8601 timestamp when the location was added (must be today's date in UTC).
- * @param {string} request.data.address - The physical address to be pinned (required).
- * @param {string} [request.data.additionalInfo] - Optional additional information about the location.
- * @returns {Promise<{message: string, formattedAddress: string}>} A promise that resolves to an object containing:
- *   - message: Success confirmation message.
- *   - formattedAddress: The geocoded and formatted address from Google Maps API.
- * @throws {HttpsError} If validation fails, geocoding fails, or database operations encounter an error.
- */
-export const pin = onCall(async (request) => {
-  logger.info("pin called", { data: request.data });
-
-  // // Enforce rate limiting: max 3 calls per IP per day
-  // const isAboveLimit = await enforceDailyQuotaByIp(request, "pin", 3);
-
-  // if (isAboveLimit) {
-  //   throw new HttpsError(
-  //     "resource-exhausted",
-  //     "Daily limit reached. Try again tomorrow."
-  //   );
-  // }
-
-  const { data } = request;
-
-  if (!data.addedAt || !data.address) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Missing required fields: addedAt and address"
-    );
-  }
-
-  if (isValidISO8601(data.addedAt) === false) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Invalid date format for addedAt. Must be ISO 8601 format."
-    );
-  }
-
-  if (isDateTodayUTC(data.addedAt) === false) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
-    );
-  }
-
-  // Sanitize the address input
-  const sanitizedAddress = sanitizeInput(data.address);
-
-  // Sanitize additionalInfo to prevent injection attacks, default to empty string if not provided
-  const sanitizedAdditionalInfo = sanitizeInput(data.additionalInfo || "");
-
-  if (!sanitizedAddress.trim()) {
-    throw new HttpsError("invalid-argument", "Invalid address provided");
-  }
-
-  // Check for negative content using AI filter service
-  const isNegative = await aiFilterService.isNegative(sanitizedAdditionalInfo);
-
-  if (isNegative) {
-    // Log negative content to separate database for monitoring
-    try {
-      await firestoreDb.collection("negative").add({
-        addedAt: data.addedAt,
-        address: sanitizedAddress,
-        additionalInfo: sanitizedAdditionalInfo,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      logger.error("Error saving negative content to database:", error);
-    }
-    throw new HttpsError(
-      "failed-precondition",
-      "Please avoid using negative or abusive language in the additional info"
-    );
-  }
-
-  // Geocode the address to get coordinates and formatted address
-  const geocodeResult = await geocodingService.geocodeAddress(sanitizedAddress);
-
-  if (!geocodeResult) {
-    throw new HttpsError(
-      "not-found",
-      "Please provide a valid address that can be found on the map"
-    );
-  }
-
-  // Database operations need error handling since they can throw exceptions
-  try {
-    // Create a sanitized key from the formatted address
-    const addressKey = makeAddressKey(geocodeResult.formattedAddress);
-
-    if (!addressKey) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Could not generate valid address key"
-      );
-    }
-
-    // Check if this address already exists
-    const existingLocationRef = realtimeDb.ref(`locations/${addressKey}`);
-    const existingSnapshot = await existingLocationRef.once("value");
-
-    const locationId = addressKey;
-
-    // Create final location data with geocoded coordinates and formatted address
-    const finalLocationData: PinLocation = {
-      addedAt: data.addedAt,
-      address: geocodeResult.formattedAddress,
-      additionalInfo: sanitizedAdditionalInfo,
-      lat: geocodeResult.lat,
-      lng: geocodeResult.lng,
-      reported: existingSnapshot.exists()
-        ? existingSnapshot.val().reported + 1
-        : 1,
-      imageUrl: data.imageUrl || "",
-      imagePath: data.imagePath || "",
-    };
-
-    let isNewLocation = true;
-
-    if (existingSnapshot.exists()) {
-      // Address already exists, update it instead of creating duplicate
-      logger.info("Updating existing location:", {
-        addressKey,
-        formattedAddress: geocodeResult.formattedAddress,
-      });
-      isNewLocation = false;
-    } else {
-      logger.info("Creating new location:", {
-        addressKey,
-        formattedAddress: geocodeResult.formattedAddress,
-      });
-    }
-
-    // Set/update the location data
-    await existingLocationRef.set(finalLocationData);
-
-    // update stats regarless of new or existing location since we are counting reports
-    await updatePinStats(data.addedAt);
-
-    logger.info("POST request received and saved to database:", {
-      locationId,
-      ...finalLocationData,
-    });
-
-    return {
-      message: isNewLocation
-        ? "Data logged and saved successfully"
-        : "Location updated successfully",
-      formattedAddress: finalLocationData.address,
-    };
-  } catch (error) {
-    logger.error("Error saving to database:", error);
-    throw new HttpsError("internal", "Internal server error");
-  }
-});
+//     return currentStats;
+//   });
+// }
 
 /**
  *

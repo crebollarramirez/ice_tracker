@@ -9,7 +9,6 @@ export async function onSubmitReport({
   signInAnonymously,
   storageRef,
   uploadBytes,
-  getDownloadURL,
   deleteObject,
 
   // Optional injectable clock for testability
@@ -47,15 +46,11 @@ export async function onSubmitReport({
     uploadedRef = storageRef(storage, storagePath);
     await uploadBytes(uploadedRef, imageFile, { contentType: imageFile.type });
 
-    // 5) Get download URL
-    const imageUrl = await getDownloadURL(uploadedRef);
-
     // 6) Call function with payload (backend generates reportId)
     const result = await pinFunction({
       addedAt: now(),
       address,
       additionalInfo,
-      imageUrl,
       imagePath: storagePath,
     });
 
@@ -71,7 +66,6 @@ export async function onSubmitReport({
     return {
       reportId: result.data?.reportId,
       imagePath: storagePath,
-      imageUrl,
     };
   } catch (error) {
     // Best-effort orphan cleanup if upload succeeded but pin failed

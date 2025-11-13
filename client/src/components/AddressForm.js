@@ -29,7 +29,6 @@ import { pinFunction, storage, auth } from "../firebase";
 import {
   ref as storageRef,
   uploadBytes,
-  getDownloadURL,
   deleteObject,
 } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
@@ -98,7 +97,6 @@ export default function AddressForm({ className }) {
         signInAnonymously,
         storageRef,
         uploadBytes,
-        getDownloadURL,
         deleteObject,
         // now: () => new Date().toISOString(), // (optional override in tests)
       });

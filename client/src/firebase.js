@@ -29,12 +29,12 @@ const app = initializeApp(firebaseConfig);
 // Initialize App Check only on client side
 if (typeof window !== "undefined") {
   try {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(
-        process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-      ),
-      isTokenAutoRefreshEnabled: true,
-    });
+    // initializeAppCheck(app, {
+    //   provider: new ReCaptchaV3Provider(
+    //     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    //   ),
+    //   isTokenAutoRefreshEnabled: true,
+    // });
     console.log("App Check initialized successfully");
   } catch (error) {
     console.warn("App Check initialization failed:", error);

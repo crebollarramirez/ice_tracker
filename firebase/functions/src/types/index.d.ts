@@ -1,13 +1,21 @@
 export interface PinLocation {
   addedAt: string; // ISO 8601 timestamp
   address: string;
-  additionalInfo?: string;
+  additionalInfo: string;
   lat: number;
   lng: number;
   reported: number;
   imageUrl: string;
   imagePath: string;
 }
+
+// export interface ExpectedData {
+//   addedAt: string;
+//   address: string;
+//   additionalInfo: string;
+//   imageUrl: string;
+//   imagePath: string;
+// }
 
 /**
  * Represents the incoming request object for a Firebase v2 Callable Function.
