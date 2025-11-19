@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FileText, Users, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/utils/utils";
 
 const steps = [
@@ -176,14 +177,12 @@ export const VerificationTimeline = () => {
                       {step.title}
                     </h3>
                     {step.id === 3 && state !== "upcoming" && (
-                      <span
-                        className={cn(
-                          "text-xs font-medium px-3 py-1.5 rounded-full bg-primary/10 text-primary whitespace-nowrap",
-                          !prefersReducedMotion && "animate-pulse"
-                        )}
+                      <StatusBadge
+                        color="primary"
+                        animate={!prefersReducedMotion}
                       >
                         Live Updates
-                      </span>
+                      </StatusBadge>
                     )}
                   </div>
                   <p className="text-base md:text-lg text-muted-foreground leading-relaxed">

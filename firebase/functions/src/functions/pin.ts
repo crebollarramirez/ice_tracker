@@ -4,10 +4,10 @@ import * as admin from "firebase-admin";
 import { GoogleGeocodingService } from "../utils/geocodingService";
 import { sanitizeInput, makeAddressKey } from "../utils/addressHandling";
 import { isValidISO8601, isDateTodayUTC } from "../utils/utils";
-import { PinLocation } from "../types/index";
+import { PendingReport } from "../types/index";
 
 // Initialize services USING MOCKS FOR TESTING
-const geocodingService = new GoogleGeocodingService(true);
+const geocodingService = new GoogleGeocodingService();
 
 const realtimeDb = admin.database();
 
@@ -17,20 +17,29 @@ const realtimeDb = admin.database();
  * This function accepts location data, validates and sanitizes the input, geocodes the address to get precise coordinates, and stores the location in Firebase Realtime Database under the `/pending` collection. It also ensures that the `additionalInfo` field is provided and sanitized to prevent injection attacks.
  *
  * ### Key Features:
- * - **Validation**: Ensures required fields are present and valid, including `addedAt`, `address`, `imageUrl`, `imagePath`, and `additionalInfo`.
- * - **Image Verification**: Validates that the image file exists in Firebase Storage before processing.
+ * - **Validation**: Ensures required fields are present and valid, including `addedAt`, `address`, `imagePath`, and `additionalInfo`.
+ * - **Image Verification**: Validates that the image file exists in Firebase Storage before processing (currently commented out for testing).
  * - **Sanitization**: Cleans input fields to prevent injection attacks.
  * - **Geocoding**: Converts the address into precise coordinates and a formatted address using Google Maps API.
  * - **Duplicate Handling**: Updates existing entries or creates new ones, incrementing the `reported` count for duplicates.
  * - **Error Handling**: Logs and throws detailed errors for validation, geocoding, and database operations.
+ *
+ * ### Workflow:
+ * 1. Validate required fields (`addedAt`, `address`, `imagePath`, `additionalInfo`).
+ * 2. Sanitize the `address` and `additionalInfo` fields to prevent injection attacks.
+ * 3. Geocode the sanitized address to retrieve coordinates and a formatted address.
+ * 4. Check if the address already exists in the database:
+ *    - If it exists, update the entry and increment the `reported` count.
+ *    - If it does not exist, create a new entry.
+ * 5. Save the location data to Firebase Realtime Database.
+ * 6. Return a success message and the formatted address.
  *
  * @async
  * @function pin
  * @param {CallableRequest} request - The Firebase functions request object.
  * @param {object} request.data - The data payload containing location information.
  * @param {string} request.data.addedAt - ISO 8601 timestamp when the location was added (must be today's date in UTC).
- * @param {string} request.data.imageUrl - Download URL of the image associated with the location.
- * @param {string} request.data.imagePath - Storage path of the image associated with the location.
+ * @param {string} request.data.imagePath - Storage path of the image associated with the location (required).
  * @param {string} request.data.address - The physical address to be pinned (required).
  * @param {string} request.data.additionalInfo - Additional information about the location (required).
  * @returns {Promise<{message: string, formattedAddress: string}>} A promise that resolves to an object containing:
@@ -142,7 +151,7 @@ export const pin = onCall(async (request) => {
     const locationId = addressKey;
 
     // Create final location data with geocoded coordinates and formatted address
-    const finalLocationData: PinLocation = {
+    const finalLocationData: PendingReport = {
       addedAt: data.addedAt,
       address: geocodeResult.formattedAddress,
       additionalInfo: sanitizedAdditionalInfo,
@@ -151,7 +160,6 @@ export const pin = onCall(async (request) => {
       reported: existingSnapshot.exists()
         ? existingSnapshot.val().reported + 1
         : 1,
-      imageUrl: data.imageUrl || "",
       imagePath: data.imagePath || "",
     };
 

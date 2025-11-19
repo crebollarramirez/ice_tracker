@@ -101,5 +101,8 @@ if (process.env.NODE_ENV === "development") {
 
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
+const verifyFunction = httpsCallable(functions, "verifyReport")
+const denyFunction = httpsCallable(functions, "denyReport")
+const deleteFunction = httpsCallable(functions, "deletePendingReport")
 
-export { database, pinFunction, auth, storage };
+export { database, pinFunction, auth, storage, verifyFunction, denyFunction, deleteFunction};

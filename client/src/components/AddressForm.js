@@ -26,14 +26,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDonate } from "@/contexts/DonateContext";
 import { pinFunction, storage, auth } from "../firebase";
-import {
-  ref as storageRef,
-  uploadBytes,
-  deleteObject,
-} from "firebase/storage";
+import { ref as storageRef, uploadBytes, deleteObject } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
 import { cn } from "@/utils/utils";
 import { onSubmitReport } from "@/utils/submission";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -133,6 +130,9 @@ export default function AddressForm({ className }) {
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-6 h-6 text-primary" />
           <CardTitle className="text-2xl">Submit a Report</CardTitle>
+          <StatusBadge color="warning" animate={true}>
+            Beta
+          </StatusBadge>
         </div>
         <CardDescription className="text-base">
           Help your community by reporting ICE activity in your area

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
 import { cn } from "@/utils/utils";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export const ReportsList = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +47,9 @@ export const ReportsList = ({ className }) => {
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-6 h-6 text-primary" />
           <CardTitle className="text-2xl">Recent Reports</CardTitle>
+          <StatusBadge color="warning" animate={true}>
+            Beta
+          </StatusBadge>
         </div>
         <CardDescription>Latest community alerts in your area</CardDescription>
       </CardHeader>

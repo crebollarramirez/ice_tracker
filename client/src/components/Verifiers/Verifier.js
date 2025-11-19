@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { ReportCard } from "@/components/ReportCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { X, Check, LogOut } from "lucide-react";
-import { mockReports } from "@/utils/mockData";
+import { X, Check, LogOut, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/firebase";
+import { auth, verifyFunction, denyFunction, deleteFunction } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { usePending } from "@/contexts/PendingContext";
 
 export function Verifier({ user }) {
   const { toast } = useToast();
-  const [queue, setQueue] = useState([...mockReports]);
+  const { pendingLocations, isLoading } = usePending();
+  const [queue, setQueue] = useState([]);
   const [currentReport, setCurrentReport] = useState(null);
   const [animationClass, setAnimationClass] = useState("");
   const [isAnimating, setIsAnimating] = useState(false);
@@ -20,6 +21,13 @@ export function Verifier({ user }) {
 
   // Get verifier name from user object
   const verifierName = user?.displayName || user?.email || "Verifier";
+
+  // Update queue when pendingLocations change
+  useEffect(() => {
+    if (!isLoading && pendingLocations) {
+      setQueue([...pendingLocations]);
+    }
+  }, [pendingLocations, isLoading]);
 
   useEffect(() => {
     if (queue.length > 0) {
@@ -37,21 +45,81 @@ export function Verifier({ user }) {
     setAnimationClass("animate-deny-shake");
     setAnnounceMessage("Report denied. Loading next...");
 
-    // Wait for shake animation
-    setTimeout(() => {
-      setAnimationClass("animate-deny-exit");
+    try {
+      // Call the denyFunction with the report ID
+      console.log("Denying report ID:", currentReport.id);
+      await denyFunction({
+        reportId: currentReport.id,
+      });
 
-      // Wait for exit animation
+      // Wait for shake animation
       setTimeout(() => {
-        toast({
-          title: "Report denied",
-          variant: "destructive",
-        });
-        setQueue((prev) => prev.slice(1));
-        setAnimationClass("");
-        setIsAnimating(false);
+        setAnimationClass("animate-deny-exit");
+
+        // Wait for exit animation
+        setTimeout(() => {
+          toast({
+            title: "Report denied",
+            variant: "destructive",
+          });
+          setQueue((prev) => prev.slice(1));
+          setAnimationClass("");
+          setIsAnimating(false);
+        }, 300);
       }, 300);
-    }, 300);
+    } catch (error) {
+      console.error("Error denying report:", error);
+      toast({
+        title: "Deny failed",
+        description: "Failed to deny the report. Please try again.",
+        variant: "destructive",
+      });
+      setAnimationClass("");
+      setIsAnimating(false);
+    }
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    if (isAnimating || !currentReport) return;
+
+    setIsAnimating(true);
+    setAnimationClass("animate-deny-shake");
+    setAnnounceMessage("Report deleted. Loading next...");
+
+    try {
+      // Call the deleteFunction with the report ID
+      console.log("Deleting report ID:", currentReport.id);
+      await deleteFunction({
+        reportId: currentReport.id,
+      });
+
+      // Wait for shake animation
+      setTimeout(() => {
+        setAnimationClass("animate-deny-exit");
+
+        // Wait for exit animation
+        setTimeout(() => {
+          toast({
+            title: "Report deleted",
+            description: "Report has been permanently deleted",
+            variant: "destructive",
+          });
+          setQueue((prev) => prev.slice(1));
+          setAnimationClass("");
+          setIsAnimating(false);
+        }, 300);
+      }, 300);
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the report. Please try again.",
+        variant: "destructive",
+      });
+      setAnimationClass("");
+      setIsAnimating(false);
+    }
   };
 
   const handleVerify = async (e) => {
@@ -62,21 +130,39 @@ export function Verifier({ user }) {
     setAnimationClass("animate-verify-scale");
     setAnnounceMessage("Report verified. Loading next...");
 
-    // Wait for scale animation
-    setTimeout(() => {
-      setAnimationClass("animate-verify-exit");
+    try {
+      // Call the verifyFunction with the report ID and user info
 
-      // Wait for exit animation
+      console.log("Verifying report ID:", currentReport.id);
+      await verifyFunction({
+        reportId: currentReport.id,
+      });
+
+      // Wait for scale animation
       setTimeout(() => {
-        toast({
-          title: "Report verified",
-          description: "Report has been successfully verified",
-        });
-        setQueue((prev) => prev.slice(1));
-        setAnimationClass("");
-        setIsAnimating(false);
+        setAnimationClass("animate-verify-exit");
+
+        // Wait for exit animation
+        setTimeout(() => {
+          toast({
+            title: "Report verified",
+            description: "Report has been successfully verified",
+          });
+          setQueue((prev) => prev.slice(1));
+          setAnimationClass("");
+          setIsAnimating(false);
+        }, 300);
       }, 300);
-    }, 300);
+    } catch (error) {
+      console.error("Error verifying report:", error);
+      toast({
+        title: "Verification failed",
+        description: "Failed to verify the report. Please try again.",
+        variant: "destructive",
+      });
+      setAnimationClass("");
+      setIsAnimating(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -142,6 +228,17 @@ export function Verifier({ user }) {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={handleDelete}
+                    disabled={isAnimating}
+                    className="gap-2 flex-1 border-orange-500/50 text-orange-500 hover:bg-orange-500/10 hover:text-orange-500 focus-visible:ring-orange-500"
+                    aria-label="Delete this report"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleVerify}
                     disabled={isAnimating}
                     className="gap-2 flex-1 border-green-500/50 text-green-500 hover:bg-green-500/10 hover:text-green-500 focus-visible:ring-green-500"
@@ -160,16 +257,22 @@ export function Verifier({ user }) {
                   <Check className="w-12 h-12 text-success" />
                 </div>
               </div>
-              <h2 className="text-2xl font-semibold">All Done!</h2>
+              <h2 className="text-2xl font-semibold">
+                {isLoading ? "Loading..." : "All Done!"}
+              </h2>
               <p className="text-muted-foreground">
-                No more reports to review at this time.
+                {isLoading
+                  ? "Loading pending reports..."
+                  : "No more reports to review at this time."}
               </p>
-              <Button
-                onClick={() => setQueue([...mockReports])}
-                className="mt-4"
-              >
-                Reset Queue
-              </Button>
+              {!isLoading && pendingLocations.length === 0 && (
+                <Button
+                  onClick={() => setQueue([...pendingLocations])}
+                  className="mt-4"
+                >
+                  Refresh
+                </Button>
+              )}
             </Card>
           )}
 

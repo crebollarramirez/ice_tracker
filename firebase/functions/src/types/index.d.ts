@@ -1,21 +1,33 @@
-export interface PinLocation {
+export interface Report {
   addedAt: string; // ISO 8601 timestamp
   address: string;
   additionalInfo: string;
   lat: number;
   lng: number;
   reported: number;
-  imageUrl: string;
+}
+
+export interface PendingReport extends Report {
   imagePath: string;
 }
 
-// export interface ExpectedData {
-//   addedAt: string;
-//   address: string;
-//   additionalInfo: string;
-//   imageUrl: string;
-//   imagePath: string;
-// }
+export interface VerifiedReport extends Report {
+  imageUrl: string;
+  verifiedAt: string;
+}
+
+export interface VerifiedExtension {
+  reportId: string;
+  verifierUid: string;
+  reportAddress: string;
+}
+
+export interface DeniedReport {
+  verifierUid: string;
+  reportAddress: string;
+  imagePath: string;
+}
+
 
 /**
  * Represents the incoming request object for a Firebase v2 Callable Function.

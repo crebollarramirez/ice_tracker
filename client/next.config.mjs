@@ -5,14 +5,16 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.js");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Allow all external images
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "**",
       },
       {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },

@@ -11,7 +11,7 @@ export function LocationsProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const locationsRef = ref(database, "locations");
+    const locationsRef = ref(database, "verified");
 
     const unsubscribe = onValue(
       locationsRef,
