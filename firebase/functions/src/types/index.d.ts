@@ -28,7 +28,6 @@ export interface DeniedReport {
   imagePath: string;
 }
 
-
 /**
  * Represents the incoming request object for a Firebase v2 Callable Function.
  */
@@ -70,7 +69,7 @@ export interface FirebaseCallableRequest<TData = unknown> {
    */
   auth?: {
     uid: string;
-    token: Record<string, any>;
+    token: Record<string, unknown>;
   } | null;
 
   /**

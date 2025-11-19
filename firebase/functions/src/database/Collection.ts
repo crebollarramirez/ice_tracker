@@ -1,9 +1,19 @@
 import * as logger from "firebase-functions/logger";
 import { DeniedReport, VerifiedExtension } from "../types/index";
 
+/**
+ * The `Collections` class provides methods to interact with Firestore collections
+ * for logging verification and denial events. It encapsulates Firestore operations
+ * to ensure consistent and reusable database interactions.
+ */
 export class Collections {
   private firestoreDb: FirebaseFirestore.Firestore;
 
+  /**
+   * Constructs a new instance of the `Collections` class.
+   *
+   * @param {FirebaseFirestore.Firestore} firestoreDb - The Firestore database instance to use for operations.
+   */
   constructor(firestoreDb: FirebaseFirestore.Firestore) {
     this.firestoreDb = firestoreDb;
   }
@@ -15,7 +25,7 @@ export class Collections {
    *   - `reportId` (string): The ID of the report being verified.
    *   - `verifierUid` (string): The UID of the verifier performing the verification.
    *
-   * @returns {Promise<void>} A promise that resolves when the verification log is successfully written to Firestore.
+   * @return {Promise<void>} A promise that resolves when the verification log is successfully written to Firestore.
    *
    * @throws {Error} Throws an error if the Firestore operation fails.
    *
@@ -51,7 +61,7 @@ export class Collections {
    *   - `imagePath` (string): The path of the denied image.
    *   - `reason` (string): The reason for the denial.
    *
-   * @returns {Promise<void>} A promise that resolves when the denial log is successfully written to Firestore.
+   * @return {Promise<void>} A promise that resolves when the denial log is successfully written to Firestore.
    *
    * @throws {Error} Throws an error if the Firestore operation fails.
    */

@@ -9,16 +9,16 @@ export interface AuthContext {
   token?: {
     email?: string;
     role?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 /**
  * Validates that the user is authenticated and has the verifier role.
  *
- * @param auth - The authentication context from the request
+ * @param {AuthContext | undefined} auth - The authentication context from the request
  * @throws {HttpsError} If user is not authenticated or lacks verifier role
- * @returns The authenticated user's context (uid, email, role)
+ * @return {object} The authenticated user's context (uid, email, role)
  */
 export function requireVerifierRole(auth: AuthContext | undefined) {
   // Check if user is authenticated

@@ -10,14 +10,18 @@ dotenv.config();
  * - Returns "unknown" if no IP address can be determined.
  *
  * @function clientIp
- * @param {any} req - The request object containing headers and IP information.
+ * @param {Record<string, unknown>} req - The request object containing headers and IP information.
  * @return {string} The client IP address or "unknown" if it cannot be determined.
  */
-export function clientIp(req: any): string {
+export function clientIp(req: Record<string, unknown>): string {
   // For Firebase callable functions, the request structure is different
   // Try Firebase callable structure first, then fall back to regular HTTP request structure
-  const headers = req.rawRequest?.headers || req.headers || {};
-  const ip = req.rawRequest?.ip || req.ip;
+  const rawRequest = req.rawRequest as Record<string, unknown> | undefined;
+  const headers = (rawRequest?.headers || req.headers || {}) as Record<
+    string,
+    string | string[] | undefined
+  >;
+  const ip = (rawRequest?.ip || req.ip) as string | undefined;
 
   const xff = (headers["x-forwarded-for"] as string | undefined) || "";
   const first = xff.split(",")[0].trim();
@@ -124,4 +128,3 @@ export function todayUTC(): string {
   const day = String(d.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-

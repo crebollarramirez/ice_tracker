@@ -1,18 +1,11 @@
 import { setGlobalOptions } from "firebase-functions";
-import { HttpsError } from "firebase-functions/v2/https";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
 // import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { clientIp, ipKey, todayUTC } from "./utils/utils";
-import {
-  FirebaseCallableRequest,
-  PendingReport,
-  VerifiedReport,
-  DeniedReport,
-} from "./types/index";
+import { PendingReport, VerifiedReport, DeniedReport } from "./types/index";
 // import { isDateTodayUTC } from "./utils/utils";
 import * as dotenv from "dotenv";
-import { onCall } from "firebase-functions/v2/https";
 import { ImageStorage } from "./database/ImageStorage";
 import { Collections } from "./database/Collection";
 import { RealtimeDB } from "./database/RealtimeDB";
@@ -45,73 +38,57 @@ logger.info("Services initialized:", {
   storageBucket: process.env.STORAGE_BUCKET || "NOT_SET",
 });
 
-/**
- * @async
- * @function enforceDailyQuotaByIp
- * @description
- * Enforces a daily quota for the number of calls allowed per IP address for a specific logical bucket.
- *
- * - Retrieves the client IP address from the request.
- * - Checks if the IP address has exceeded the daily limit for the specified bucket.
- * - Updates the Firestore document to track the count and reset it for a new day.
- *
- * @param {FirebaseCallableRequest} req - The request object containing client information.
- * @param {string} bucket - The logical bucket name for rate limiting.
- * @param {number} [limit=3] - The maximum number of allowed calls per day (default is 3).
- * @throws {HttpsError} If the client IP address is unknown or cannot be determined.
- * @return {Promise<boolean>} Resolves to `true` if the limit is exceeded, otherwise `false`.
- */
-export async function enforceDailyQuotaByIp(
-  req: FirebaseCallableRequest,
-  bucket: string,
-  limit = 3
-): Promise<boolean> {
-  const ip = clientIp(req);
+// export async function enforceDailyQuotaByIp(
+//   req: FirebaseCallableRequest,
+//   bucket: string,
+//   limit = 3
+// ): Promise<boolean> {
+//   const ip = clientIp(req);
 
-  // Reject requests with unknown IP to prevent abuse
-  if (ip === "unknown") {
-    throw new HttpsError(
-      "failed-precondition",
-      "Unable to determine client IP address. Request blocked for security."
-    );
-  }
+//   // Reject requests with unknown IP to prevent abuse
+//   if (ip === "unknown") {
+//     throw new HttpsError(
+//       "failed-precondition",
+//       "Unable to determine client IP address. Request blocked for security."
+//     );
+//   }
 
-  const key = ipKey(ip);
-  const doc = firestoreDb.collection("rate_daily_ip").doc(`${bucket}_${key}`);
-  const today = todayUTC();
+//   const key = ipKey(ip);
+//   const doc = firestoreDb.collection("rate_daily_ip").doc(`${bucket}_${key}`);
+//   const today = todayUTC();
 
-  const result = await firestoreDb.runTransaction(async (tx) => {
-    const snap = await tx.get(doc);
-    const data = snap.exists ? snap.data() : {};
-    const date = data?.date ?? today;
-    let count = typeof data?.count === "number" ? data.count : 0;
+//   const result = await firestoreDb.runTransaction(async (tx) => {
+//     const snap = await tx.get(doc);
+//     const data = snap.exists ? snap.data() : {};
+//     const date = data?.date ?? today;
+//     let count = typeof data?.count === "number" ? data.count : 0;
 
-    if (date !== today) count = 0; // new day → reset
+//     if (date !== today) count = 0; // new day → reset
 
-    if (count >= limit) {
-      return true; // Above limit
-    }
+//     if (count >= limit) {
+//       return true; // Above limit
+//     }
 
-    tx.set(
-      doc,
-      {
-        date: today,
-        count: count + 1,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+//     tx.set(
+//       doc,
+//       {
+//         date: today,
+//         count: count + 1,
+//         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 
-        // Proper Firestore Timestamp for TTL (25 hours ahead)
-        deleteAt: admin.firestore.Timestamp.fromMillis(
-          Date.now() + 25 * 60 * 60 * 1000
-        ),
-      },
-      { merge: true }
-    );
+//         // Proper Firestore Timestamp for TTL (25 hours ahead)
+//         deleteAt: admin.firestore.Timestamp.fromMillis(
+//           Date.now() + 25 * 60 * 60 * 1000
+//         ),
+//       },
+//       { merge: true }
+//     );
 
-    return false; // Below limit, request allowed
-  });
+//     return false; // Below limit, request allowed
+//   });
 
-  return result;
-}
+//   return result;
+// }
 
 /**
  * Updates pin statistics in the realtime database.
@@ -403,9 +380,7 @@ export const verifyReport = onCall(async (request) => {
 
     // it already exists so we should imcrement the reported count
     if (verifiedReport) {
-      const isIncremented = await realtimeDb.updateReport(
-        reportId
-      );
+      const isIncremented = await realtimeDb.updateReport(reportId);
 
       if (isIncremented) {
         await imageStorage.deleteFile(pendingReport.imagePath);

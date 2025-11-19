@@ -2,9 +2,21 @@ import { Database } from "firebase-admin/database";
 import * as logger from "firebase-functions/logger";
 import { VerifiedReport, PendingReport } from "../types/index";
 
+/**
+ * The `RealtimeDB` class provides utility methods to interact with Firebase Realtime Database.
+ * It includes operations for fetching, saving, updating, and deleting reports, as well as
+ * generic methods for reading, writing, and deleting data at specified paths.
+ *
+ * This class is designed to encapsulate database operations for better reusability and maintainability.
+ */
 export class RealtimeDB {
   private db: Database;
 
+  /**
+   * Constructs a new instance of the `RealtimeDB` class.
+   *
+   * @param {Database} db - The Firebase Realtime Database instance to use for operations.
+   */
   constructor(db: Database) {
     this.db = db;
   }
@@ -13,7 +25,7 @@ export class RealtimeDB {
    * Fetches a pending report from `/pending/{id}`.
    *
    * @param {string} reportId - The ID of the pending report to retrieve.
-   * @returns {Promise<PendingReport | null>} - Resolves with the pending report data, or `null` if not found.
+   * @return {Promise<PendingReport | null>} - Resolves with the pending report data, or `null` if not found.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async getPendingReport(reportId: string): Promise<PendingReport | null> {
@@ -42,7 +54,7 @@ export class RealtimeDB {
    * Fetches a verified report from `/verified/{id}`.
    *
    * @param {string} reportId - The ID of the verified report to retrieve.
-   * @returns {Promise<VerifiedReport | null>} - Resolves with the verified report data, or `null` if not found.
+   * @return {Promise<VerifiedReport | null>} - Resolves with the verified report data, or `null` if not found.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async getVerifiedReport(reportId: string): Promise<VerifiedReport | null> {
@@ -72,7 +84,7 @@ export class RealtimeDB {
    *
    * @param {string} reportId - The ID of the report to save.
    * @param {VerifiedReport} verifiedData - The verified report data to save.
-   * @returns {Promise<void>} - Resolves when the operation is successful.
+   * @return {Promise<void>} - Resolves when the operation is successful.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async saveVerifiedReport(
@@ -93,7 +105,7 @@ export class RealtimeDB {
    * Deletes a pending report from `/pending/{id}`.
    *
    * @param {string} reportId - The ID of the pending report to delete.
-   * @returns {Promise<void>} - Resolves when the operation is successful.
+   * @return {Promise<void>} - Resolves when the operation is successful.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async removePendingReport(reportId: string): Promise<void> {
@@ -111,7 +123,7 @@ export class RealtimeDB {
    * Updates a verified report by incrementing the `reported` count and refreshing the `addedAt` timestamp.
    *
    * @param {string} reportId - The ID of the verified report to update.
-   * @returns {Promise<boolean>} - Resolves to `true` if the update is successful, or `false` if the report does not exist.
+   * @return {Promise<boolean>} - Resolves to `true` if the update is successful, or `false` if the report does not exist.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async updateReport(reportId: string): Promise<boolean> {
@@ -156,7 +168,7 @@ export class RealtimeDB {
    * Reads data from a specified path in the Realtime Database.
    *
    * @param {string} path - The path to read data from.
-   * @returns {Promise<T | null>} - Resolves with the data at the specified path, or `null` if it does not exist.
+   * @return {Promise<T | null>} - Resolves with the data at the specified path, or `null` if it does not exist.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async read<T>(path: string): Promise<T | null> {
@@ -174,7 +186,7 @@ export class RealtimeDB {
    *
    * @param {string} path - The path to write data to.
    * @param {T} data - The data to write.
-   * @returns {Promise<void>} - Resolves when the operation is successful.
+   * @return {Promise<void>} - Resolves when the operation is successful.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async write<T>(path: string, data: T): Promise<void> {
@@ -191,7 +203,7 @@ export class RealtimeDB {
    * Deletes data from a specified path in the Realtime Database.
    *
    * @param {string} path - The path to delete data from.
-   * @returns {Promise<void>} - Resolves when the operation is successful.
+   * @return {Promise<void>} - Resolves when the operation is successful.
    * @throws {Error} - Throws an error if the database operation fails.
    */
   async delete(path: string): Promise<void> {

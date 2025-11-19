@@ -43,7 +43,12 @@ export interface IGeocodingService {
 export class GoogleGeocodingService implements IGeocodingService {
   private useMock: boolean;
 
-  constructor(useMock: boolean = false) {
+  /**
+   * Constructs a new instance of the `GoogleGeocodingService` class.
+   *
+   * @param {boolean} [useMock=false] - Whether to use mock data instead of making actual API calls.
+   */
+  constructor(useMock = false) {
     this.useMock = useMock;
   }
 
@@ -198,6 +203,11 @@ export class GoogleGeocodingService implements IGeocodingService {
     }
   }
 
+  /**
+   * Sets whether the service should use mock data instead of making actual API calls.
+   *
+   * @param {boolean} mock - A boolean indicating whether to enable mock mode.
+   */
   setMcok(mock: boolean): void {
     this.useMock = mock;
   }

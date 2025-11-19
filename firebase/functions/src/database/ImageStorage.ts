@@ -4,9 +4,28 @@ import { Bucket, File } from "@google-cloud/storage";
 
 dotenv.config();
 
+/**
+ * The `ImageStorage` class provides utility methods to interact with a Google Cloud Storage bucket.
+ * It includes operations such as checking file existence, copying, deleting, and moving files,
+ * as well as generating public download URLs for files. This class is designed to facilitate
+ * the management of images associated with reports in the application.
+ *
+ * Key Features:
+ * - Check if a file exists in the storage bucket.
+ * - Copy files within the bucket.
+ * - Delete files from the bucket.
+ * - Generate or retrieve download tokens for files.
+ * - Construct public download URLs for files.
+ * - Move images to specific folders (e.g., verified or denied reports) and handle associated operations.
+ */
 export class ImageStorage {
   private bucket: Bucket;
 
+  /**
+   * Constructs a new instance of the `ImageStorage` class.
+   *
+   * @param {Bucket} bucket - The Google Cloud Storage bucket instance to use for file operations.
+   */
   constructor(bucket: Bucket) {
     this.bucket = bucket;
   }
@@ -15,7 +34,7 @@ export class ImageStorage {
    * Checks if a file exists in the configured storage bucket.
    *
    * @param {string} filePath - The path of the file to check.
-   * @returns {Promise<boolean>} - Resolves to `true` if the file exists, otherwise `false`.
+   * @return {Promise<boolean>} - Resolves to `true` if the file exists, otherwise `false`.
    * @throws {Error} - Logs an error if the existence check fails.
    */
   async fileExists(filePath: string): Promise<boolean> {
@@ -34,7 +53,7 @@ export class ImageStorage {
    *
    * @param {string} sourcePath - The path of the source file to copy.
    * @param {string} destinationPath - The path where the file should be copied.
-   * @returns {Promise<File>} - Resolves with the destination file handle.
+   * @return {Promise<File>} - Resolves with the destination file handle.
    * @throws {Error} - Throws an error if the copy operation fails.
    */
   async copyFile(sourcePath: string, destinationPath: string): Promise<File> {
@@ -54,7 +73,7 @@ export class ImageStorage {
    * Deletes a file from the storage bucket.
    *
    * @param {string} filePath - The path of the file to delete.
-   * @returns {Promise<void>} - Resolves when the file is successfully deleted.
+   * @return {Promise<void>} - Resolves when the file is successfully deleted.
    * @throws {Error} - Throws an error if the deletion fails.
    */
   async deleteFile(filePath: string): Promise<void> {
@@ -72,7 +91,7 @@ export class ImageStorage {
    * Retrieves or generates a download token for a file in the storage bucket.
    *
    * @param {File} file - The file object to retrieve or generate a token for.
-   * @returns {Promise<string>} - Resolves with the download token.
+   * @return {Promise<string>} - Resolves with the download token.
    * @throws {Error} - Throws an error if the metadata update fails.
    */
   async getOrCreateDownloadToken(file: File): Promise<string> {
@@ -82,7 +101,8 @@ export class ImageStorage {
 
     if (!downloadToken) {
       // Generate a new UUID token if one doesn't exist
-      downloadToken = require("crypto").randomUUID();
+      const crypto = await import("crypto");
+      downloadToken = crypto.randomUUID();
       await file.setMetadata({
         metadata: {
           firebaseStorageDownloadTokens: downloadToken,
@@ -102,7 +122,7 @@ export class ImageStorage {
    *
    * @param {string} filePath - The path of the file in the bucket.
    * @param {string} downloadToken - The download token associated with the file.
-   * @returns {string} - The constructed download URL.
+   * @return {string} - The constructed download URL.
    */
   constructDownloadUrl(filePath: string, downloadToken: string): string {
     const bucketName = this.bucket.name;
@@ -110,13 +130,14 @@ export class ImageStorage {
     return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media&token=${downloadToken}`;
   }
 
+  // eslint-disable-next-line valid-jsdoc
   /**
    * Moves a file to a new location, generates a permanent download token, and deletes the source file.
    *
-   * @param {string} sourcePath - The path of the source file to move.
-   * @param {string} destinationPath - The path where the file should be moved.
-   * @returns {Promise<{ imageUrl: string; file: File }>} - Resolves with the new file's URL and handle.
-   * @throws {Error} - Throws an error if the move operation fails.
+   * @param {string} sourcePath The path of the source file to move
+   * @param {string} destinationPath The path where the file should be moved
+   * @return {Promise<{imageUrl: string; file: File}>} Resolves with the new file's URL and handle
+   * @throws {Error} Throws an error if the move operation fails
    */
   async moveImageAndGenerateUrl(
     sourcePath: string,
@@ -149,7 +170,7 @@ export class ImageStorage {
    * @param {object} report - The report object containing the image path.
    * @param {string} report.imagePath - The path of the image to move.
    * @param {string} reportId - The ID of the report.
-   * @returns {Promise<{ imageUrl: string }>} - Resolves with the public URL of the moved image.
+   * @return {Promise<{ imageUrl: string }>} - Resolves with the public URL of the moved image.
    * @throws {Error} - Throws an error if the move operation fails.
    */
   async moveImageToVerified(
@@ -176,7 +197,7 @@ export class ImageStorage {
    *
    * @param {object} report - The report object containing the image path.
    * @param {string} report.imagePath - The path of the image to move.
-   * @returns {Promise<string>} - Resolves with the new storage path of the moved image.
+   * @return {Promise<string>} - Resolves with the new storage path of the moved image.
    * @throws {Error} - Throws an error if the move operation fails.
    */
   async moveImageToDenied(report: { imagePath: string }): Promise<string> {
@@ -204,7 +225,7 @@ export class ImageStorage {
   /**
    * Retrieves the name of the configured storage bucket.
    *
-   * @returns {string} - The name of the storage bucket.
+   * @return {string} - The name of the storage bucket.
    */
   getBucketName(): string {
     return this.bucket.name;

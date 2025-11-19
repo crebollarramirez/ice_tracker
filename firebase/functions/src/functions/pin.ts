@@ -68,9 +68,9 @@ export const pin = onCall(
       );
     }
 
-    const projectId = process.env.GCLOUD_PROJECT!;
-    const enterpriseApiKey = process.env.RECAPTCHA_ENTERPRISEV3_API_KEY!;
-    const v2Secret = process.env.RECAPTCHA_V2_SECRET_KEY!;
+    const projectId = process.env.GCLOUD_PROJECT || "";
+    const enterpriseApiKey = process.env.RECAPTCHA_ENTERPRISEV3_API_KEY || "";
+    const v2Secret = process.env.RECAPTCHA_V2_SECRET_KEY || "";
 
     /** -------------------------------------------
      *  STEP 2 — Verify reCAPTCHA v3 Enterprise
