@@ -1,11 +1,13 @@
 {
     "header": {
-        "title": "Rastreador de Actividad de ICE",
-        "subtitle": "Sistema Comunitario de Alertas de Seguridad"
+        "description": "La forma más confiable de rastrear la actividad de ICE cerca de ti."
     },
-    "safetyAlert": {
-        "title": "Información Importante",
-        "description": "Esta herramienta permite al público reportar y rastrear avistamientos de ICE en tiempo real: revisa el mapa antes de viajar, comparte alertas, evita áreas con actividad reciente y conoce tus derechos si te abordan."
+    "home": {
+        "header": "Rastreador de Actividad de ICE",
+        "description": "La forma más confiable de rastrear la actividad de ICE cerca de ti."
+    },
+    "donate-button": {
+        "title": "Donar"
     },
     "reporting": {
         "title": "Reportar Actividad de ICE",
@@ -13,9 +15,9 @@
         "subTitle1": "Qué Reportar",
         "info1": "Vehículos de ICE, retenes o detenciones.",
         "subTitle2": "Dónde",
-        "info2": "Usa la barra de ubicación para compartir detalles exactos (cruces, direcciones o puntos de referencia).",
+        "info2": "Usa la barra de Ubicación para compartir detalles exactos (cruces, direcciones o lugares reconocidos).",
         "subTitle3": "Cuándo",
-        "info3": "Envía los reportes tan pronto como sea seguro hacerlo.",
+        "info3": "Envía reportes tan pronto como sea seguro para ti hacerlo.",
         "subTitle4": "Privacidad",
         "info4": "Todos los reportes son completamente anónimos."
     },
@@ -30,66 +32,15 @@
         "top": "Tener contactos importantes accesibles puede ayudarte a ti y a tus seres queridos a mantenerse seguros en situaciones inesperadas.",
         "bottom": "Guarda estos números en tu teléfono, en tu cartera o en una tarjeta de “Conoce Tus Derechos”. Considera mantener una pequeña lista en papel como respaldo en caso de que tu teléfono se pierda o sea confiscado."
     },
-    "form": {
-        "title": "Reportar Actividad de ICE",
-        "guidelines": {
-            "title": "Guía Rápida de Reporte:",
-            "activities": "Vehículos de ICE • Retenes • Redadas • Operativos",
-            "examples": "Ejemplos: \"4th St y La Regina Ave, Downey CA\" o \"123 Main St, Los Ángeles CA\""
-        },
-        "fields": {
-            "locationLabel": "Ubicación",
-            "locationRequired": "Requerido",
-            "locationPlaceholder": "Dirección, cruce o punto de referencia",
-            "addDetails": "Agregar detalles (opcional)",
-            "detailsLabel": "Detalles",
-            "detailsPlaceholder": "Cantidad de vehículos, hora, oficiales vistos...",
-            "charactersCount": "{count}/200"
-        },
-        "buttons": {
-            "submit": "Enviar Reporte",
-            "locating": "📍 Obteniendo ubicación...",
-            "hide": "✕"
-        },
-        "errors": {
-            "addressRequired": "La dirección es requerida",
-            "negativeContent": "Por favor evita usar lenguaje negativo o abusivo en la información adicional. Ahora estás bloqueado para enviar reportes por 1 hora.",
-            "invalidAddress": "Por favor proporciona una dirección válida que se pueda encontrar en el mapa",
-            "generic": "Ocurrió un error al enviar el formulario",
-            "network": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo.",
-            "cooldown": "Por favor espera {minutes} minutos más antes de enviar otro reporte."
-        },
-        "success": {
-            "message": "Ubicación agregada exitosamente",
-            "title": "✅ ¡Reporte de actividad de ICE enviado con éxito!",
-            "location": "Ubicación: {address}",
-            "thanks": "Gracias por ayudar a proteger tu comunidad. Comparte esta información con familiares y amistades."
-        },
-        "validation": {
-            "enterAddress": "Por favor ingresa una dirección o ubicación",
-            "noResults": "No se encontraron resultados. Estado: {status}",
-            "apiError": "Error al llamar a la API de geocodificación de Google. Revisa la consola para más detalles.",
-            "saveError": "Error al guardar en la base de datos. Revisa la consola para más detalles.",
-            "rateLimitError": "Por favor espera antes de enviar otro reporte"
-        },
-        "confirmation": {
-            "title": "🚨 CONFIRMAR REPORTE DE ACTIVIDAD DE ICE",
-            "question": "¿Es esta la dirección/ubicación correcta donde viste actividad de ICE?",
-            "address": "\"{address}\"",
-            "instructions": "Haz clic en Aceptar para confirmar y enviar este reporte para ayudar a proteger tu comunidad.\nHaz clic en Cancelar para regresar y corregir la ubicación."
-        }
-    },
     "reportsList": {
-        "title": "📍 Reportes Recientes de ICE",
-        "loading": "Cargando reportes recientes...",
-        "noReports": "Aún no hay reportes. ¡Ayuda a proteger tu comunidad reportando actividad de ICE!",
-        "reported": "Reportado: {date}",
-        "additionalInfo": "ℹ️ {info}",
-        "total": "Total de reportes de ICE: {count}",
-        "warning": "⚠️ Revisa antes de viajar – evita estas zonas",
-        "search": "Buscar",
-        "searchPlaceholder": "Buscar direcciones...",
-        "filtered": "Encontrados:"
+        "title": "Reportes Recientes",
+        "loading": "Cargando reportes verificados...",
+        "noReports": "Sin Reportes",
+        "noReportsMatching": "No se encontraron reportes que coincidan con \"{searchQuery}\"",
+        "viewMore": "Ver Más ({count} reportes adicionales)",
+        "showLess": "Mostrar Menos",
+        "betaBadge": "Beta",
+        "description": "Alertas más recientes de la comunidad en tu área"
     },
     "map": {
         "loading": "Cargando reportes de ICE...",
@@ -99,41 +50,25 @@
             "reported": "Reportado: {date}"
         }
     },
-    "rights": {
+    "knowYourRights": {
         "title": "Conoce Tus Derechos",
-        "iceApproaches": {
-            "title": "Si ICE Se Acerca a Ti:",
-            "items": [
-                [
-                    "Tienes el derecho de permanecer en silencio.",
-                    "No tienes que responder preguntas sobre tu estatus migratorio, dónde naciste o tu ciudadanía."
-                ],
-                [
-                    "No tienes que mostrar documentos a menos que estés conduciendo un vehículo",
-                    "y la ley te exija mostrar tu licencia y registro."
-                ],
-                [
-                    "Tienes el derecho de negarte a registros.",
-                    "No tienes que dar consentimiento para que registren tu persona, tus pertenencias o tu hogar sin una orden judicial."
-                ],
-                [
-                    "Pide un abogado.",
-                    "Tienes el derecho de hablar con un abogado antes de responder preguntas."
-                ],
-                [
-                    "No firmes nada.",
-                    "Nunca firmes documentos de ICE sin consultar con un abogado."
-                ],
-                [
-                    "Si eres detenido, tienes el derecho de hacer una llamada telefónica",
-                    "a un abogado o a un contacto de confianza."
-                ]
-            ]
-        }
+        "description": "Si ICE se Acerca a Ti",
+        "infoT1": "Derecho a Permanecer en Silencio",
+        "infoD1": "No tienes que responder preguntas sobre tu estatus migratorio, dónde naciste o tu ciudadanía.",
+        "infoT2": "Documentos",
+        "infoD2": "No tienes que mostrar documentos a menos que estés conduciendo un vehículo y la ley te exija mostrar tu licencia y registro.",
+        "infoT3": "Negarte a Búsquedas",
+        "infoD3": "Tienes derecho a negarte a búsquedas. No tienes que dar consentimiento para que revisen tu persona, tus pertenencias o tu hogar sin una orden.",
+        "infoT4": "Pedir un Abogado",
+        "infoD4": "Tienes derecho a hablar con un abogado antes de responder preguntas.",
+        "infoT5": "No Firmes Nada",
+        "infoD5": "Nunca firmes documentos de ICE sin consultar a un abogado.",
+        "infoT6": "Derechos de Llamada Telefónica",
+        "infoD6": "Si eres detenido, tienes derecho a hacer una llamada telefónica a un abogado o a un contacto de confianza."
     },
     "footer": {
-        "disclaimer": "Esta es una herramienta comunitaria para concientización sobre seguridad. Reporta información de manera responsable y verifica las alertas siempre que sea posible.",
-        "emergency": "En caso de emergencia inmediata, contacta a los servicios de emergencia locales. Para ayuda legal de inmigración, acude a organizaciones legales calificadas."
+        "disclaimer": "Para emergencias inmediatas, contacta a los servicios de emergencia locales. Para ayuda legal de inmigración, comunícate con organizaciones calificadas de asistencia legal.",
+        "rights": "Conoce Tus Derechos →"
     },
     "common": {
         "hide": "Ocultar",
@@ -146,45 +81,126 @@
         "todayReports": "Reportes de Hoy",
         "weekReports": "Reportes de la Semana"
     },
-    "resources": {
-        "title": "Recursos",
-        "subtitle": "Aquí encontrarás recursos útiles para conocer tus derechos y obtener asistencia legal.",
-        "resourceSection1": "Pasos a Seguir si un Ser Querido es Detenido",
-        "resourceSection2": "Recursos Adicionales",
-        "resourcesLinks": {
-            "resource1": {
-                "title": "Confirmar Detención por ICE",
-                "link": "https://locator.ice.gov"
-            },
-            "resource2": {
-                "title": "Contactar a tu Ser Querido",
-                "link": "https://ice.gov/detention-facilities"
-            }
+    "addressForm": {
+        "title": "Reportar Actividad de ICE",
+        "description": "Ayuda a tu comunidad reportando actividad de ICE en tu área",
+        "address": {
+            "label": "Dirección",
+            "required": "La dirección es requerida",
+            "placeholder": "Ingresa la dirección o ubicación"
         },
-        "additionalResources": {
-            "resource1": {
-                "title": "Encuentra Ayuda Legal Cerca de Ti",
-                "description": "Busca en el Directorio Nacional de Servicios Legales de Inmigración para localizar organizaciones que ofrecen asistencia legal gratuita o de bajo costo en todo EE. UU., y conéctate rápidamente con recursos de confianza en tu área.",
-                "link": "https://www.immigrationadvocates.org/nonprofit/legaldirectory"
-            },
-            "resource2": {
-                "title": "Lleva Tus Derechos Contigo",
-                "description": "Esta tarjeta de bolsillo de Conozca Sus Derechos, creada por el Immigrant Legal Resource Center (ILRC), te ayuda a hacer valer tus derechos durante encuentros con ICE o las fuerzas del orden. Disponible en varios idiomas, es fácil de imprimir, llevar y mostrar cuando sea necesario.",
-                "link": "https://www.nilc.org/resources/know-your-rights-card/"
-            },
-            "resource3": {
-                "title": "Tenemos Derechos – Plan de Emergencia y Recursos",
-                "description": "Prepárate tú y tus seres queridos con el Plan de Emergencia de Tenemos Derechos, una guía gratuita y pública del Brooklyn Defender Services. Proporciona instrucciones paso a paso para encuentros con ICE e incluye enlaces a videos y recursos legales adicionales. Disponible en inglés, español y otros idiomas para un fácil acceso e impresión.",
-                "link": "https://www.wehaverights.us/"
-            }
+        "additionalInfo": {
+            "label": "Información Adicional",
+            "required": "La información adicional es requerida",
+            "placeholder": "Proporciona detalles sobre la actividad"
+        },
+        "image": {
+            "label": "Evidencia Fotográfica *",
+            "takePhoto": "Tomar foto con la Cámara",
+            "uploadGallery": "Subir desde la Galería",
+            "uploadPhoto": "Subir Foto",
+            "retake": "Volver a Tomar",
+            "change": "Cambiar",
+            "uploadDifferent": "Subir Diferente",
+            "takeOrUpload": "Toma una foto con tu cámara o súbela desde la galería",
+            "uploadInfo": "Sube una foto (JPG, PNG, WebP o HEIC - Máx 5MB)",
+            "required": "La imagen es obligatoria",
+            "maxSize": "El tamaño máximo del archivo es 5MB",
+            "invalidType": "Solo se permiten formatos .jpg, .jpeg, .png, .webp y .heic"
+        },
+        "buttons": {
+            "submit": "Enviar Reporte",
+            "locating": "📍 Localizando..."
+        },
+        "errors": {
+            "generic": "Ocurrió un error al enviar el formulario",
+            "network": "Error de red. Verifica tu conexión e inténtalo nuevamente."
+        },
+        "success": {
+            "message": "Ubicación agregada exitosamente",
+            "thanks": "Gracias por ayudar a proteger tu comunidad."
+        },
+        "privacyNotice": "Todos los reportes son completamente anónimos. Tu información personal no será compartida."
+    },
+    "aboutPage": {
+        "title": "Sobre Nosotros",
+        "description": "Protección impulsada por la comunidad para los vecindarios que llamamos hogar",
+        "missionTitle": "Nuestra Misión",
+        "missionDescription": "Somos exalumnos de UC San Diego que crecimos en Los Ángeles y compartimos un profundo agradecimiento hacia la comunidad que nos formó. Iceinmyarea.org fue creado a partir de nuestro deseo de usar la educación y las oportunidades que hemos tenido la fortuna de recibir para retribuir a los vecindarios, amigos y familias que nos ayudaron a crecer. Nuestra misión es ayudar a mantener a nuestras comunidades informadas, conectadas y seguras. Para nosotros, esto es mucho más que un proyecto: es una manera de proteger y elevar a la ciudad que admiramos y a los vecinos que nos importan.",
+        "cTitle1": "La Comunidad Primero",
+        "cDescription1": "Construido por la comunidad y para la comunidad. Creemos en el poder de la conciencia colectiva y el apoyo mutuo.",
+        "cTitle2": "Seguridad y Privacidad",
+        "cDescription2": "Tu seguridad es nuestra prioridad. Protegemos tu privacidad mientras te mantenemos informado sobre la actividad de ICE en tu área.",
+        "cTitle3": "Devolver a la Comunidad",
+        "cDescription3": "Usamos nuestra educación y oportunidades para proteger los vecindarios y familias que nos ayudaron a crecer.",
+        "webTitle": "Por Qué Cambió el Sitio Web",
+        "webPara1": "Nuestro sitio ha crecido rápidamente, con miles de personas en EE.UU. reportando actividad de ICE cada día. Con más de",
+        "webPara2": "4,000 visitantes diarios",
+        "webPara3": ", hemos mejorado la forma en que se verifican los reportes para hacer nuestra información más",
+        "webPara4": "precisa, confiable y útil",
+        "webPara5": "para la comunidad.",
+        "webPara6": "Ahora cada reporte es",
+        "webPara7": "revisado por una persona real",
+        "webPara8": "para confirmar su exactitud — haciendo nuestra plataforma una de las",
+        "webPara9": "herramientas más confiables para rastrear actividad de ICE",
+        "webPara10": "a nivel nacional.",
+        "verifyTitle": "Cómo se Verifican los Reportes",
+        "verifyDescription": "Desplázate por nuestro proceso de verificación de tres pasos para ver cómo aseguramos precisión y confiabilidad",
+        "contactTitle": "Contáctanos",
+        "contactP1": "¿Tienes preguntas o necesitas ayuda? Estamos aquí para apoyarte.",
+        "contactP2": "Para emergencias o asistencia legal inmediata, por favor contacta directamente a un abogado de inmigración u organización de ayuda legal."
+    },
+    "verificationTimeline": {
+        "step1": {
+            "title": "Reporte Enviado",
+            "description": "Un miembro de la comunidad envía un reporte con detalles y ubicación.",
+            "info": "Los reportes incluyen ubicación, hora, información adicional y evidencia fotográfica."
+        },
+        "step2": {
+            "title": "Revisado por una Persona",
+            "description": "Un verificador real revisa la exactitud y el contexto.",
+            "info": "Nuestro equipo de verificación compara detalles, revisa duplicados y confirma la autenticidad."
+        },
+        "step3": {
+            "title": "Visible en Tiempo Real",
+            "description": "Los reportes verificados aparecen en vivo para todos.",
+            "info": "Los reportes verificados aparecen instantáneamente en el mapa, ayudando a que las comunidades se mantengan informadas y seguras."
+        }
+    },
+    "resourcesPage": {
+        "title": "Recursos",
+        "description": "Aquí encontrarás recursos útiles para conocer tus derechos y encontrar asistencia legal.",
+        "subTitle1": "Pasos a Seguir si un Ser Querido es Detenido",
+        "resource1": {
+            "title": "Confirmar Detención por ICE",
+            "description": "Usa el Sistema de Localización de Detenidos de ICE para confirmar su ubicación y estatus. Ten a la mano el nombre completo, fecha de nacimiento y país de origen de la persona.",
+            "button": "Localizador de Detenidos de ICE"
+        },
+        "resource2": {
+            "title": "Comunícate con tu Ser Querido",
+            "description": "Encuentra información de contacto de centros de detención, reglas de visita y guías de comunicación para mantenerte en contacto con familiares detenidos.",
+            "button": "Centros de Detención"
+        },
+        "subTitle2": "Recursos Adicionales",
+        "resource3": {
+            "title": "Encuentra Ayuda Legal Cerca de Ti",
+            "description": "Busca en el Directorio Nacional de Servicios Legales de Inmigración para encontrar organizaciones de asistencia legal gratuita o de bajo costo en EE.UU.",
+            "button": "Buscar Servicios Legales"
+        },
+        "resource4": {
+            "title": "Lleva Tus Derechos Contigo",
+            "description": "Tarjeta de bolsillo ‘Conoce Tus Derechos’ del Immigrant Legal Resource Center (ILRC). Disponible en varios idiomas.",
+            "button": "Descargar Tarjeta"
+        },
+        "resource5": {
+            "title": "Tenemos Derechos",
+            "description": "Plan de Emergencia y Recursos de Brooklyn Defender Services. Guía paso a paso para encuentros con ICE, con videos y recursos legales.",
+            "button": "Ver Recursos"
         }
     },
     "maintenance": {
         "title": "Sección en Mantenimiento",
         "message": "Estamos haciendo mantenimiento. La parte de reportes va a estar disponible muy pronto."
-    },
-    "donate-button": {
-        "title": "Donar"
     },
     "notice": {
         "message": "¿Te interesa donar?"

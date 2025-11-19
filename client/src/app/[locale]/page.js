@@ -12,6 +12,7 @@ import { EmergencyInfo } from "@/components/EmergencyInfo";
 import { KnowYourRights } from "@/components/KnowYourRights";
 import { Footer } from "@/components/Footer";
 import { PageHeader, PageTitle, PageDescription } from "@/components/ui/page";
+import { useTranslations } from "next-intl";
 
 export default function Home() {
   // Set this to true to show maintenance message for Map and Form section only
@@ -23,6 +24,8 @@ export default function Home() {
   const isMapFormMaintenanceMode =
     process.env.NEXT_PUBLIC_MAP_FORM_MAINTENANCE === "true";
 
+    const t = useTranslations("home");
+
   return (
     <main className="w-full min-h-screen bg-background">
       <DonateProvider>
@@ -31,9 +34,10 @@ export default function Home() {
 
           <div className="container mx-auto px-4 py-8">
             <PageHeader>
-              <PageTitle>ICE Activity Tracker</PageTitle>
+              <PageTitle>{t("header")}</PageTitle>
               <PageDescription>
-                The most reliable way to track ICE activity near you.
+                {t("description")}
+                
               </PageDescription>
             </PageHeader>
             {/* Main Grid Layout */}

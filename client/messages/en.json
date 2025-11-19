@@ -1,11 +1,13 @@
 {
     "header": {
-        "title": "ICE Activity Tracker",
-        "subtitle": "Community Safety Alert System"
+        "description": "The most reliable way to track ICE activity near you."
     },
-    "safetyAlert": {
-        "title": "Important Information",
-        "description": "This tool lets the public report and track ICE sightings in real time—check the map before traveling, share alerts, avoid recent activity areas, and know your rights if approached."
+    "home": {
+        "header": "ICE Activity Tracker",
+        "description": "The most reliable way to track ICE activity near you."
+    },
+    "donate-button": {
+        "title": "Donate"
     },
     "reporting": {
         "title": "Reporting ICE Activity",
@@ -30,66 +32,15 @@
         "top": "Keeping important contacts accessible can help you and your loved ones stay safe in unexpected situations.",
         "bottom": "Store these numbers in your phone, in a wallet, or on a “Know Your Rights” card. Consider keeping a small paper list as backup in case your phone is lost or confiscated."
     },
-    "form": {
-        "title": "Report ICE Activity",
-        "guidelines": {
-            "title": "Quick Report Guidelines:",
-            "activities": "ICE vehicles • Checkpoints • Raids • Enforcement operations",
-            "examples": "Examples: \"4th St and La Regina Ave, Downey CA\" or \"123 Main St, Los Angeles CA\""
-        },
-        "fields": {
-            "locationLabel": "Location",
-            "locationRequired": "Required",
-            "locationPlaceholder": "Address, intersection, or landmark",
-            "addDetails": "Add details (optional)",
-            "detailsLabel": "Details",
-            "detailsPlaceholder": "Vehicles count, time, officers seen...",
-            "charactersCount": "{count}/200"
-        },
-        "buttons": {
-            "submit": "Submit Report",
-            "locating": "📍 Locating...",
-            "hide": "✕"
-        },
-        "errors": {
-            "addressRequired": "Address is required",
-            "negativeContent": "Please avoid using negative or abusive language in the additional info. You are now blocked from submitting for 1 hour.",
-            "invalidAddress": "Please provide a valid address that can be found on the map",
-            "generic": "An error occurred while submitting the form",
-            "network": "Network error. Please check your connection and try again.",
-            "cooldown": "Please wait {minutes} more minutes before submitting another report."
-        },
-        "success": {
-            "message": "Successfully added location",
-            "title": "✅ ICE activity report submitted successfully!",
-            "location": "Location: {address}",
-            "thanks": "Thank you for helping protect your community. Please share this information with family and friends."
-        },
-        "validation": {
-            "enterAddress": "Please enter an address or location",
-            "noResults": "No results found. Status: {status}",
-            "apiError": "Error calling Google Geocoding API. Check console for details.",
-            "saveError": "Error saving to database. Check console for details.",
-            "rateLimitError": "Please wait before submitting another report"
-        },
-        "confirmation": {
-            "title": "🚨 CONFIRM ICE ACTIVITY REPORT",
-            "question": "Is this the correct address/location where you witnessed ICE activity?",
-            "address": "\"{address}\"",
-            "instructions": "Click OK to confirm and submit this report to help protect your community.\nClick Cancel to go back and edit the location."
-        }
-    },
     "reportsList": {
-        "title": "📍 Recent ICE Reports",
-        "loading": "Loading recent reports...",
-        "noReports": "No reports yet. Help protect your community by reporting ICE activity!",
-        "reported": "Reported: {date}",
-        "additionalInfo": "ℹ️ {info}",
-        "total": "Total ICE reports: {count}",
-        "warning": "⚠️ Check before traveling - avoid these areas",
-        "search": "Find",
-        "searchPlaceholder": "Search addresses...",
-        "filtered": "Found:"
+        "title": "Recent Reports",
+        "loading": "Loading verified reports...",
+        "noReports": "No Reports",
+        "noReportsMatching": "No reports found matching \"{searchQuery}\"",
+        "viewMore": "View More ({count} more reports)",
+        "showLess": "Show Less",
+        "betaBadge": "Beta",
+        "description": "Latest community alerts in your area"
     },
     "map": {
         "loading": "Loading ICE reports...",
@@ -99,41 +50,25 @@
             "reported": "Reported: {date}"
         }
     },
-    "rights": {
+    "knowYourRights": {
         "title": "Know Your Rights",
-        "iceApproaches": {
-            "title": "If ICE Approaches You:",
-            "items": [
-                [
-                    "You have the right to remain silent.",
-                    "You do not have to answer questions about your immigration status, where you were born, or your citizenship."
-                ],
-                [
-                    "You do not have to show documents unless you are driving a vehicle",
-                    "and legally required to show your license and registration."
-                ],
-                [
-                    "You have the right to refuse searches.",
-                    "You do not have to consent to a search of yourself, your belongings, or your home without a warrant. "
-                ],
-                [
-                    "Request an attorney.",
-                    "You have the right to speak with a lawyer before answering questions. "
-                ],
-                [
-                    "Do not sign anything.",
-                    "Never sign documents from ICE without consulting a lawyer."
-                ],
-                [
-                    "If detained, you have the right to make a phone call",
-                    "to a lawyer or trusted contact."
-                ]
-            ]
-        }
+        "description": "If ICE Approaches You",
+        "infoT1": "Right to Remain Silent",
+        "infoD1": "You do not have to answer questions about your immigration status, where you were born, or your citizenship.",
+        "infoT2": "Documents",
+        "infoD2": "You do not have to show documents unless you are driving a vehicle and legally required to show your license and registration.",
+        "infoT3": "Refuse Searches",
+        "infoD3": "You have the right to refuse searches. You do not have to consent to a search of yourself, your belongings, or your home without a warrant.",
+        "infoT4": "Request an Attorney",
+        "infoD4": "You have the right to speak with a lawyer before answering questions.",
+        "infoT5": "Do Not Sign Anything",
+        "infoD5": "Never sign documents from ICE without consulting a lawyer.",
+        "infoT6": "Phone Call Rights",
+        "infoD6": "If detained, you have the right to make a phone call to a lawyer or trusted contact."
     },
     "footer": {
-        "disclaimer": "This is a community-driven tool for safety awareness. Report information responsibly and verify alerts when possible.",
-        "emergency": "For immediate emergencies, contact local emergency services. For immigration legal help, contact qualified legal aid organizations."
+        "disclaimer": "For immediate emergencies, contact local emergency services. For immigration legal help, contact qualified legal aid organizations.",
+        "rights": "Know Your Rights →"
     },
     "common": {
         "hide": "Hide",
@@ -146,48 +81,122 @@
         "todayReports": "Today Reports",
         "weekReports": "Week Reports"
     },
-    "resources": {
-        "title": "Resources",
-        "subtitle": "Here are some helpful resources to know your rights and find legal assistance.",
-        "resourceSection1": "Steps to Take if a Loved One is Detained",
-        "resourceSection2": "Additional Resources",
-        "resourcesLinks": {
-            "resource1": {
-                "title": "Confirming Detainment by ICE",
-                "link": "https://locator.ice.gov "
-            },
-            "resource2": {
-                "title": "Reach Your Loved One",
-                "link": "https://ice.gov/detention-facilities"
-            }
+    "addressForm": {
+        "title": "Report ICE Activity",
+        "description": "Help your community by reporting ICE activity in your area",
+        "address": {
+            "label": "Address",
+            "required": "Address is required",
+            "placeholder": "Enter the address or location"
         },
-        "additionalResources": {
-            "resource1": {
-                "title": "Find Legal Help Near You",
-                "description": "Search the National Immigration Legal Services Directory to locate free or low-cost legal aid organizations across the U.S., and quickly connect with trusted resources in your area.",
-                "link": "https://www.immigrationadvocates.org/nonprofit/legaldirectory"
-            },
-            "resource2": {
-                "title": "Carry Your Rights With You",
-                "description": "This wallet-sized Know Your Rights card, created by the Immigrant Legal Resource Center (ILRC), helps you assert your rights during encounters with ICE or law enforcement. Available in multiple languages, it's easy to print, carry, and show when needed.",
-                "link": "https://www.nilc.org/resources/know-your-rights-card/"
-            },
-            "resource3": {
-                "title": "We Have Rights– Emergency Plan and Resources",
-                "description": "Prepare yourself and your loved ones with the We Have Rights Emergency Plan, a free publicly available guide from Brooklyn Defender Services. It provides step-by-step instructions for ICE encounters and includes links to videos and additional legal resources. Available in English, Spanish, and other languages for easy access and printing.",
-                "link": "https://www.wehaverights.us/"
-            }
+        "additionalInfo": {
+            "label": "Additional Information",
+            "required": "Additional information is required",
+            "placeholder": "Provide details about the activity"
+        },
+        "image": {
+            "label": "Photo Evidence *",
+            "takePhoto": "Take photo with Camera",
+            "uploadGallery": "Upload from Gallery",
+            "uploadPhoto": "Upload Photo",
+            "retake": "Retake",
+            "change": "Change",
+            "uploadDifferent": "Upload Different",
+            "takeOrUpload": "Take a photo with your camera or upload from gallery",
+            "uploadInfo": "Upload a photo (JPG, PNG, WebP, or HEIC - Max 5MB)",
+            "required": "Image is required",
+            "maxSize": "Max file size is 5MB",
+            "invalidType": "Only .jpg, .jpeg, .png, .webp and .heic formats are supported"
+        },
+        "buttons": {
+            "submit": "Submit Report",
+            "locating": "📍 Locating..."
+        },
+        "errors": {
+            "generic": "An error occurred while submitting the form",
+            "network": "Network error. Please check your connection and try again."
+        },
+        "success": {
+            "message": "Successfully added location",
+            "thanks": "Thank you for helping protect your community."
+        },
+        "privacyNotice": "All reports are completely anonymous. Your personal information will not be shared."
+    },
+    "aboutPage": {
+        "title": "About Us",
+        "description": "Community-driven protection for the neighborhoods we call home",
+        "missionTitle": "Our Mission",
+        "missionDescription": "We are UC San Diego alumni who grew up in Los Angeles and share a deep appreciation towards the community that shaped us. Iceinmyarea.org was created from our desire to use the education and opportunities we've been fortunate to receive to give back to neighborhoods, friends, and families that helped us grow. Our mission is to help keep our communities informed, connected, and safe. For us, this is much more than a project, it is a way to protect and uplift the city that we admire and the neighbors we care about.",
+        "cTitle1": "Community First",
+        "cDescription1": "Built by the community, for the community. We believe in the power of collective awareness and mutual support.",
+        "cTitle2": "Safety & Privacy",
+        "cDescription2": "Your safety is our priority. We protect your privacy while keeping you informed about ICE activity in your area.",
+        "cTitle3": "Giving Back",
+        "cDescription3": "Using our education and opportunities to protect the neighborhoods and families that helped us grow.",
+        "webTitle": "Why the Website Changed",
+        "webPara1": "Our website has grown rapidly, with thousands of people across the U.S. reporting ICE activity every day. With over",
+        "webPara2": "4,000 daily visitors",
+        "webPara3": ", we've improved how reports are verified to make our information more",
+        "webPara4": "accurate, trustworthy, and useful",
+        "webPara5": "for the community.",
+        "webPara6": "Every report is now",
+        "webPara7": "reviewed by a real person",
+        "webPara8": "to confirm its accuracy — making our platform one of the",
+        "webPara9": "most reliable tools for tracking ICE activity",
+        "webPara10": "nationwide.",
+        "verifyTitle": "How Reports Are Verified",
+        "verifyDescription": "Scroll through our three-step verification process to see how we ensure accuracy and reliability",
+        "contactTitle": "Contact Us",
+        "contactP1": "Have questions or need assistance? We're here to help.",
+        "contactP2": "For emergencies or immediate legal assistance, please contact an immigration lawyer or legal aid organization directly."
+    },
+    "verificationTimeline": {
+        "step1": {
+            "title": "Report Submitted",
+            "description": "A community member submits a report with details and location.",
+            "info": "Reports include location, time, additional information, and photo evidence."
+        },
+        "step2": {
+            "title": "Reviewed by a Person",
+            "description": "A real verifier checks accuracy and context.",
+            "info": "Our verification team cross-references details, checks for duplicates, and confirms authenticity."
+        },
+        "step3": {
+            "title": "Visible in Real Time",
+            "description": "Verified reports appear live for everyone.",
+            "info": "Verified reports appear on the map instantly, helping communities stay informed and safe."
         }
     },
-    "maintenance": {
-        "title": "Section Under Maintenance",
-        "message": "Maintenance is currently ongoing, reporting will be available as soon as possible."
-    },
-    "donate-button": {
-        "title": "Donate"
-    },
-    "notice": {
-        "message": "Interested in Donating?"
+    "resourcesPage": {
+        "title": "Resources",
+        "description": "Here are some helpful resources to know your rights and find legal assistance.",
+        "subTitle1": "Steps to Take if a Loved One is Detained",
+        "resource1": {
+            "title": "Confirming Detainment by ICE",
+            "description": "Use the ICE Detainee Locator System to confirm their location and status. Have the person's full name, date of birth, and country of origin ready.",
+            "button": "ICE Detainee Locator"
+        },
+        "resource2": {
+            "title": "Reach Your Loved One",
+            "description": "Find detention facility contact information, visitation rules, and communication guidelines to stay connected with detained loved ones.",
+            "button": "Detention Facilities"
+        },
+        "subTitle2": "Additional Resources",
+        "resource3": {
+            "title": "Find Legal Help Near You",
+            "description": "Search the National Immigration Legal Services Directory to locate free or low-cost legal aid organizations across the U.S.",
+            "button": "Find Legal Services"
+        },
+        "resource4": {
+            "title": "Carry Your Rights With You",
+            "description": "Wallet-sized Know Your Rights card from the Immigrant Legal Resource Center (ILRC). Available in multiple languages.",
+            "button": "Download Card"
+        },
+        "resource5": {
+            "title": "We Have Rights",
+            "description": "Emergency Plan and Resources from Brooklyn Defender Services. Step-by-step guide for ICE encounters with videos and legal resources.",
+            "button": "View Resources"
+        }
     },
     "donate-popup": {
         "title": "Support Our Mission",
@@ -198,5 +207,9 @@
         "button1": "Donate Now",
         "button2": "Maybe Later",
         "footer": "We're a community-driven initiative. Thank you for your consideration."
+    },
+    "maintenance": {
+        "title": "Section Under Maintenance",
+        "message": "Maintenance is currently ongoing, reporting will be available as soon as possible."
     }
 }

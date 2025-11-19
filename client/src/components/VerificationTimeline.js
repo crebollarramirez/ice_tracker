@@ -5,30 +5,30 @@ import { FileText, Users, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { cn } from "@/utils/utils";
-
-const steps = [
-  {
-    id: 1,
-    title: "Report Submitted",
-    description:
-      "A community member submits a report with details and location.",
-    icon: FileText,
-  },
-  {
-    id: 2,
-    title: "Reviewed by a Person",
-    description: "A real verifier checks accuracy and context.",
-    icon: Users,
-  },
-  {
-    id: 3,
-    title: "Visible in Real Time",
-    description: "Verified reports appear live for everyone.",
-    icon: Globe,
-  },
-];
+import { useTranslations } from "next-intl";
 
 export const VerificationTimeline = () => {
+  const t = useTranslations("verificationTimeline");
+  const steps = [
+    {
+      id: 1,
+      title: t("step1.title"),
+      description: t("step1.description"),
+      icon: FileText,
+    },
+    {
+      id: 2,
+      title: t("step2.title"),
+      description: t("step2.title"),
+      icon: Users,
+    },
+    {
+      id: 3,
+      title: t("step3.title"),
+      description: t("step3.title"),
+      icon: Globe,
+    },
+  ];
   const [stepStates, setStepStates] = useState([
     "upcoming",
     "upcoming",
@@ -199,20 +199,17 @@ export const VerificationTimeline = () => {
                     >
                       {step.id === 1 && (
                         <p className="text-sm text-muted-foreground">
-                          Reports include location, time, optional additional
-                          information, and photo evidence.
+                            {t("step1.info")}
                         </p>
                       )}
                       {step.id === 2 && (
                         <p className="text-sm text-muted-foreground">
-                          Our verification team cross-references details, checks
-                          for duplicates, and confirms authenticity.
+                          {t("step2.info")}
                         </p>
                       )}
                       {step.id === 3 && (
                         <p className="text-sm text-muted-foreground">
-                          Verified reports appear on the map instantly, helping
-                          communities stay informed and safe.
+                          {t("step3.info")}
                         </p>
                       )}
                     </div>

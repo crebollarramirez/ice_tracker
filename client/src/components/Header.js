@@ -3,8 +3,11 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "./Navbar";
+import { useTranslations } from "next-intl";
 
 export const Header = () => {
+
+  const t = useTranslations("header");
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/60 px-4 md:px-0">
       <div className="container mx-auto">
@@ -25,7 +28,7 @@ export const Header = () => {
                 iceinmyarea.org
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
-                The most reliable way to track ICE activity near you.
+            {t('description')}
               </p>
             </div>
           </Link>

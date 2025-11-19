@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useTranslations } from "next-intl";
 
 export const ReportsList = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,18 +56,19 @@ export const ReportsList = ({ className }) => {
   }, [filteredAndSortedReports, showAll]);
 
   const hasMoreReports = filteredAndSortedReports.length > 6;
+  const t = useTranslations("reportsList");
 
   return (
     <Card className={cn(className)}>
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-6 h-6 text-primary" />
-          <CardTitle className="text-2xl">Recent Reports</CardTitle>
+          <CardTitle className="text-2xl">{t("title")}</CardTitle>
           <StatusBadge color="warning" animate={true}>
-            Beta
+            {t("betaBadge")}
           </StatusBadge>
         </div>
-        <CardDescription>Latest community alerts in your area</CardDescription>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
 
       <CardContent className="px-6">
@@ -79,7 +81,7 @@ export const ReportsList = ({ className }) => {
 
         {isLoading ? (
           <div className="text-center py-12 lg:min-h-[700px] lg:flex lg:items-center lg:justify-center">
-            <p className="text-muted-foreground">Loading verified reports...</p>
+            <p className="text-muted-foreground">{t("loading")}</p>
           </div>
         ) : filteredAndSortedReports.length > 0 ? (
           <div className="space-y-6">
@@ -101,7 +103,9 @@ export const ReportsList = ({ className }) => {
                   className="gap-2"
                 >
                   <ChevronDown className="w-4 h-4" />
-                  View More ({filteredAndSortedReports.length - 6} more reports)
+                  {t("viewMore", {
+                    count: filteredAndSortedReports.length - 6,
+                  })}
                 </Button>
               </div>
             )}
@@ -114,7 +118,7 @@ export const ReportsList = ({ className }) => {
                   className="gap-2"
                 >
                   <ChevronUp className="w-4 h-4" />
-                  Show Less
+                  {t("showLess")}
                 </Button>
               </div>
             )}
@@ -123,8 +127,8 @@ export const ReportsList = ({ className }) => {
           <div className="text-center py-12 lg:min-h-[700px] lg:flex lg:items-center lg:justify-center">
             <p className="text-muted-foreground">
               {searchQuery
-                ? `No reports found matching "${searchQuery}"`
-                : "No Reports"}
+                ? t("noReportsMatching", { searchQuery })
+                : t("noReports")}
             </p>
           </div>
         )}

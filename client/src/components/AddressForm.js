@@ -33,6 +33,7 @@ import { onSubmitReport } from "@/utils/submission";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useFormSecurity } from "@/hooks/useFormSecurity";
 import { RecaptchaV2Widget } from "@/components/RecaptchaV2Widget";
+import { useTranslations } from "next-intl";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -96,6 +97,8 @@ export default function AddressForm({ className }) {
       additionalInfo: "",
     },
   });
+
+  const t = useTranslations("addressForm");
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -167,13 +170,13 @@ export default function AddressForm({ className }) {
       <CardHeader>
         <div className="flex items-center gap-2 mb-2">
           <MapPin className="w-6 h-6 text-primary" />
-          <CardTitle className="text-2xl">Submit a Report</CardTitle>
+          <CardTitle className="text-2xl">{t("title")}</CardTitle>
           <StatusBadge color="warning" animate={true}>
             Beta
           </StatusBadge>
         </div>
         <CardDescription className="text-base">
-          Help your community by reporting ICE activity in your area
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -185,12 +188,9 @@ export default function AddressForm({ className }) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address *</FormLabel>
+                  <FormLabel>{t("address.label")}</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter exact location (intersection, address, or landmark)"
-                      {...field}
-                    />
+                    <Input placeholder={t("address.placeholder")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,10 +203,10 @@ export default function AddressForm({ className }) {
               name="additionalInfo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Additional Information *</FormLabel>
+                  <FormLabel>{t("additionalInfo.label")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe what you observed (vehicles, checkpoints, detainments, etc.)"
+                      placeholder={t("additionalInfo.placeholder")}
                       className="min-h-[120px] resize-none"
                       {...field}
                     />
@@ -222,7 +222,7 @@ export default function AddressForm({ className }) {
               name="image"
               render={({ field: { onChange, value, ...field } }) => (
                 <FormItem>
-                  <FormLabel>Photo Evidence *</FormLabel>
+                  <FormLabel>{t("image.label")}</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
                       {/* Hidden file inputs */}
@@ -253,7 +253,7 @@ export default function AddressForm({ className }) {
                             className="w-full gap-2 h-12 md:hidden"
                           >
                             <Camera className="w-5 h-5" />
-                            Take Photo with Camera
+                            {t("image.takePhoto")}
                           </Button>
 
                           <Button
@@ -264,10 +264,10 @@ export default function AddressForm({ className }) {
                           >
                             <Upload className="w-5 h-5" />
                             <span className="md:hidden">
-                              Upload from Gallery
+                              {t("image.uploadGallery")}
                             </span>
                             <span className="hidden md:inline">
-                              Upload Photo
+                              {t("image.uploadPhoto")}
                             </span>
                           </Button>
                         </div>
@@ -293,7 +293,7 @@ export default function AddressForm({ className }) {
                               size="sm"
                             >
                               <Camera className="w-4 h-4" />
-                              Retake
+                              {t("image.retake")}
                             </Button>
 
                             <Button
@@ -304,9 +304,11 @@ export default function AddressForm({ className }) {
                               size="sm"
                             >
                               <Upload className="w-4 h-4" />
-                              <span className="md:hidden">Change</span>
+                              <span className="md:hidden">
+                                {t("image.change")}
+                              </span>
                               <span className="hidden md:inline">
-                                Upload Different
+                                {t("image.uploadDifferent")}
                               </span>
                             </Button>
                           </div>
@@ -320,8 +322,7 @@ export default function AddressForm({ className }) {
                             <div className="md:hidden">
                               <Camera className="w-12 h-12 text-muted-foreground" />
                               <p className="text-sm text-muted-foreground">
-                                Take a photo with your camera or upload from
-                                gallery
+                                {t("image.takeOrUpload")}
                               </p>
                             </div>
 
@@ -329,8 +330,7 @@ export default function AddressForm({ className }) {
                             <div className="hidden md:flex md:flex-col md:items-center md:gap-3">
                               <Upload className="w-12 h-12 text-muted-foreground" />
                               <p className="text-sm text-muted-foreground">
-                                Upload a photo (JPG, PNG, WebP, or HEIC - Max
-                                5MB)
+                                {t("image.uploadInfo")}
                               </p>
                             </div>
                           </div>
@@ -350,7 +350,7 @@ export default function AddressForm({ className }) {
             {showRecaptchaV2 && (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground text-center">
-                  Please complete the verification to continue:
+                  {t("recaptcha.instruction")}
                 </p>
                 <RecaptchaV2Widget
                   visible={showRecaptchaV2}
@@ -364,8 +364,7 @@ export default function AddressForm({ className }) {
             <div className="flex gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                All reports are completely anonymous. Your personal information
-                will not be shared.
+                {t("privacyNotice")}
               </p>
             </div>
 
@@ -379,12 +378,12 @@ export default function AddressForm({ className }) {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {submitStatus || "Processing..."}
+                  {submitStatus || t("buttons.submitting")}
                 </>
               ) : showRecaptchaV2 && !recaptchaV2Token ? (
-                "Complete verification above"
+                t("buttons.completeVerification")
               ) : (
-                "Submit Report"
+                t("buttons.submit")
               )}
             </Button>
           </form>
