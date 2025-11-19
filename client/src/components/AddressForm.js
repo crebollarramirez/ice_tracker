@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,6 +31,8 @@ import { signInAnonymously } from "firebase/auth";
 import { cn } from "@/utils/utils";
 import { onSubmitReport } from "@/utils/submission";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useFormSecurity } from "@/hooks/useFormSecurity";
+import { RecaptchaV2Widget } from "@/components/RecaptchaV2Widget";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -76,6 +78,17 @@ export default function AddressForm({ className }) {
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Security features
+  const {
+    honeypotProps,
+    showRecaptchaV2,
+    recaptchaV2Token,
+    handleV2TokenReceived,
+    handleV2Error,
+    submitWithSecurity,
+    isSecurityReady,
+  } = useFormSecurity();
+
   const form = useForm({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
@@ -86,26 +99,34 @@ export default function AddressForm({ className }) {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
+    setSubmitStatus("Submitting report...");
+
     try {
-      await onSubmitReport({
-        data,
-        auth,
-        storage,
-        pinFunction,
-        toast,
-        signInAnonymously,
-        storageRef,
-        uploadBytes,
-        deleteObject,
-        // now: () => new Date().toISOString(), // (optional override in tests)
+      // Use security wrapper for submission
+      await submitWithSecurity(data, async (secureData) => {
+        setSubmitStatus("Processing...");
+        return await onSubmitReport({
+          data: secureData,
+          auth,
+          storage,
+          pinFunction,
+          toast,
+          signInAnonymously,
+          storageRef,
+          uploadBytes,
+          deleteObject,
+        });
       });
+
       form.reset();
       setImagePreview("");
       showDonatePopup();
     } catch (error) {
       console.error("Submission error:", error);
+      // Error handling is already done in onSubmitReport and submitWithSecurity
     } finally {
       setIsSubmitting(false);
+      setSubmitStatus("");
     }
   };
 
@@ -322,6 +343,23 @@ export default function AddressForm({ className }) {
               )}
             />
 
+            {/* Honeypot field (hidden) */}
+            <input {...honeypotProps} />
+
+            {/* reCAPTCHA v2 Widget (shown when needed) */}
+            {showRecaptchaV2 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
+                  Please complete the verification to continue:
+                </p>
+                <RecaptchaV2Widget
+                  visible={showRecaptchaV2}
+                  onTokenReceived={handleV2TokenReceived}
+                  onError={handleV2Error}
+                />
+              </div>
+            )}
+
             {/* Privacy Notice */}
             <div className="flex gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -336,13 +374,15 @@ export default function AddressForm({ className }) {
               type="submit"
               size="lg"
               className="w-full font-medium"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (showRecaptchaV2 && !recaptchaV2Token)}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {submitStatus}
+                  {submitStatus || "Processing..."}
                 </>
+              ) : showRecaptchaV2 && !recaptchaV2Token ? (
+                "Complete verification above"
               ) : (
                 "Submit Report"
               )}

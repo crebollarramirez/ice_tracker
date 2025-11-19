@@ -8,10 +8,7 @@ import {
 
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 
-import {
-  getStorage,
-  connectStorageEmulator,
-} from "firebase/storage";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // Firebase configuration using environment variables
@@ -29,13 +26,18 @@ const app = initializeApp(firebaseConfig);
 // Initialize App Check only on client side
 if (typeof window !== "undefined") {
   try {
-    // initializeAppCheck(app, {
-    //   provider: new ReCaptchaV3Provider(
-    //     process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-    //   ),
-    //   isTokenAutoRefreshEnabled: true,
-    // });
-    console.log("App Check initialized successfully");
+    if (process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY) {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(
+          process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY
+        ),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else {
+      console.warn(
+        "NEXT_PUBLIC_APPCHECK_SITE_KEY not found - App Check disabled"
+      );
+    }
   } catch (error) {
     console.warn("App Check initialization failed:", error);
   }
@@ -95,14 +97,22 @@ if (process.env.NODE_ENV === "development") {
       console.error("❌ Failed to connect to storage emulator:", error.message);
     }
   }
-} else {
-  console.log("Using production Firebase database and functions");
 }
+
+
 
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
-const verifyFunction = httpsCallable(functions, "verifyReport")
-const denyFunction = httpsCallable(functions, "denyReport")
-const deleteFunction = httpsCallable(functions, "deletePendingReport")
+const verifyFunction = httpsCallable(functions, "verifyReport");
+const denyFunction = httpsCallable(functions, "denyReport");
+const deleteFunction = httpsCallable(functions, "deletePendingReport");
 
-export { database, pinFunction, auth, storage, verifyFunction, denyFunction, deleteFunction};
+export {
+  database,
+  pinFunction,
+  auth,
+  storage,
+  verifyFunction,
+  denyFunction,
+  deleteFunction,
+};

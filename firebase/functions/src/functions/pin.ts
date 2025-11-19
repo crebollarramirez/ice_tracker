@@ -7,7 +7,7 @@ import { isValidISO8601, isDateTodayUTC } from "../utils/utils";
 import { PendingReport } from "../types/index";
 
 // Initialize services USING MOCKS FOR TESTING
-const geocodingService = new GoogleGeocodingService();
+const geocodingService = new GoogleGeocodingService(true);
 
 const realtimeDb = admin.database();
 
@@ -47,154 +47,197 @@ const realtimeDb = admin.database();
  *   - `formattedAddress`: The geocoded and formatted address from Google Maps API.
  * @throws {HttpsError} If validation fails, geocoding fails, or database operations encounter an error.
  */
-export const pin = onCall(async (request) => {
-  logger.info("pin called", { data: request.data });
+export const pin = onCall(
+  {
+    secrets: ["RECAPTCHA_ENTERPRISEV3_API_KEY", "RECAPTCHA_V2_SECRET_KEY"],
+  },
+  async (request) => {
+    logger.info("pin called", { data: request.data });
 
-  const { data } = request;
+    const { data } = request;
 
-  if (!data.imagePath) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Missing required field: imagePath"
-    );
-  }
+    /** -------------------------------------------
+     *  STEP 1 — Extract CAPTCHA tokens from client
+     * --------------------------------------------*/
+    const { v3Token, v2Token, siteKeyV3 } = data;
 
-  if (!data.addedAt || !data.address) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Missing required fields: addedAt and address"
-    );
-  }
-
-  if (isValidISO8601(data.addedAt) === false) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Invalid date format for addedAt. Must be ISO 8601 format."
-    );
-  }
-
-  if (isDateTodayUTC(data.addedAt) === false) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
-    );
-  }
-
-  if (!data.additionalInfo) {
-    throw new HttpsError(
-      "invalid-argument",
-      "Missing required fields: additionalInfo"
-    );
-  }
-
-  // Validate that the image exists in Firebase Storage
-
-  console.log("Image existence check for", data.imagePath);
-  //   try {
-  //     const bucket = admin.storage().bucket();
-  //     const file = bucket.file(data.imagePath);
-  //     const [exists] = await file.exists();
-
-  //     if (!exists) {
-  //       throw new HttpsError(
-  //         "invalid-argument",
-  //         "Image file does not exist in storage"
-  //       );
-  //     }
-  //   } catch (error) {
-  //     if (error instanceof HttpsError) {
-  //       throw error; // Re-throw our custom error
-  //     }
-  //     logger.error("Error checking image existence:", error);
-  //     throw new HttpsError(
-  //       "invalid-argument",
-  //       "Unable to verify image file in storage"
-  //     );
-  //   }
-
-  // Sanitize the address input
-  const sanitizedAddress = sanitizeInput(data.address);
-
-  // Sanitize additionalInfo to prevent injection attacks, default to empty string if not provided
-  const sanitizedAdditionalInfo = sanitizeInput(data.additionalInfo || "");
-
-  if (!sanitizedAddress.trim()) {
-    throw new HttpsError("invalid-argument", "Invalid address provided");
-  }
-
-  // Geocode the address to get coordinates and formatted address
-  const geocodeResult = await geocodingService.geocodeAddress(sanitizedAddress);
-
-  if (!geocodeResult) {
-    throw new HttpsError(
-      "not-found",
-      "Please provide a valid address that can be found on the map"
-    );
-  }
-
-  // Database operations need error handling since they can throw exceptions
-  try {
-    // Create a sanitized key from the formatted address
-    const addressKey = makeAddressKey(geocodeResult.formattedAddress);
-
-    if (!addressKey) {
+    if (!v3Token || !siteKeyV3) {
       throw new HttpsError(
-        "invalid-argument",
-        "Could not generate valid address key"
+        "failed-precondition",
+        "Missing reCAPTCHA verification fields"
       );
     }
 
-    // Check if this address already exists
-    const existingLocationRef = realtimeDb.ref(`pending/${addressKey}`);
-    const existingSnapshot = await existingLocationRef.once("value");
+    const projectId = process.env.GCLOUD_PROJECT!;
+    const enterpriseApiKey = process.env.RECAPTCHA_ENTERPRISEV3_API_KEY!;
+    const v2Secret = process.env.RECAPTCHA_V2_SECRET_KEY!;
 
-    const locationId = addressKey;
+    /** -------------------------------------------
+     *  STEP 2 — Verify reCAPTCHA v3 Enterprise
+     * --------------------------------------------*/
+    const v3Response = await fetch(
+      `https://recaptchaenterprise.googleapis.com/v1/projects/${projectId}/assessments?key=${enterpriseApiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: {
+            token: v3Token,
+            siteKey: siteKeyV3,
+            expectedAction: "submit",
+          },
+        }),
+      }
+    ).then((res) => res.json());
 
-    // Create final location data with geocoded coordinates and formatted address
-    const finalLocationData: PendingReport = {
-      addedAt: data.addedAt,
-      address: geocodeResult.formattedAddress,
-      additionalInfo: sanitizedAdditionalInfo,
-      lat: geocodeResult.lat,
-      lng: geocodeResult.lng,
-      reported: existingSnapshot.exists()
-        ? existingSnapshot.val().reported + 1
-        : 1,
-      imagePath: data.imagePath || "",
-    };
-
-    let isNewLocation = true;
-
-    if (existingSnapshot.exists()) {
-      // Address already exists, update it instead of creating duplicate
-      logger.info("Updating existing location:", {
-        addressKey,
-        formattedAddress: geocodeResult.formattedAddress,
-      });
-      isNewLocation = false;
-    } else {
-      logger.info("Creating new location:", {
-        addressKey,
-        formattedAddress: geocodeResult.formattedAddress,
-      });
+    if (v3Response.tokenProperties?.valid !== true) {
+      throw new HttpsError(
+        "permission-denied",
+        `Invalid reCAPTCHA v3 token: ${v3Response.tokenProperties?.invalidReason}`
+      );
     }
 
-    // Set/update the location data
-    await existingLocationRef.set(finalLocationData);
+    const score = v3Response.riskAnalysis?.score ?? 0;
 
-    logger.info("POST request received and saved to database:", {
-      locationId,
-      ...finalLocationData,
-    });
+    // If score is good, proceed
+    if (score < 0.5) {
+      // Low score → require v2 fallback
+      if (!v2Token) {
+        throw new HttpsError(
+          "permission-denied",
+          "Low reCAPTCHA score: requires_v2_challenge"
+        );
+      }
 
-    return {
-      message: isNewLocation
-        ? "Data logged and saved successfully"
-        : "Location updated successfully",
-      formattedAddress: finalLocationData.address,
-    };
-  } catch (error) {
-    logger.error("Error saving to database:", error);
-    throw new HttpsError("internal", "Internal server error");
+      /** -------------------------------------------
+       *  STEP 3 — Verify reCAPTCHA v2 Checkbox
+       * --------------------------------------------*/
+      const v2Verify = await fetch(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${v2Secret}&response=${v2Token}`,
+        { method: "POST" }
+      ).then((res) => res.json());
+
+      if (!v2Verify.success) {
+        throw new HttpsError(
+          "permission-denied",
+          "Invalid reCAPTCHA v2 challenge"
+        );
+      }
+    }
+
+    // other logic
+
+    if (!data.imagePath) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required field: imagePath"
+      );
+    }
+
+    if (!data.addedAt || !data.address) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: addedAt and address"
+      );
+    }
+
+    if (isValidISO8601(data.addedAt) === false) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Invalid date format for addedAt. Must be ISO 8601 format."
+      );
+    }
+
+    if (isDateTodayUTC(data.addedAt) === false) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Invalid date format for addedAt. Must be today's date in ISO 8601 format."
+      );
+    }
+
+    if (!data.additionalInfo) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: additionalInfo"
+      );
+    }
+
+    const sanitizedAddress = sanitizeInput(data.address);
+    const sanitizedAdditionalInfo = sanitizeInput(data.additionalInfo || "");
+
+    if (!sanitizedAddress.trim()) {
+      throw new HttpsError("invalid-argument", "Invalid address provided");
+    }
+
+    const geocodeResult = await geocodingService.geocodeAddress(
+      sanitizedAddress
+    );
+
+    if (!geocodeResult) {
+      throw new HttpsError(
+        "not-found",
+        "Please provide a valid address that can be found on the map"
+      );
+    }
+
+    try {
+      const addressKey = makeAddressKey(geocodeResult.formattedAddress);
+
+      if (!addressKey) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Could not generate valid address key"
+        );
+      }
+
+      const existingLocationRef = realtimeDb.ref(`pending/${addressKey}`);
+      const existingSnapshot = await existingLocationRef.once("value");
+
+      const locationId = addressKey;
+
+      const finalLocationData: PendingReport = {
+        addedAt: data.addedAt,
+        address: geocodeResult.formattedAddress,
+        additionalInfo: sanitizedAdditionalInfo,
+        lat: geocodeResult.lat,
+        lng: geocodeResult.lng,
+        reported: existingSnapshot.exists()
+          ? existingSnapshot.val().reported + 1
+          : 1,
+        imagePath: data.imagePath || "",
+      };
+
+      let isNewLocation = true;
+
+      if (existingSnapshot.exists()) {
+        logger.info("Updating existing location:", {
+          addressKey,
+          formattedAddress: geocodeResult.formattedAddress,
+        });
+        isNewLocation = false;
+      } else {
+        logger.info("Creating new location:", {
+          addressKey,
+          formattedAddress: geocodeResult.formattedAddress,
+        });
+      }
+
+      await existingLocationRef.set(finalLocationData);
+
+      logger.info("POST request received and saved to database:", {
+        locationId,
+        ...finalLocationData,
+      });
+
+      return {
+        message: isNewLocation
+          ? "Data logged and saved successfully"
+          : "Location updated successfully",
+        formattedAddress: finalLocationData.address,
+      };
+    } catch (error) {
+      logger.error("Error saving to database:", error);
+      throw new HttpsError("internal", "Internal server error");
+    }
   }
-});
+);

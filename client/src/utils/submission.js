@@ -47,12 +47,26 @@ export async function onSubmitReport({
     await uploadBytes(uploadedRef, imageFile, { contentType: imageFile.type });
 
     // 6) Call function with payload (backend generates reportId)
-    const result = await pinFunction({
+    const payload = {
       addedAt: now(),
       address,
       additionalInfo,
       imagePath: storagePath,
-    });
+    };
+
+    // Add security data if provided - using backend expected field names
+    if (data.recaptchaV3Token !== undefined) {
+      payload.v3Token = data.recaptchaV3Token;
+      // Add the v3 site key that backend expects
+      payload.siteKeyV3 = process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY;
+    }
+    if (data.recaptchaV2Token !== undefined) {
+      payload.v2Token = data.recaptchaV2Token;
+    }
+    if (data.honeypot !== undefined) payload.honeypot = data.honeypot;
+    if (data.startedAt !== undefined) payload.startedAt = data.startedAt;
+
+    const result = await pinFunction(payload);
 
     // 7) Optional UX feedback (injectable)
     if (toast) {
@@ -100,9 +114,28 @@ export async function onSubmitReport({
               "Please provide a valid address that can be found on the map";
             break;
           case "functions/failed-precondition":
+            // Check for reCAPTCHA-related errors
+            if (error.message && error.message.includes("reCAPTCHA")) {
+              // This will trigger the v2 fallback in the security hook
+              throw error;
+            }
             errorMessage =
               error.message ||
               "Please avoid using negative or abusive language.";
+            break;
+          case "functions/permission-denied":
+            // Handle reCAPTCHA verification failures
+            if (
+              error.message &&
+              (error.message.includes("requires_v2_challenge") ||
+                error.message.includes("Low reCAPTCHA score") ||
+                error.message.includes("Invalid reCAPTCHA"))
+            ) {
+              // This will trigger the v2 fallback in the security hook
+              throw error;
+            }
+            errorMessage =
+              error.message || "Permission denied. Please try again.";
             break;
           case "functions/not-found":
             errorMessage =

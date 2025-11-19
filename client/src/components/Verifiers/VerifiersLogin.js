@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ShieldCheck } from "lucide-react";
 import { signInWithEmailPasswordAndMfa } from "@/auth/authHelper";
 import { useToast } from "@/hooks/use-toast";
+import { useFormSecurity } from "@/hooks/useFormSecurity";
+import { RecaptchaV2Widget } from "@/components/RecaptchaV2Widget";
 
 export function VerifiersLogin() {
   const { toast } = useToast();
@@ -18,6 +20,17 @@ export function VerifiersLogin() {
   const [error, setError] = useState("");
   const [needsMfa, setNeedsMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
+
+  // Security features
+  const {
+    honeypotProps,
+    showRecaptchaV2,
+    recaptchaV2Token,
+    handleV2TokenReceived,
+    handleV2Error,
+    submitWithSecurity,
+    isSecurityReady,
+  } = useFormSecurity();
 
   // Function to get MFA code from user
   const getMfaCode = () => {
@@ -44,22 +57,30 @@ export function VerifiersLogin() {
     setLoading(true);
 
     try {
-      // Add reCAPTCHA container for MFA
-      if (!document.getElementById("recaptcha-container")) {
-        const recaptchaDiv = document.createElement("div");
-        recaptchaDiv.id = "recaptcha-container";
-        document.body.appendChild(recaptchaDiv);
-      }
+      // Use security wrapper for login
+      await submitWithSecurity({ email, password }, async (secureData) => {
+        // Add reCAPTCHA container for MFA
+        if (!document.getElementById("recaptcha-container")) {
+          const recaptchaDiv = document.createElement("div");
+          recaptchaDiv.id = "recaptcha-container";
+          document.body.appendChild(recaptchaDiv);
+        }
 
-      const user = await signInWithEmailPasswordAndMfa(
-        email,
-        password,
-        getMfaCode
-      );
+        // Note: For login, we don't pass security tokens to signInWithEmailPasswordAndMfa
+        // as it's a Firebase auth method. The security data is mainly for backend verification
+        // if needed by your custom authentication flow.
+        const user = await signInWithEmailPasswordAndMfa(
+          email,
+          password,
+          getMfaCode
+        );
 
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.email}`,
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${user.email}`,
+        });
+
+        return user;
       });
     } catch (err) {
       console.error("Login error:", err.code); // Log error code for debugging, not message
@@ -171,8 +192,33 @@ export function VerifiersLogin() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+            {/* Honeypot field (hidden) */}
+            <input {...honeypotProps} />
+
+            {/* reCAPTCHA v2 Widget (shown when needed) */}
+            {showRecaptchaV2 && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
+                  Please complete the verification to continue:
+                </p>
+                <RecaptchaV2Widget
+                  visible={showRecaptchaV2}
+                  onTokenReceived={handleV2TokenReceived}
+                  onError={handleV2Error}
+                />
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || (showRecaptchaV2 && !recaptchaV2Token)}
+            >
+              {loading
+                ? "Signing in..."
+                : showRecaptchaV2 && !recaptchaV2Token
+                ? "Complete verification above"
+                : "Sign In"}
             </Button>
           </form>
         </CardContent>
