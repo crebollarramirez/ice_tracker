@@ -62,14 +62,29 @@ export function VerifiersLogin() {
         description: `Welcome back, ${user.email}`,
       });
     } catch (err) {
-      console.error("Login error:", err);
-      setError(
-        err.message || "Failed to login. Please check your credentials."
-      );
+      console.error("Login error:", err.code); // Log error code for debugging, not message
+
+      // Generic error messages to avoid exposing system details
+      const getGenericError = (errorCode) => {
+        const genericErrors = {
+          "auth/user-not-found": "Invalid credentials. Please try again.",
+          "auth/wrong-password": "Invalid credentials. Please try again.",
+          "auth/invalid-credential": "Invalid credentials. Please try again.",
+          "auth/invalid-email": "Please enter a valid email address.",
+          "auth/user-disabled": "This account has been disabled.",
+          "auth/too-many-requests":
+            "Too many failed attempts. Please try again later.",
+          "auth/network-request-failed":
+            "Network error. Please check your connection.",
+        };
+        return genericErrors[errorCode] || "Login failed. Please try again.";
+      };
+
+      const genericMessage = getGenericError(err.code);
+      setError(genericMessage);
       toast({
         title: "Login failed",
-        description:
-          err.message || "Please check your credentials and try again.",
+        description: genericMessage,
         variant: "destructive",
       });
     } finally {

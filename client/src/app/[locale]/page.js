@@ -48,7 +48,7 @@ export default function Home() {
               <MapComponent />
 
               {/* Reports List */}
-              <ReportsList />
+              <ReportsList className="" />
 
               {/* Address Form */}
               <AddressForm />

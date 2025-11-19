@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { ReportCard } from "./ReportCard";
 import { SearchToolbar } from "./SearchToolbar";
-import { mockReports } from "@/utils/mockData";
+import { useLocations } from "@/contexts/LocationsContext";
 import {
   Card,
   CardHeader,
@@ -11,13 +11,16 @@ import {
   CardContent,
   CardDescription,
 } from "@/components/ui/card";
-import { MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 export const ReportsList = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortNewest, setSortNewest] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const { locations, isLoading } = useLocations();
 
   const handleReportClick = (report) => {
     console.log("Report clicked:", report);
@@ -26,20 +29,32 @@ export const ReportsList = ({ className }) => {
 
   // Filter and sort reports
   const filteredAndSortedReports = useMemo(() => {
+    if (!locations || locations.length === 0) return [];
+
     // Filter by search query
-    let filtered = mockReports.filter((report) =>
+    let filtered = locations.filter((report) =>
       report.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Sort by date
+    // Sort by date - using originalAddedAt for proper sorting
     filtered = [...filtered].sort((a, b) => {
-      const dateA = new Date(a.addedAt).getTime();
-      const dateB = new Date(b.addedAt).getTime();
+      const dateA = new Date(a.originalAddedAt || a.addedAt).getTime();
+      const dateB = new Date(b.originalAddedAt || b.addedAt).getTime();
       return sortNewest ? dateB - dateA : dateA - dateB;
     });
 
     return filtered;
-  }, [searchQuery, sortNewest]);
+  }, [locations, searchQuery, sortNewest]);
+
+  // Get reports to display (first 6 or all if showAll is true)
+  const reportsToShow = useMemo(() => {
+    if (showAll || filteredAndSortedReports.length <= 6) {
+      return filteredAndSortedReports;
+    }
+    return filteredAndSortedReports.slice(0, 6);
+  }, [filteredAndSortedReports, showAll]);
+
+  const hasMoreReports = filteredAndSortedReports.length > 6;
 
   return (
     <Card className={cn(className)}>
@@ -62,20 +77,54 @@ export const ReportsList = ({ className }) => {
           onSortToggle={() => setSortNewest(!sortNewest)}
         />
 
-        {filteredAndSortedReports.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedReports.map((report, index) => (
-              <ReportCard
-                key={`${report.address}-${index}`}
-                report={report}
-                onClick={() => handleReportClick(report)}
-              />
-            ))}
+        {isLoading ? (
+          <div className="text-center py-12 lg:min-h-[700px] lg:flex lg:items-center lg:justify-center">
+            <p className="text-muted-foreground">Loading verified reports...</p>
+          </div>
+        ) : filteredAndSortedReports.length > 0 ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:min-h-[700px]">
+              {reportsToShow.map((report) => (
+                <ReportCard
+                  key={report.id || `${report.address}-${report.addedAt}`}
+                  report={report}
+                  onClick={() => handleReportClick(report)}
+                />
+              ))}
+            </div>
+
+            {hasMoreReports && !showAll && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAll(true)}
+                  className="gap-2"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  View More ({filteredAndSortedReports.length - 6} more reports)
+                </Button>
+              </div>
+            )}
+
+            {showAll && hasMoreReports && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAll(false)}
+                  className="gap-2"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                  Show Less
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div className="text-center py-12 lg:min-h-[700px] lg:flex lg:items-center lg:justify-center">
             <p className="text-muted-foreground">
-              No reports found matching &quot;{searchQuery}&quot;
+              {searchQuery
+                ? `No reports found matching "${searchQuery}"`
+                : "No Reports"}
             </p>
           </div>
         )}

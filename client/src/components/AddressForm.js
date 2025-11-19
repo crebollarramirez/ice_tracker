@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { MapPin, Upload, AlertCircle, Loader2 } from "lucide-react";
+import { MapPin, Upload, AlertCircle, Loader2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,6 +73,8 @@ export default function AddressForm({ className }) {
   const [submitStatus, setSubmitStatus] = useState("");
   const { toast } = useToast();
   const { showDonatePopup } = useDonate();
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const form = useForm({
     resolver: zodResolver(reportFormSchema),
@@ -107,7 +109,7 @@ export default function AddressForm({ className }) {
     }
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e, formOnChange) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -119,8 +121,23 @@ export default function AddressForm({ className }) {
         setImagePreview("");
       };
       reader.readAsDataURL(file);
+
+      // Update form with the file
+      formOnChange(e.target.files);
     } else {
       setImagePreview("");
+    }
+  };
+
+  const handleCameraCapture = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -187,36 +204,115 @@ export default function AddressForm({ className }) {
                   <FormLabel>Photo Evidence *</FormLabel>
                   <FormControl>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4">
-                        <Input
-                          type="file"
-                          accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                          onChange={(e) => {
-                            onChange(e.target.files);
-                            handleImageChange(e);
-                          }}
-                          {...field}
-                          className="cursor-pointer"
-                        />
-                      </div>
+                      {/* Hidden file inputs */}
+                      <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                        capture="environment"
+                        onChange={(e) => handleImageChange(e, onChange)}
+                        style={{ display: "none" }}
+                      />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                        onChange={(e) => handleImageChange(e, onChange)}
+                        style={{ display: "none" }}
+                      />
+
+                      {/* Action buttons */}
+                      {!imagePreview && (
+                        <div className="space-y-3">
+                          {/* Camera button - only show on mobile/tablet */}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCameraCapture}
+                            className="w-full gap-2 h-12 md:hidden"
+                          >
+                            <Camera className="w-5 h-5" />
+                            Take Photo with Camera
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleFileUpload}
+                            className="w-full gap-2 h-12"
+                          >
+                            <Upload className="w-5 h-5" />
+                            <span className="md:hidden">
+                              Upload from Gallery
+                            </span>
+                            <span className="hidden md:inline">
+                              Upload Photo
+                            </span>
+                          </Button>
+                        </div>
+                      )}
 
                       {imagePreview && (
-                        <div className="relative w-full max-w-md">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-auto rounded-lg border border-border"
-                          />
+                        <div className="space-y-4">
+                          <div className="relative w-full max-w-md">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-full h-auto rounded-lg border border-border"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            {/* Retake button - only show on mobile/tablet */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleCameraCapture}
+                              className="flex-1 gap-2 md:hidden"
+                              size="sm"
+                            >
+                              <Camera className="w-4 h-4" />
+                              Retake
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleFileUpload}
+                              className="flex-1 gap-2"
+                              size="sm"
+                            >
+                              <Upload className="w-4 h-4" />
+                              <span className="md:hidden">Change</span>
+                              <span className="hidden md:inline">
+                                Upload Different
+                              </span>
+                            </Button>
+                          </div>
                         </div>
                       )}
 
                       {!imagePreview && (
                         <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                          <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            Upload a photo (JPG, PNG, WebP, or HEIC - Max 5MB)
-                          </p>
+                          <div className="flex flex-col items-center gap-3">
+                            {/* Mobile view */}
+                            <div className="md:hidden">
+                              <Camera className="w-12 h-12 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Take a photo with your camera or upload from
+                                gallery
+                              </p>
+                            </div>
+
+                            {/* Desktop view */}
+                            <div className="hidden md:flex md:flex-col md:items-center md:gap-3">
+                              <Upload className="w-12 h-12 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Upload a photo (JPG, PNG, WebP, or HEIC - Max
+                                5MB)
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

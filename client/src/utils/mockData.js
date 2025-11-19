@@ -52,4 +52,54 @@ export const mockReports = [
     reported: 1,
     imgUrl: "",
   },
+  {
+    addedAt: "2025-11-02T14:22:00Z",
+    additionalInfo:
+      "Officers in unmarked clothing conducting stops. Community members warned.",
+    address: "450 El Camino Real, Redwood City, CA",
+    lat: 37.4852,
+    lng: -122.2364,
+    reported: 1,
+    imgUrl: "",
+  },
+  {
+    addedAt: "2025-11-02T14:22:00Z",
+    additionalInfo:
+      "Officers in unmarked clothing conducting stops. Community members warned.",
+    address: "450 El Camino Real, Redwood City, CA",
+    lat: 37.4852,
+    lng: -122.2364,
+    reported: 1,
+    imgUrl: "",
+  },
+  {
+    addedAt: "2025-11-02T14:22:00Z",
+    additionalInfo:
+      "Officers in unmarked clothing conducting stops. Community members warned.",
+    address: "450 El Camino Real, Redwood City, CA",
+    lat: 37.4852,
+    lng: -122.2364,
+    reported: 1,
+    imgUrl: "",
+  },
+  {
+    addedAt: "2025-11-02T14:22:00Z",
+    additionalInfo:
+      "Officers in unmarked clothing conducting stops. Community members warned.",
+    address: "450 El Camino Real, Redwood City, CA",
+    lat: 37.4852,
+    lng: -122.2364,
+    reported: 1,
+    imgUrl: "",
+  },
+  {
+    addedAt: "2025-11-02T14:22:00Z",
+    additionalInfo:
+      "Officers in unmarked clothing conducting stops. Community members warned.",
+    address: "450 El Camino Real, Redwood City, CA",
+    lat: 37.4852,
+    lng: -122.2364,
+    reported: 1,
+    imgUrl: "",
+  },
 ];

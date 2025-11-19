@@ -38,6 +38,9 @@ export function LocationsProvider({ children }) {
             addedAt: formatDate(location.originalAddedAt), // Format for display
           }));
 
+          console.log("Raw data:", data);
+          console.log("Number of verified reports:", formattedLocations.length);
+
           setLocations(formattedLocations);
         } else {
           console.log("No locations found in Firebase");
