@@ -48,9 +48,6 @@ const realtimeDb = admin.database();
  * @throws {HttpsError} If validation fails, geocoding fails, or database operations encounter an error.
  */
 export const pin = onCall(
-  {
-    secrets: ["RECAPTCHA_ENTERPRISEV3_API_KEY", "RECAPTCHA_V2_SECRET_KEY"],
-  },
   async (request) => {
     logger.info("pin called", { data: request.data });
 
