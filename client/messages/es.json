@@ -120,7 +120,11 @@
             "message": "Ubicación agregada exitosamente",
             "thanks": "Gracias por ayudar a proteger tu comunidad."
         },
-        "privacyNotice": "Todos los reportes son completamente anónimos. Tu información personal no será compartida."
+        "privacyNotice": "Todos los reportes son completamente anónimos. Tu información personal no será compartida.",
+        "maintenance": {
+            "title": "Mantenimiento del Sistema",
+            "description": "El mantenimiento está en curso; los reportes estarán disponibles lo antes posible."
+        }
     },
     "aboutPage": {
         "title": "Sobre Nosotros",
@@ -197,10 +201,6 @@
             "description": "Plan de Emergencia y Recursos de Brooklyn Defender Services. Guía paso a paso para encuentros con ICE, con videos y recursos legales.",
             "button": "Ver Recursos"
         }
-    },
-    "maintenance": {
-        "title": "Sección en Mantenimiento",
-        "message": "Estamos haciendo mantenimiento. La parte de reportes va a estar disponible muy pronto."
     },
     "notice": {
         "message": "¿Te interesa donar?"

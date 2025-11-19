@@ -120,7 +120,11 @@
             "message": "Successfully added location",
             "thanks": "Thank you for helping protect your community."
         },
-        "privacyNotice": "All reports are completely anonymous. Your personal information will not be shared."
+        "privacyNotice": "All reports are completely anonymous. Your personal information will not be shared.",
+        "maintenance": {
+            "title": "System Maintenance",
+            "description": "Maintenance is currently ongoing, reporting will be available as soon as possible."
+        }
     },
     "aboutPage": {
         "title": "About Us",
@@ -207,9 +211,5 @@
         "button1": "Donate Now",
         "button2": "Maybe Later",
         "footer": "We're a community-driven initiative. Thank you for your consideration."
-    },
-    "maintenance": {
-        "title": "Section Under Maintenance",
-        "message": "Maintenance is currently ongoing, reporting will be available as soon as possible."
     }
 }

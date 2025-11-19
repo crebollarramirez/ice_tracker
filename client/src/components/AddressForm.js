@@ -4,7 +4,14 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { MapPin, Upload, AlertCircle, Loader2, Camera } from "lucide-react";
+import {
+  MapPin,
+  Upload,
+  AlertCircle,
+  Loader2,
+  Camera,
+  Wrench,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,6 +106,9 @@ export default function AddressForm({ className }) {
   });
 
   const t = useTranslations("addressForm");
+
+  // Check if maintenance mode is enabled
+  const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -368,24 +378,40 @@ export default function AddressForm({ className }) {
               </p>
             </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full font-medium"
-              disabled={isSubmitting || (showRecaptchaV2 && !recaptchaV2Token)}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {submitStatus || t("buttons.submitting")}
-                </>
-              ) : showRecaptchaV2 && !recaptchaV2Token ? (
-                t("buttons.completeVerification")
-              ) : (
-                t("buttons.submit")
-              )}
-            </Button>
+            {/* Submit Button or Maintenance Notice */}
+            {isMaintenanceMode ? (
+              <div className="flex gap-3 p-4 bg-muted border border-border rounded-lg">
+                <Wrench className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("maintenance.title")}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {t("maintenance.description")}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full font-medium"
+                disabled={
+                  isSubmitting || (showRecaptchaV2 && !recaptchaV2Token)
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {submitStatus || t("buttons.submitting")}
+                  </>
+                ) : showRecaptchaV2 && !recaptchaV2Token ? (
+                  t("buttons.completeVerification")
+                ) : (
+                  t("buttons.submit")
+                )}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>
