@@ -36,27 +36,36 @@ export function PendingProvider({ children }) {
           // Convert image paths to download URLs and format dates
           const formattedPending = await Promise.all(
             sortedPending.map(async (location) => {
-              let imgUrl = location.imagePath;
-              
+              let imageUrl = location.imagePath;
+
               // Convert Firebase Storage path to download URL if imagePath exists
               if (location.imagePath) {
                 try {
                   const imageRef = storageRef(storage, location.imagePath);
-                  imgUrl = await getDownloadURL(imageRef);
-                  console.log("Generated download URL:", imgUrl, "for path:", location.imagePath);
+                  imageUrl = await getDownloadURL(imageRef);
+                  console.log(
+                    "Generated download URL:",
+                    imageUrl,
+                    "for path:",
+                    location.imagePath
+                  );
                 } catch (error) {
-                  console.error("Error getting download URL for image:", location.imagePath, error);
+                  console.error(
+                    "Error getting download URL for image:",
+                    location.imagePath,
+                    error
+                  );
                   // Keep original path as fallback
-                  imgUrl = location.imagePath;
+                  imageUrl = location.imagePath;
                 }
               }
 
               const result = {
                 ...location,
-                imgUrl, // Add the download URL
+                imageUrl, // Add the download URL
                 addedAt: formatDate(location.originalAddedAt), // Format for display
               };
-              
+
               console.log("Formatted pending location:", result);
               return result;
             })
