@@ -119,16 +119,13 @@ export async function onSubmitReport({
       address,
       additionalInfo,
       imagePath: storagePath,
+      preVerified: true, // Flag to indicate reCAPTCHA was already verified
     };
 
-    // Add security data for final submission
-    if (data.recaptchaV3Token !== undefined) {
-      finalPayload.v3Token = data.recaptchaV3Token;
-      finalPayload.siteKeyV3 = process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY;
-    }
-    if (data.recaptchaV2Token !== undefined) {
-      finalPayload.v2Token = data.recaptchaV2Token;
-    }
+    // DON'T add reCAPTCHA tokens for final submission since they're single-use
+    // and we already verified them in the first call
+    
+    // Still add other security data
     if (data.honeypot !== undefined) finalPayload.honeypot = data.honeypot;
     if (data.startedAt !== undefined) finalPayload.startedAt = data.startedAt;
 

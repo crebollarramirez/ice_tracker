@@ -108,8 +108,13 @@
             "maxSize": "Max file size is 5MB",
             "invalidType": "Only .jpg, .jpeg, .png, .webp and .heic formats are supported"
         },
+        "recaptcha": {
+            "instruction": "Please complete the verification below to continue."
+        },
         "buttons": {
             "submit": "Submit Report",
+            "submitting": "Submitting...",
+            "completeVerification": "Complete Verification to Submit",
             "locating": "📍 Locating..."
         },
         "errors": {

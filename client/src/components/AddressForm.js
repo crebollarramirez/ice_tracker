@@ -397,8 +397,8 @@ export default function AddressForm({ className }) {
                 size="lg"
                 className="w-full font-medium"
                 disabled={
-                  isSubmitting || 
-                  !isSecurityReady || 
+                  isSubmitting ||
+                  !isSecurityReady ||
                   (showRecaptchaV2 && !recaptchaV2Token)
                 }
               >
