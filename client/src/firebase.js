@@ -9,7 +9,10 @@ import {
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 
 import { getStorage, connectStorageEmulator } from "firebase/storage";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from "firebase/app-check";
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -25,21 +28,17 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize App Check only on client side
 if (typeof window !== "undefined") {
-  try {
-    if (process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY) {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(
-          process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY
-        ),
-        isTokenAutoRefreshEnabled: true,
-      });
-    } else {
-      console.warn(
-        "NEXT_PUBLIC_APPCHECK_SITE_KEY not found - App Check disabled"
-      );
-    }
-  } catch (error) {
-    console.warn("App Check initialization failed:", error);
+  if (process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(
+        process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY
+      ),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } else {
+    console.warn(
+      "NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY not found - App Check disabled"
+    );
   }
 }
 
@@ -98,8 +97,6 @@ if (process.env.NODE_ENV === "development") {
     }
   }
 }
-
-
 
 // Create callable function reference
 const pinFunction = httpsCallable(functions, "pin");
