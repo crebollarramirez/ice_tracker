@@ -64,9 +64,9 @@ export const ReportCard = ({ report, onClick, actions, animationClass }) => {
     >
       {/* Image */}
       <div className="aspect-video bg-muted relative overflow-hidden">
-        {report.imgUrl && !imageError ? (
+        {report.imageUrl && !imageError ? (
           <Image
-            src={report.imgUrl}
+            src={report.imageUrl}
             alt={`Report from ${report.address}`}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
