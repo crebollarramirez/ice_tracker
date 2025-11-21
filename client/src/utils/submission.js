@@ -124,20 +124,12 @@ export async function onSubmitReport({
 
     // DON'T add reCAPTCHA tokens for final submission since they're single-use
     // and we already verified them in the first call
-    
+
     // Still add other security data
     if (data.honeypot !== undefined) finalPayload.honeypot = data.honeypot;
     if (data.startedAt !== undefined) finalPayload.startedAt = data.startedAt;
 
-    console.log("📤 Sending final payload:", {
-      ...finalPayload,
-      v3Token: finalPayload.v3Token
-        ? `${finalPayload.v3Token.substring(0, 20)}...`
-        : null,
-      v2Token: finalPayload.v2Token
-        ? `${finalPayload.v2Token.substring(0, 20)}...`
-        : null,
-    });
+    console.log("📤 Sending final payload:", finalPayload);
 
     const result = await pinFunction(finalPayload);
     console.log("✅ Final submission successful:", result?.data?.reportId);

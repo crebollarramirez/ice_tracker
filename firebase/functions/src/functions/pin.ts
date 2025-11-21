@@ -78,49 +78,69 @@ export const pin = onCall(async (request) => {
   if (!preVerified) {
     // Check which verification method to use
     if (v3Token && siteKeyV3) {
-    /** -------------------------------------------
-     *  STEP 2 — Verify reCAPTCHA v3 Enterprise
-     * --------------------------------------------*/
-    logger.info("Verifying reCAPTCHA v3 token");
-    const v3Response = await fetch(
-      `https://recaptchaenterprise.googleapis.com/v1/projects/${projectId}/assessments?key=${enterpriseApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: {
-            token: v3Token,
-            siteKey: siteKeyV3,
-            expectedAction: "submit",
-          },
-        }),
-      }
-    ).then((res) => res.json());
+      /** -------------------------------------------
+       *  STEP 2 — Verify reCAPTCHA v3 Enterprise
+       * --------------------------------------------*/
+      logger.info("Verifying reCAPTCHA v3 token");
+      const v3Response = await fetch(
+        `https://recaptchaenterprise.googleapis.com/v1/projects/${projectId}/assessments?key=${enterpriseApiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: {
+              token: v3Token,
+              siteKey: siteKeyV3,
+              expectedAction: "submit",
+            },
+          }),
+        }
+      ).then((res) => res.json());
 
-    if (v3Response.tokenProperties?.valid !== true) {
-      throw new HttpsError(
-        "permission-denied",
-        `Invalid reCAPTCHA v3 token: ${v3Response.tokenProperties?.invalidReason}`
-      );
-    }
-
-    const score = v3Response.riskAnalysis?.score ?? 0;
-    logger.info("reCAPTCHA v3 score:", score);
-
-    // If score is good, proceed
-    if (score < 0.5) {
-      // Low score → require v2 fallback
-      if (!v2Token) {
+      if (v3Response.tokenProperties?.valid !== true) {
         throw new HttpsError(
           "permission-denied",
-          "Low reCAPTCHA score: requires_v2_challenge"
+          `Invalid reCAPTCHA v3 token: ${v3Response.tokenProperties?.invalidReason}`
         );
       }
 
+      const score = v3Response.riskAnalysis?.score ?? 0;
+      logger.info("reCAPTCHA v3 score:", score);
+
+      // If score is good, proceed
+      if (score < 0.5) {
+        // Low score → require v2 fallback
+        if (!v2Token) {
+          throw new HttpsError(
+            "permission-denied",
+            "Low reCAPTCHA score: requires_v2_challenge"
+          );
+        }
+
+        /** -------------------------------------------
+         *  STEP 3 — Verify reCAPTCHA v2 Checkbox (fallback)
+         * --------------------------------------------*/
+        logger.info("Low v3 score, verifying v2 token as fallback");
+        const v2Verify = await fetch(
+          `https://www.google.com/recaptcha/api/siteverify?secret=${v2Secret}&response=${v2Token}`,
+          { method: "POST" }
+        ).then((res) => res.json());
+
+        if (!v2Verify.success) {
+          throw new HttpsError(
+            "permission-denied",
+            "Invalid reCAPTCHA v2 challenge"
+          );
+        }
+        logger.info("reCAPTCHA v2 verification successful (fallback)");
+      } else {
+        logger.info("reCAPTCHA v3 verification successful");
+      }
+    } else if (v2Token) {
       /** -------------------------------------------
-       *  STEP 3 — Verify reCAPTCHA v2 Checkbox (fallback)
+       *  STEP 2 — Verify reCAPTCHA v2 Only
        * --------------------------------------------*/
-      logger.info("Low v3 score, verifying v2 token as fallback");
+      logger.info("Verifying reCAPTCHA v2 token only");
       const v2Verify = await fetch(
         `https://www.google.com/recaptcha/api/siteverify?secret=${v2Secret}&response=${v2Token}`,
         { method: "POST" }
@@ -132,27 +152,7 @@ export const pin = onCall(async (request) => {
           "Invalid reCAPTCHA v2 challenge"
         );
       }
-      logger.info("reCAPTCHA v2 verification successful (fallback)");
-    } else {
-      logger.info("reCAPTCHA v3 verification successful");
-    }
-  } else if (v2Token) {
-    /** -------------------------------------------
-     *  STEP 2 — Verify reCAPTCHA v2 Only
-     * --------------------------------------------*/
-    logger.info("Verifying reCAPTCHA v2 token only");
-    const v2Verify = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${v2Secret}&response=${v2Token}`,
-      { method: "POST" }
-    ).then((res) => res.json());
-
-    if (!v2Verify.success) {
-      throw new HttpsError(
-        "permission-denied",
-        "Invalid reCAPTCHA v2 challenge"
-      );
-    }
-    logger.info("reCAPTCHA v2 verification successful");
+      logger.info("reCAPTCHA v2 verification successful");
     } else {
       throw new HttpsError(
         "failed-precondition",
