@@ -30,7 +30,32 @@ export async function onSubmitReport({
     const address = data.address.trim();
     const additionalInfo = data.additionalInfo.trim();
 
-    // 3) Build storage path with timestamp (backend will generate reportId)
+    // 3) First, verify reCAPTCHA with backend BEFORE uploading image
+    const verificationPayload = {
+      addedAt: now(),
+      address,
+      additionalInfo,
+      imagePath: "temp", // Temporary placeholder for verification
+    };
+
+    // Add security data for verification
+    if (data.recaptchaV3Token !== undefined) {
+      verificationPayload.v3Token = data.recaptchaV3Token;
+      verificationPayload.siteKeyV3 =
+        process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY;
+    }
+    if (data.recaptchaV2Token !== undefined) {
+      verificationPayload.v2Token = data.recaptchaV2Token;
+    }
+    if (data.honeypot !== undefined)
+      verificationPayload.honeypot = data.honeypot;
+    if (data.startedAt !== undefined)
+      verificationPayload.startedAt = data.startedAt;
+
+    // Verify with backend first (this will throw if reCAPTCHA fails)
+    await pinFunction(verificationPayload);
+
+    // 4) Only upload image AFTER reCAPTCHA verification passes
     const timestamp = Date.now();
     const extMap = {
       "image/png": "png",
@@ -42,31 +67,29 @@ export async function onSubmitReport({
     const fileExtension = extMap[imageFile.type] || "jpg";
     const storagePath = `reports/pending/${uid}/${timestamp}.${fileExtension}`;
 
-    // 4) Upload image (set contentType)
     uploadedRef = storageRef(storage, storagePath);
     await uploadBytes(uploadedRef, imageFile, { contentType: imageFile.type });
 
-    // 6) Call function with payload (backend generates reportId)
-    const payload = {
+    // 5) Call function again with real image path for final submission
+    const finalPayload = {
       addedAt: now(),
       address,
       additionalInfo,
       imagePath: storagePath,
     };
 
-    // Add security data if provided - using backend expected field names
+    // Add security data for final submission
     if (data.recaptchaV3Token !== undefined) {
-      payload.v3Token = data.recaptchaV3Token;
-      // Add the v3 site key that backend expects
-      payload.siteKeyV3 = process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY;
+      finalPayload.v3Token = data.recaptchaV3Token;
+      finalPayload.siteKeyV3 = process.env.NEXT_PUBLIC_RECAPTCHAV3_SITE_KEY;
     }
     if (data.recaptchaV2Token !== undefined) {
-      payload.v2Token = data.recaptchaV2Token;
+      finalPayload.v2Token = data.recaptchaV2Token;
     }
-    if (data.honeypot !== undefined) payload.honeypot = data.honeypot;
-    if (data.startedAt !== undefined) payload.startedAt = data.startedAt;
+    if (data.honeypot !== undefined) finalPayload.honeypot = data.honeypot;
+    if (data.startedAt !== undefined) finalPayload.startedAt = data.startedAt;
 
-    const result = await pinFunction(payload);
+    const result = await pinFunction(finalPayload);
 
     // 7) Optional UX feedback (injectable)
     if (toast) {
