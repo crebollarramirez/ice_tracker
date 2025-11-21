@@ -48,16 +48,35 @@ export function useFormSecurity() {
   // Create security payload
   const createPayload = useCallback(
     async (originalData) => {
+      console.log("🔐 Creating security payload...");
       const currentHoneypotValue = honeypotRef.current?.value || honeypotValue;
+
+      console.log("Security state:", {
+        showRecaptchaV2,
+        hasV2Token: !!recaptchaV2Token,
+        honeypotValue: currentHoneypotValue,
+        startedAt,
+        isSecurityReady,
+      });
 
       // Get v3 token if not showing v2
       let v3Token = null;
       if (!showRecaptchaV2) {
         try {
+          console.log("🎯 Getting reCAPTCHA v3 token...");
           v3Token = await getRecaptchaV3Token("submit");
+          console.log(
+            "✅ Got v3 token:",
+            v3Token ? `${v3Token.substring(0, 20)}...` : null
+          );
         } catch (error) {
-          console.warn("Failed to get v3 token:", error);
+          console.warn("❌ Failed to get v3 token:", error);
         }
+      } else {
+        console.log(
+          "🔄 Using v2 token instead of v3:",
+          recaptchaV2Token ? `${recaptchaV2Token.substring(0, 20)}...` : null
+        );
       }
 
       const securityData = createSecurityPayload(
@@ -67,18 +86,45 @@ export function useFormSecurity() {
         recaptchaV2Token
       );
 
+      console.log("📦 Security payload created:", {
+        hasV3Token: !!securityData.recaptchaV3Token,
+        hasV2Token: !!securityData.recaptchaV2Token,
+        honeypot: securityData.honeypot,
+        startedAt: securityData.startedAt,
+      });
+
       return {
         ...originalData,
         ...securityData,
       };
     },
-    [honeypotValue, startedAt, showRecaptchaV2, recaptchaV2Token]
+    [
+      honeypotValue,
+      startedAt,
+      showRecaptchaV2,
+      recaptchaV2Token,
+      isSecurityReady,
+    ]
   );
 
   // Handle submission with security checks
   const submitWithSecurity = useCallback(
     async (originalData, submitFunction) => {
       try {
+        console.log("🚀 Starting secure submission...");
+
+        // Check if security is ready
+        if (!isSecurityReady) {
+          throw new Error(
+            "Security system is not ready. Please wait and try again."
+          );
+        }
+
+        // If showing v2 but no token, don't allow submission
+        if (showRecaptchaV2 && !recaptchaV2Token) {
+          throw new Error("Please complete the verification to continue.");
+        }
+
         // Check minimum fill time (optional client-side check)
         if (!hasMinFillTimeElapsed(startedAt, 2000)) {
           console.warn("Submission too fast, but allowing anyway");
@@ -87,6 +133,15 @@ export function useFormSecurity() {
         // Create payload with security data
         const payload = await createPayload(originalData);
 
+        // Validate that we have some form of reCAPTCHA token
+        if (!payload.recaptchaV3Token && !payload.recaptchaV2Token) {
+          console.error("❌ No reCAPTCHA tokens available!");
+          throw new Error(
+            "Security verification failed. Please refresh and try again."
+          );
+        }
+
+        console.log("📡 Submitting with security data...");
         // Submit with security data
         const result = await submitFunction(payload);
 

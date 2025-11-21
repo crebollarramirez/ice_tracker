@@ -31,6 +31,18 @@ export async function onSubmitReport({
     const additionalInfo = data.additionalInfo.trim();
 
     // 3) First, verify reCAPTCHA with backend BEFORE uploading image
+    console.log("🔒 Starting reCAPTCHA verification before image upload...");
+    console.log("Security data available:", {
+      hasV3Token:
+        data.recaptchaV3Token !== undefined && data.recaptchaV3Token !== null,
+      hasV2Token:
+        data.recaptchaV2Token !== undefined && data.recaptchaV2Token !== null,
+      hasHoneypot: data.honeypot !== undefined,
+      hasStartedAt: data.startedAt !== undefined,
+      v3TokenLength: data.recaptchaV3Token?.length || 0,
+      v2TokenLength: data.recaptchaV2Token?.length || 0,
+    });
+
     const verificationPayload = {
       addedAt: now(),
       address,
@@ -52,10 +64,31 @@ export async function onSubmitReport({
     if (data.startedAt !== undefined)
       verificationPayload.startedAt = data.startedAt;
 
+    console.log("📤 Sending verification payload:", {
+      ...verificationPayload,
+      v3Token: verificationPayload.v3Token
+        ? `${verificationPayload.v3Token.substring(0, 20)}...`
+        : null,
+      v2Token: verificationPayload.v2Token
+        ? `${verificationPayload.v2Token.substring(0, 20)}...`
+        : null,
+    });
+
     // Verify with backend first (this will throw if reCAPTCHA fails)
-    await pinFunction(verificationPayload);
+    try {
+      await pinFunction(verificationPayload);
+      console.log(
+        "✅ reCAPTCHA verification successful, proceeding with image upload"
+      );
+    } catch (verificationError) {
+      console.error("❌ reCAPTCHA verification failed:", verificationError);
+      throw verificationError; // Re-throw to prevent image upload
+    }
 
     // 4) Only upload image AFTER reCAPTCHA verification passes
+    console.log(
+      "📁 Starting image upload after successful reCAPTCHA verification..."
+    );
     const timestamp = Date.now();
     const extMap = {
       "image/png": "png",
@@ -67,10 +100,20 @@ export async function onSubmitReport({
     const fileExtension = extMap[imageFile.type] || "jpg";
     const storagePath = `reports/pending/${uid}/${timestamp}.${fileExtension}`;
 
+    console.log(
+      "📤 Uploading image to:",
+      storagePath,
+      "Size:",
+      imageFile.size,
+      "Type:",
+      imageFile.type
+    );
     uploadedRef = storageRef(storage, storagePath);
     await uploadBytes(uploadedRef, imageFile, { contentType: imageFile.type });
+    console.log("✅ Image upload successful");
 
     // 5) Call function again with real image path for final submission
+    console.log("🎯 Starting final submission with uploaded image...");
     const finalPayload = {
       addedAt: now(),
       address,
@@ -89,7 +132,18 @@ export async function onSubmitReport({
     if (data.honeypot !== undefined) finalPayload.honeypot = data.honeypot;
     if (data.startedAt !== undefined) finalPayload.startedAt = data.startedAt;
 
+    console.log("📤 Sending final payload:", {
+      ...finalPayload,
+      v3Token: finalPayload.v3Token
+        ? `${finalPayload.v3Token.substring(0, 20)}...`
+        : null,
+      v2Token: finalPayload.v2Token
+        ? `${finalPayload.v2Token.substring(0, 20)}...`
+        : null,
+    });
+
     const result = await pinFunction(finalPayload);
+    console.log("✅ Final submission successful:", result?.data?.reportId);
 
     // 7) Optional UX feedback (injectable)
     if (toast) {
@@ -105,11 +159,22 @@ export async function onSubmitReport({
       imagePath: storagePath,
     };
   } catch (error) {
+    console.error("💥 Submission failed at stage:", error);
+    console.error("Error details:", {
+      code: error?.code,
+      message: error?.message,
+      stack: error?.stack?.split("\n")[0],
+    });
+
     // Best-effort orphan cleanup if upload succeeded but pin failed
     if (uploadedRef) {
+      console.log("🧹 Cleaning up uploaded image due to error...");
       try {
         await deleteObject(uploadedRef);
-      } catch {}
+        console.log("✅ Image cleanup successful");
+      } catch (cleanupError) {
+        console.warn("⚠️ Image cleanup failed:", cleanupError);
+      }
     }
 
     let errorMessage = "Please try again later.";

@@ -397,13 +397,20 @@ export default function AddressForm({ className }) {
                 size="lg"
                 className="w-full font-medium"
                 disabled={
-                  isSubmitting || (showRecaptchaV2 && !recaptchaV2Token)
+                  isSubmitting || 
+                  !isSecurityReady || 
+                  (showRecaptchaV2 && !recaptchaV2Token)
                 }
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     {submitStatus || t("buttons.submitting")}
+                  </>
+                ) : !isSecurityReady ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Loading security...
                   </>
                 ) : showRecaptchaV2 && !recaptchaV2Token ? (
                   t("buttons.completeVerification")
